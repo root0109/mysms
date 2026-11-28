@@ -10,6 +10,8 @@ import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.core.testkit.TestTransactions;
 import com.mysms.hrms.hr.config.HrDatabaseConfig;
+import com.mysms.hrms.hr.events.HolidayRecordSync;
+import com.mysms.messaging.events.EventEnvelope;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
@@ -57,9 +60,12 @@ class LeaveLedgerComponentTest {
     @Qualifier(HrDatabaseConfig.DATABASE)
     private ModuleDatabase database;
 
+    @Autowired
+    private HolidayRecordSync holidays;
+
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "hr", "payroll");
+        DATABASE.register(registry, "hr", "payroll", "time_attendance");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }
@@ -113,6 +119,53 @@ class LeaveLedgerComponentTest {
                     + "\",\"toAt\":\"" + toAt + "\",\"dayPart\":\"" + dayPart + "\"}");
             assertThat(created.status()).as(created.text()).isEqualTo(201);
             return created.body().path("id").asString();
+        }
+
+        /**
+         * org announces a holiday (created, updated or deleted) as it does from HolidayService; answers whether hr's
+         * copy changed. A null institution is a holiday of the whole tenant.
+         */
+        boolean holiday(String verb, UUID id, UUID closes, String start, String end, int rowVersion) {
+            String data = "{\"id\":\"" + id + "\"," + (closes == null ? "" : "\"institutionId\":\"" + closes + "\",")
+                    + "\"title\":\"Closed\",\"startDate\":\"" + start + "\",\"endDate\":\"" + end
+                    + "\",\"rowVersion\":" + rowVersion + "}";
+            return CallContextHolder.callAs(CallContext.anonymous(TRACE).withIdentity(tenant, null),
+                    () -> TestTransactions.of(database).write(() -> holidays.apply(new EventEnvelope(
+                            UUID.randomUUID(), "org", "org.holiday." + verb, Optional.of(tenant), "org.holiday", id,
+                            Instant.now(), data, Optional.empty()))));
+        }
+
+        /**
+         * The teacher's live attendance days as "date status leave replaced" (leave: the application id or -,
+         * replaced: the status the leave overrode or -), waiting up to ten seconds for them to become what is expected:
+         * time_attendance writes them from hr's decision events.
+         */
+        List<String> attendance(List<String> expected) throws InterruptedException {
+            List<String> days = List.of();
+            for (int attempt = 0; attempt < 100; attempt++) {
+                days = CallContextHolder.callAs(CallContext.anonymous(TRACE).withIdentity(tenant, null),
+                        () -> TestTransactions.of(database).read(() -> database.jdbc().sql(
+                                "SELECT a.attendance_date || ' ' || a.status || ' '"
+                                        + " || COALESCE(a.leave_application_id::text, '-') || ' '"
+                                        + " || COALESCE(a.replaced_status, '-')"
+                                        + " FROM time_attendance.staff_attendance a WHERE a.tenant_id = :tenantId"
+                                        + " AND a.staff_id = '" + teacherStaff + "' AND a.deleted_at IS NULL"
+                                        + " ORDER BY a.attendance_date").query(String.class).list()));
+                if (days.equals(expected)) {
+                    return days;
+                }
+                Thread.sleep(100);
+            }
+            return days;
+        }
+
+        /** The remark of the teacher's live attendance row of the day. */
+        String remark(String day) {
+            return CallContextHolder.callAs(CallContext.anonymous(TRACE).withIdentity(tenant, null),
+                    () -> TestTransactions.of(database).read(() -> database.jdbc().sql(
+                            "SELECT a.remark FROM time_attendance.staff_attendance a WHERE a.tenant_id = :tenantId"
+                                    + " AND a.staff_id = '" + teacherStaff + "' AND a.attendance_date = '" + day
+                                    + "' AND a.deleted_at IS NULL").query(String.class).single()));
         }
 
         /** The teacher's position for casual leave, as [entitled, taken, pending, available]. */
@@ -181,7 +234,8 @@ class LeaveLedgerComponentTest {
         assertThat(approve(halfDay, school.head, "{}").status()).isEqualTo(200);
         assertThat(school.position(school.teacher)).containsExactly("10", "3.5", "0", "6.5");
 
-        String tooLong = school.applies("2026-04-06T00:00:00Z", "2026-04-12T00:00:00Z", "full_day");
+        // Monday to the Tuesday after: seven working days, the weekend between them not counted
+        String tooLong = school.applies("2026-04-06T00:00:00Z", "2026-04-14T00:00:00Z", "full_day");
         Reply refused = approve(tooLong, school.head, "{}");
         assertThat(refused.status()).as("seven days with six and a half left: " + refused.text()).isEqualTo(409);
         assertThat(refused.body().path("detail").asString()).contains("7 days").contains("6.5");
@@ -194,7 +248,7 @@ class LeaveLedgerComponentTest {
                 .isEqualTo(409);
         assertThat(school.position(school.teacher)).containsExactly("10", "3.5", "7", "0");
 
-        // times of day do not change the days: Monday morning to Wednesday morning is three calendar days
+        // times of day do not change the days: Monday morning to Wednesday morning is three working days
         String byTheClock = school.applies("2026-06-01T09:00:00Z", "2026-06-03T08:00:00Z", "full_day");
         assertThat(school.position(school.teacher)).containsExactly("10", "3.5", "10", "0");
         Reply rejected = call("POST", APPLICATIONS + "/" + byTheClock + ":reject", school.head,
@@ -202,6 +256,115 @@ class LeaveLedgerComponentTest {
         assertThat(rejected.status()).as(rejected.text()).isEqualTo(200);
         assertThat(rejected.body().path("decisionComments").asString()).as("the applicant reads why")
                 .isEqualTo("Exams that week");
+    }
+
+    @Test
+    void leaveTakesWorkingDaysOnlyWithoutWeekendsOrTheSchoolsAndTheTenantsHolidays() throws Exception {
+        School school = new School();
+        UUID ownHoliday = UUID.randomUUID();
+        UUID tenantHoliday = UUID.randomUUID();
+        assertThat(school.holiday("created", ownHoliday, school.institution, "2026-03-04", "2026-03-04", 1)).isTrue();
+        assertThat(school.holiday("created", tenantHoliday, null, "2026-03-05", "2026-03-05", 1)).isTrue();
+        assertThat(school.holiday("created", UUID.randomUUID(), UUID.randomUUID(), "2026-03-06", "2026-03-06", 1))
+                .as("another school's holiday is kept too").isTrue();
+
+        // Monday 2 to Sunday 8 March: seven calendar days, less the weekend (7, 8), the school's holiday (4) and the
+        // tenant's (5); another school's holiday (6) closes nothing here
+        String week = school.applies("2026-03-02T00:00:00Z", "2026-03-08T00:00:00Z", "full_day");
+        assertThat(school.position(school.teacher)).containsExactly("10", "0", "3", "7");
+        String onTheHoliday = school.applies("2026-03-04T00:00:00Z", "2026-03-04T00:00:00Z", "forenoon");
+        String onSaturday = school.applies("2026-03-07T00:00:00Z", "2026-03-07T00:00:00Z", "afternoon");
+        assertThat(school.position(school.teacher)).as("a half day on a holiday or a weekend takes nothing")
+                .containsExactly("10", "0", "3", "7");
+        String halfDay = school.applies("2026-03-09T00:00:00Z", "2026-03-09T00:00:00Z", "afternoon");
+        assertThat(school.position(school.teacher)).containsExactly("10", "0", "3.5", "6.5");
+
+        assertThat(school.holiday("deleted", tenantHoliday, null, "2026-03-05", "2026-03-05", 2)).isTrue();
+        assertThat(school.holiday("updated", tenantHoliday, null, "2026-03-05", "2026-03-05", 1))
+                .as("a late event cannot restore a deleted holiday").isFalse();
+        assertThat(school.position(school.teacher)).as("the deleted holiday is a working day again")
+                .containsExactly("10", "0", "4.5", "5.5");
+        assertThat(school.holiday("updated", ownHoliday, school.institution, "2026-03-03", "2026-03-04", 2)).isTrue();
+        assertThat(school.position(school.teacher)).as("the school's holiday now closes the 3rd and the 4th")
+                .containsExactly("10", "0", "3.5", "6.5");
+
+        assertThat(approve(week, school.head, "{}").status()).isEqualTo(200);
+        assertThat(approve(onTheHoliday, school.head, "{}").status()).isEqualTo(200);
+        assertThat(approve(onSaturday, school.head, "{}").status()).isEqualTo(200);
+        assertThat(approve(halfDay, school.head, "{}").status()).isEqualTo(200);
+        assertThat(school.position(school.teacher)).as("2, 5 and 6 March, and half of the 9th")
+                .containsExactly("10", "3.5", "0", "6.5");
+    }
+
+    @Test
+    void approvedLeaveIsRecordedInStaffAttendanceOnItsWorkingDaysAndCancellingItGivesTheDaysBack() throws Exception {
+        School school = new School();
+        // Friday 2 to Tuesday 6 January 2099: the weekend (3, 4) and the tenant's holiday (5) are not leave days
+        assertThat(school.holiday("created", UUID.randomUUID(), null, "2099-01-05", "2099-01-05", 1)).isTrue();
+        UUID recorded = UUID.randomUUID();
+        school.sql("INSERT INTO time_attendance.staff_attendance (id, tenant_id, staff_id, attendance_date, status,"
+                + " remark, row_version) VALUES ('" + recorded + "', :tenantId, '" + school.teacherStaff
+                + "', '2099-01-06', 'present', 'entered ahead', 1)");
+        String leave = school.applies("2099-01-02T00:00:00Z", "2099-01-06T00:00:00Z", "full_day");
+        String halfDay = school.applies("2099-01-07T00:00:00Z", "2099-01-07T00:00:00Z", "forenoon");
+        assertThat(school.attendance(List.of("2099-01-06 present - -"))).as("pending leave records nothing")
+                .containsExactly("2099-01-06 present - -");
+
+        assertThat(approve(leave, school.head, "{}").status()).isEqualTo(200);
+        assertThat(approve(halfDay, school.head, "{}").status()).isEqualTo(200);
+        List<String> onLeave = List.of("2099-01-02 on_leave " + leave + " -",
+                "2099-01-06 on_leave " + leave + " present", "2099-01-07 half_day " + halfDay + " -");
+        assertThat(school.attendance(onLeave)).as("leave wins over the recorded day, which keeps its status")
+                .containsExactlyElementsOf(onLeave);
+        assertThat(school.position(school.teacher)).containsExactly("10", "2.5", "0", "7.5");
+
+        assertThat(call("POST", APPLICATIONS + "/" + leave + ":cancel", school.teacher, "{}").status())
+                .isEqualTo(200);
+        List<String> back = List.of("2099-01-06 present - -", "2099-01-07 half_day " + halfDay + " -");
+        assertThat(school.attendance(back)).as("the day written for the leave goes, the recorded day is restored")
+                .containsExactlyElementsOf(back);
+    }
+
+    @Test
+    void cancellingGivesBackExactlyTheDaysTheApprovalCountedWhateverTheCalendarBecameSince() throws Exception {
+        School school = new School();
+        // Monday 5 and Tuesday 6 January 2099: two working days when approved
+        String leave = school.applies("2099-01-05T00:00:00Z", "2099-01-06T00:00:00Z", "full_day");
+        Reply approved = approve(leave, school.head, "{}");
+        assertThat(approved.status()).as(approved.text()).isEqualTo(200);
+        assertThat(approved.body().path("countedDays").asString()).isEqualTo("2.0");
+        assertThat(school.position(school.teacher)).containsExactly("10", "2", "0", "8");
+
+        // the 6th becomes a holiday afterwards: a recount would now give back one day only
+        assertThat(school.holiday("created", UUID.randomUUID(), null, "2099-01-06", "2099-01-06", 1)).isTrue();
+        assertThat(call("POST", APPLICATIONS + "/" + leave + ":cancel", school.teacher, "{}").status())
+                .isEqualTo(200);
+        assertThat(school.position(school.teacher)).as("the balance is back where it was before the approval")
+                .containsExactly("10", "0", "0", "10");
+    }
+
+    @Test
+    void cancellingLeaveKeepsAChangedDayAndGivesAnotherLeavesDayItsRow() throws Exception {
+        School school = new School();
+        // Monday 2 and Tuesday 3 February 2099, and the forenoon of the 3rd again in a second application
+        String week = school.applies("2099-02-02T00:00:00Z", "2099-02-03T00:00:00Z", "full_day");
+        String forenoon = school.applies("2099-02-03T00:00:00Z", "2099-02-03T00:00:00Z", "forenoon");
+        assertThat(approve(week, school.head, "{}").status()).isEqualTo(200);
+        assertThat(approve(forenoon, school.head, "{}").status()).isEqualTo(200);
+        List<String> recorded = List.of("2099-02-02 on_leave " + week + " -", "2099-02-03 on_leave " + week + " -");
+        assertThat(school.attendance(recorded)).as("a day another leave explains is left to it")
+                .containsExactlyElementsOf(recorded);
+        school.sql("UPDATE time_attendance.staff_attendance SET status = 'present', row_version = row_version + 1"
+                + " WHERE tenant_id = :tenantId AND staff_id = '" + school.teacherStaff + "'"
+                + " AND attendance_date = '2099-02-02'");
+
+        assertThat(call("POST", APPLICATIONS + "/" + week + ":cancel", school.teacher, "{}").status())
+                .isEqualTo(200);
+        List<String> after = List.of("2099-02-02 present - -", "2099-02-03 half_day " + forenoon + " -");
+        assertThat(school.attendance(after))
+                .as("the changed day stays as it was left, without the leave; the shared day is the other leave's")
+                .containsExactlyElementsOf(after);
+        assertThat(school.remark("2099-02-03")).isEqualTo("Leave: Casual leave");
     }
 
     @Test

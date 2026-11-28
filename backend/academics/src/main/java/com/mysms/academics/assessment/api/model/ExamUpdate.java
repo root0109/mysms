@@ -53,9 +53,6 @@ public class ExamUpdate {
   private @Nullable Optional<@NotNull @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> passMarks;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Optional<@NotNull Boolean> resultsEntered;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Optional<String> notes;
 
   public ExamUpdate examSessionId(@Nullable Optional<UUID> examSessionId) {
@@ -238,26 +235,6 @@ public class ExamUpdate {
     this.passMarks = passMarks;
   }
 
-  public ExamUpdate resultsEntered(@Nullable Optional<Boolean> resultsEntered) {
-    this.resultsEntered = resultsEntered;
-    return this;
-  }
-
-  /**
-   * All marks have been entered.
-   * @return resultsEntered
-   */
-  
-  @JsonProperty("resultsEntered")
-  public @Nullable Optional<Boolean> getResultsEntered() {
-    return resultsEntered;
-  }
-
-  @JsonProperty("resultsEntered")
-  public void setResultsEntered(@Nullable Optional<Boolean> resultsEntered) {
-    this.resultsEntered = resultsEntered;
-  }
-
   public ExamUpdate notes(@Nullable Optional<String> notes) {
     this.notes = notes;
     return this;
@@ -296,13 +273,12 @@ public class ExamUpdate {
         Objects.equals(this.endAt, examUpdate.endAt) &&
         Objects.equals(this.totalMarks, examUpdate.totalMarks) &&
         Objects.equals(this.passMarks, examUpdate.passMarks) &&
-        Objects.equals(this.resultsEntered, examUpdate.resultsEntered) &&
         Objects.equals(this.notes, examUpdate.notes);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(examSessionId, subjectId, classSectionId, code, name, startAt, endAt, totalMarks, passMarks, resultsEntered, notes);
+    return Objects.hash(examSessionId, subjectId, classSectionId, code, name, startAt, endAt, totalMarks, passMarks, notes);
   }
 
   @Override
@@ -318,7 +294,6 @@ public class ExamUpdate {
     sb.append("    endAt: ").append(toIndentedString(endAt)).append("\n");
     sb.append("    totalMarks: ").append(toIndentedString(totalMarks)).append("\n");
     sb.append("    passMarks: ").append(toIndentedString(passMarks)).append("\n");
-    sb.append("    resultsEntered: ").append(toIndentedString(resultsEntered)).append("\n");
     sb.append("    notes: ").append(toIndentedString(notes)).append("\n");
     sb.append("}");
     return sb.toString();

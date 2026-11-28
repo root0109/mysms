@@ -41,7 +41,7 @@ public final class SqlRule implements ConformanceRule {
     private static final Pattern TEXT_BLOCK = Pattern.compile("\"\"\"(.*?)\"\"\"", Pattern.DOTALL);
     private static final Pattern STRING_SQL = Pattern.compile("\"((?:SELECT|UPDATE|DELETE) [^\"]*)\"");
     private static final Pattern STATEMENT = Pattern.compile("\\b(SELECT|UPDATE|DELETE)\\b");
-    private static final Pattern TABLE_ACCESS = Pattern.compile("\\b(FROM|UPDATE)\\s+[a-z]+\\.[a-z_]+");
+    private static final Pattern TABLE_ACCESS = Pattern.compile("\\b(FROM|UPDATE)\\s+[a-z_]+\\.[a-z_]+");
     private static final Pattern DELETE_FROM = Pattern.compile("(?i)\\bDELETE\\s+FROM\\s+(\\S+)");
     private static final Pattern INFRASTRUCTURE = Pattern.compile("\\.(idempotency_key|outbox_event|inbox_event)$");
 
@@ -91,7 +91,7 @@ public final class SqlRule implements ConformanceRule {
         String rest = path.substring(at + marker.length());
         int slash = rest.indexOf('/');
         if (slash >= 0 && tree.areas(module).stream()
-                .anyMatch(a -> !a.name().equals(module) && a.name().equals(rest.substring(0, slash)))) {
+                .anyMatch(a -> !a.name().equals(module) && a.packageSegment().equals(rest.substring(0, slash)))) {
             String inArea = rest.substring(slash + 1);
             int next = inArea.indexOf('/');
             return next < 0 ? "" : inArea.substring(0, next);

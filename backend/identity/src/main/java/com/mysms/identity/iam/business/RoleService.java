@@ -180,6 +180,9 @@ public class RoleService extends AppTransactionManager {
             scope.requireWritable(institutionOf(entity));
             rules.beforeWrite(entity);
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return flagged(List.of(mapper.toDto(entity))).get(0);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -357,6 +360,9 @@ public class RoleService extends AppTransactionManager {
             scope.requireWritable(institutionOfRolePermission(entity));
             rolePermissionRules.beforeWrite(entity);
             assertUniqueRolePermission(entity);
+            if (fields.isEmpty()) {
+                return rolePermissionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return rolePermissionMapper.toDto(entity);

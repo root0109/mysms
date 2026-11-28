@@ -2,6 +2,7 @@ package com.mysms.hrms.payroll.repository;
 
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.id.UuidV7;
+import com.mysms.hrms.hr.repository.WorkingDays;
 import com.mysms.hrms.payroll.config.PayrollDatabaseConfig;
 import com.mysms.hrms.payroll.domain.PayslipEntity;
 import com.mysms.hrms.payroll.domain.PayslipLineEntity;
@@ -152,10 +153,39 @@ public class PayslipRunRepository {
                AND id = :id AND deleted_at IS NULL
             """;
 
-    private final JdbcClient jdbc;
+    /**
+     * The working days of a span of a pay period at the institution (hrms's {@link WorkingDays} rule), and how much
+     * of them the staff member's approved leave of unpaid types takes (hr.leave_application, hr.leave_type: the sibling
+     * area's tables): a full day 1, a half day 0.5, at most 1 a day however many applications cover it. Leave days are
+     * the UTC days of the application, as hr counts them.
+     */
+    private static final String ABSENCE = """
+            SELECT count(*) AS working,
+                   COALESCE(sum((SELECT LEAST(1, COALESCE(sum(CASE WHEN a.day_part = 'full_day' THEN 1
+                                                                    ELSE 0.5 END), 0))
+                                   FROM hr.leave_application a
+                                   JOIN hr.leave_type t ON t.tenant_id = :tenantId AND t.id = a.leave_type_id
+                                  WHERE a.tenant_id = :tenantId AND a.staff_id = :staffId AND a.deleted_at IS NULL
+                                    AND a.status IN ('approved', 'completed') AND NOT t.is_paid
+                                    AND wd.day BETWEEN (a.from_at AT TIME ZONE 'UTC')::date
+                                                   AND (a.to_at AT TIME ZONE 'UTC')::date)), 0) AS unpaid
+              FROM (SELECT g.day::date AS day, CAST(:institutionId AS uuid) AS institution_id
+                      FROM generate_series(CAST(:fromDay AS timestamp), CAST(:toDay AS timestamp),
+                                           interval '1 day') AS g(day)) wd
+             WHERE
+            """ + WorkingDays.IS_WORKING_DAY;
 
-    public PayslipRunRepository(@Qualifier(PayrollDatabaseConfig.DATABASE) ModuleDatabase database) {
+    private final JdbcClient jdbc;
+    private final WorkingDays workingDays;
+
+    public PayslipRunRepository(@Qualifier(PayrollDatabaseConfig.DATABASE) ModuleDatabase database,
+            WorkingDays workingDays) {
         this.jdbc = database.jdbc();
+        this.workingDays = workingDays;
+    }
+
+    /** The working days of a span and the unpaid leave days among them. */
+    public record Absence(BigDecimal workingDays, BigDecimal unpaidDays) {
     }
 
     /** A staff salary of the run (a projection), with the institution of its template. */
@@ -186,6 +216,13 @@ public class PayslipRunRepository {
                 .query((rs, row) -> new SalaryRow(rs.getObject("id", UUID.class),
                         rs.getObject("effective_date", LocalDate.class), rs.getObject("institution_id", UUID.class)))
                 .list();
+    }
+
+    /** The working days from {@code from} to {@code to} (both counted) and the staff member's unpaid leave in them. */
+    public Absence absence(UUID staffId, UUID institutionId, LocalDate from, LocalDate to) {
+        return jdbc.sql(ABSENCE).param("staffId", staffId).param("institutionId", institutionId)
+                .param("fromDay", from).param("toDay", to).param(WorkingDays.PARAMETER, workingDays.weekendDays())
+                .query((rs, row) -> new Absence(rs.getBigDecimal("working"), rs.getBigDecimal("unpaid"))).single();
     }
 
     /** The live components of these staff salaries, in the pay components' display order. */

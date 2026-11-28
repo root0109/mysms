@@ -117,6 +117,9 @@ public class RetentionPolicyService extends AppTransactionManager {
                     .policyId(id).periodDays(policy.periodDays()).action(policy.action()).build());
             List<String> fields = apply(setting, changes);
             requireValid(policy, setting);
+            if (fields.isEmpty()) {
+                return mapper.toDto(policy);
+            }
             if (stored.isPresent()) {
                 setting.onUpdatingData(Actor.current(), clock);
                 if (settings.update(setting, expected) == 0) {

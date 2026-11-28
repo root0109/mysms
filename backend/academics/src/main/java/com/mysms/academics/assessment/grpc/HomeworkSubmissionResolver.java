@@ -1,7 +1,6 @@
 package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.HomeworkSubmission;
-import com.mysms.academics.assessment.api.model.HomeworkSubmissionUpdate;
 import com.mysms.academics.assessment.business.HomeworkSubmissionService;
 import com.mysms.academics.assessment.business.HomeworkWorkflowService;
 import com.mysms.assessment.v1.CheckHomeworkSubmissionRequest;
@@ -13,11 +12,11 @@ import com.mysms.assessment.v1.DeleteHomeworkSubmissionResponse;
 import com.mysms.assessment.v1.GetHomeworkSubmissionRequest;
 import com.mysms.assessment.v1.GetHomeworkSubmissionResponse;
 import com.mysms.assessment.v1.HomeworkSubmissionServiceGrpc;
+import com.mysms.assessment.v1.HomeworkSubmissionUpdate;
 import com.mysms.assessment.v1.ListHomeworkSubmissionsRequest;
 import com.mysms.assessment.v1.ListHomeworkSubmissionsResponse;
 import com.mysms.assessment.v1.ReplyToHomeworkFeedbackRequest;
 import com.mysms.assessment.v1.ReplyToHomeworkFeedbackResponse;
-import com.mysms.assessment.v1.UpdateHomeworkSubmissionRequest;
 import com.mysms.assessment.v1.UpdateHomeworkSubmissionResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -70,13 +69,12 @@ public class HomeworkSubmissionResolver extends HomeworkSubmissionServiceGrpc.Ho
     }
 
     @Override
-    public void updateHomeworkSubmission(UpdateHomeworkSubmissionRequest request,
+    public void updateHomeworkSubmission(HomeworkSubmissionUpdate request,
             StreamObserver<UpdateHomeworkSubmissionResponse> out) {
         HomeworkSubmission updated = homeworkSubmissionService.updateHomeworkSubmission(
-                bridge.id(request.getHomeworkSubmission().getId(), "id"),
-                bridge.requiredIfMatch(request.getHomeworkSubmission().getEtag()),
-                bridge.changes(request.getHomeworkSubmission(), request.getUpdateMask(),
-                        HomeworkSubmissionUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                HomeworkSubmissionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateHomeworkSubmissionResponse.newBuilder(),
                 "homework_submission", updated).build());
     }

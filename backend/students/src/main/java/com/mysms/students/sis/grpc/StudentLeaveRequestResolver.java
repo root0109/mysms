@@ -4,7 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.StudentLeaveDecisionRequest;
 import com.mysms.students.sis.api.model.StudentLeaveRequest;
-import com.mysms.students.sis.api.model.StudentLeaveRequestUpdate;
 import com.mysms.students.sis.business.StudentLeaveRequestService;
 import com.mysms.sis.v1.ApproveStudentLeaveRequestRequest;
 import com.mysms.sis.v1.ApproveStudentLeaveRequestResponse;
@@ -19,7 +18,7 @@ import com.mysms.sis.v1.ListStudentLeaveRequestsResponse;
 import com.mysms.sis.v1.RejectStudentLeaveRequestRequest;
 import com.mysms.sis.v1.RejectStudentLeaveRequestResponse;
 import com.mysms.sis.v1.StudentLeaveRequestServiceGrpc;
-import com.mysms.sis.v1.UpdateStudentLeaveRequestRequest;
+import com.mysms.sis.v1.StudentLeaveRequestUpdate;
 import com.mysms.sis.v1.UpdateStudentLeaveRequestResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -66,12 +65,12 @@ public class StudentLeaveRequestResolver extends StudentLeaveRequestServiceGrpc.
     }
 
     @Override
-    public void updateStudentLeaveRequest(UpdateStudentLeaveRequestRequest request,
+    public void updateStudentLeaveRequest(StudentLeaveRequestUpdate request,
             StreamObserver<UpdateStudentLeaveRequestResponse> out) {
         StudentLeaveRequest updated = service.updateStudentLeaveRequest(
-                bridge.id(request.getStudentLeaveRequest().getId(), "id"),
-                bridge.requiredIfMatch(request.getStudentLeaveRequest().getEtag()),
-                bridge.changes(request.getStudentLeaveRequest(), request.getUpdateMask(), StudentLeaveRequestUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StudentLeaveRequestProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateStudentLeaveRequestResponse.newBuilder(), "student_leave_request", updated).build());

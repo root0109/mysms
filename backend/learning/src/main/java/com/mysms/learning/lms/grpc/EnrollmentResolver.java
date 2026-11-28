@@ -4,12 +4,12 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Enrollment;
 import com.mysms.learning.lms.api.model.MemberProfile;
-import com.mysms.learning.lms.api.model.EnrollmentUpdate;
 import com.mysms.learning.lms.business.EnrollmentService;
 import com.mysms.learning.lms.business.MemberProfileService;
 import com.mysms.lms.v1.DeleteEnrollmentRequest;
 import com.mysms.lms.v1.DeleteEnrollmentResponse;
 import com.mysms.lms.v1.EnrollmentServiceGrpc;
+import com.mysms.lms.v1.EnrollmentUpdate;
 import com.mysms.lms.v1.GetEnrollmentRequest;
 import com.mysms.lms.v1.GetEnrollmentResponse;
 import com.mysms.lms.v1.GetLmsStatisticsRequest;
@@ -20,7 +20,6 @@ import com.mysms.lms.v1.GetStudentDashboardRequest;
 import com.mysms.lms.v1.GetStudentDashboardResponse;
 import com.mysms.lms.v1.ListEnrollmentsRequest;
 import com.mysms.lms.v1.ListEnrollmentsResponse;
-import com.mysms.lms.v1.UpdateEnrollmentRequest;
 import com.mysms.lms.v1.UpdateEnrollmentResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,10 +56,10 @@ public class EnrollmentResolver extends EnrollmentServiceGrpc.EnrollmentServiceI
     }
 
     @Override
-    public void updateEnrollment(UpdateEnrollmentRequest request, StreamObserver<UpdateEnrollmentResponse> out) {
-        Enrollment updated = service.updateEnrollment(bridge.id(request.getEnrollment().getId(), "id"),
-                bridge.requiredIfMatch(request.getEnrollment().getEtag()),
-                bridge.changes(request.getEnrollment(), request.getUpdateMask(), EnrollmentUpdate.class),
+    public void updateEnrollment(EnrollmentUpdate request, StreamObserver<UpdateEnrollmentResponse> out) {
+        Enrollment updated = service.updateEnrollment(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EnrollmentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEnrollmentResponse.newBuilder(), "enrollment", updated).build());
     }

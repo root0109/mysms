@@ -65,7 +65,7 @@ public final class RightsRequestSaga extends AppTransactionManager {
     static final int MAX_ATTEMPTS = 5;
 
     private static final String AGGREGATE = RightsRequestEntity.TABLE;
-    private static final Pattern MODULE = Pattern.compile("^[a-z]{2,30}$");
+    private static final Pattern MODULE = Pattern.compile("^[a-z][a-z_]{1,29}$");
     private static final String ERASURE = "erasure";
     private static final String ERASE = "erase";
     private static final String EXPORT = "export";

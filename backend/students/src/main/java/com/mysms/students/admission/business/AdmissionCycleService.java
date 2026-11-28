@@ -187,6 +187,9 @@ public class AdmissionCycleService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -556,6 +559,9 @@ public class AdmissionCycleService extends AppTransactionManager {
             assertValidAdmissionCycleFee(entity, false);
             scope.requireWritable(institutionOfAdmissionCycleFee(entity));
             assertUniqueAdmissionCycleFee(entity);
+            if (fields.isEmpty()) {
+                return admissionCycleFeeMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return admissionCycleFeeMapper.toDto(entity);

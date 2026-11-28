@@ -1,6 +1,7 @@
 package com.mysms.hrms.hr.domain;
 
 import com.mysms.core.entity.BaseEntity;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -35,4 +36,5 @@ public class LeaveApplicationEntity extends BaseEntity {
     private UUID decidedByUserId;
     private LocalDate decidedOn;
     private String decisionComments;
+    private BigDecimal countedDays;
 }

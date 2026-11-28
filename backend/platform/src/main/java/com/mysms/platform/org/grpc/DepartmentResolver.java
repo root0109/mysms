@@ -3,18 +3,17 @@ package com.mysms.platform.org.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.org.api.model.Department;
-import com.mysms.platform.org.api.model.DepartmentUpdate;
 import com.mysms.platform.org.business.DepartmentService;
 import com.mysms.org.v1.CreateDepartmentRequest;
 import com.mysms.org.v1.CreateDepartmentResponse;
 import com.mysms.org.v1.DeleteDepartmentRequest;
 import com.mysms.org.v1.DeleteDepartmentResponse;
 import com.mysms.org.v1.DepartmentServiceGrpc;
+import com.mysms.org.v1.DepartmentUpdate;
 import com.mysms.org.v1.GetDepartmentRequest;
 import com.mysms.org.v1.GetDepartmentResponse;
 import com.mysms.org.v1.ListDepartmentsRequest;
 import com.mysms.org.v1.ListDepartmentsResponse;
-import com.mysms.org.v1.UpdateDepartmentRequest;
 import com.mysms.org.v1.UpdateDepartmentResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -59,11 +58,11 @@ public class DepartmentResolver extends DepartmentServiceGrpc.DepartmentServiceI
     }
 
     @Override
-    public void updateDepartment(UpdateDepartmentRequest request, StreamObserver<UpdateDepartmentResponse> out) {
+    public void updateDepartment(DepartmentUpdate request, StreamObserver<UpdateDepartmentResponse> out) {
         Department updated = service.updateDepartment(
-                bridge.id(request.getDepartment().getId(), "id"),
-                bridge.requiredIfMatch(request.getDepartment().getEtag()),
-                bridge.changes(request.getDepartment(), request.getUpdateMask(), DepartmentUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                DepartmentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateDepartmentResponse.newBuilder(), "department", updated).build());
     }

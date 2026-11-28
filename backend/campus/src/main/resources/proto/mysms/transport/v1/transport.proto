@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.transport.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "TransportProto";
@@ -20,7 +20,7 @@ service RouteService {
   // Create Route.
   rpc CreateRoute(CreateRouteRequest) returns (CreateRouteResponse);
   // Update Route.
-  rpc UpdateRoute(UpdateRouteRequest) returns (UpdateRouteResponse);
+  rpc UpdateRoute(RouteUpdate) returns (UpdateRouteResponse);
   // Soft-delete Route.
   rpc DeleteRoute(DeleteRouteRequest) returns (DeleteRouteResponse);
   // List RouteStops.
@@ -30,7 +30,7 @@ service RouteService {
   // Create RouteStop.
   rpc CreateRouteStop(CreateRouteStopRequest) returns (CreateRouteStopResponse);
   // Update RouteStop.
-  rpc UpdateRouteStop(UpdateRouteStopRequest) returns (UpdateRouteStopResponse);
+  rpc UpdateRouteStop(RouteStopUpdate) returns (UpdateRouteStopResponse);
   // Soft-delete RouteStop.
   rpc DeleteRouteStop(DeleteRouteStopRequest) returns (DeleteRouteStopResponse);
 }
@@ -44,7 +44,7 @@ service StudentTransportService {
   // Create StudentTransport.
   rpc CreateStudentTransport(CreateStudentTransportRequest) returns (CreateStudentTransportResponse);
   // Update StudentTransport.
-  rpc UpdateStudentTransport(UpdateStudentTransportRequest) returns (UpdateStudentTransportResponse);
+  rpc UpdateStudentTransport(StudentTransportUpdate) returns (UpdateStudentTransportResponse);
   // Soft-delete StudentTransport.
   rpc DeleteStudentTransport(DeleteStudentTransportRequest) returns (DeleteStudentTransportResponse);
 }
@@ -88,13 +88,29 @@ message CreateRouteResponse {
   Route route = 1;
 }
 
-message UpdateRouteRequest {
-  // Resource with id and etag set.
-  Route route = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateRoute (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message RouteUpdate {
+  // Route id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Year the route runs. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Route name.
+  optional string name = 6;
+  // Vehicle registration number.
+  optional string vehicle_number = 7;
+  // Departure time. [Time of day (HH:MM[:SS])]
+  optional string start_time = 8;
+  // Arrival time. [Time of day (HH:MM[:SS])]
+  optional string end_time = 9;
+  // Whether running.
+  optional bool is_active = 10;
 }
 message UpdateRouteResponse {
   Route route = 1;
@@ -154,15 +170,25 @@ message CreateRouteStopResponse {
   RouteStop route_stop = 1;
 }
 
-message UpdateRouteStopRequest {
+// The changes of UpdateRouteStop (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message RouteStopUpdate {
   // Route id (UUID).
   string route_id = 1;
-  // Resource with id and etag set.
-  RouteStop route_stop = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // RouteStop id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Order on the route.
+  optional int32 sequence = 5;
+  // Stop name.
+  optional string stop_name = 6;
+  // Morning pickup time. [Time of day (HH:MM[:SS])]
+  mysms.common.v1.NullableString pickup_time = 7;
+  // Evening drop time. [Time of day (HH:MM[:SS])]
+  mysms.common.v1.NullableString drop_time = 8;
 }
 message UpdateRouteStopResponse {
   RouteStop route_stop = 1;
@@ -218,13 +244,29 @@ message CreateStudentTransportResponse {
   StudentTransport student_transport = 1;
 }
 
-message UpdateStudentTransportRequest {
-  // Resource with id and etag set.
-  StudentTransport student_transport = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStudentTransport (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StudentTransportUpdate {
+  // StudentTransport id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Student. [UUID]
+  optional string student_id = 4;
+  // Academic year. [UUID]
+  optional string academic_year_id = 5;
+  // Mode.
+  optional StudentTransport.TransportMode transport_mode = 6;
+  // School route (school_bus). [UUID]
+  mysms.common.v1.NullableString route_id = 7;
+  // Boarding stop. [UUID]
+  mysms.common.v1.NullableString route_stop_id = 8;
+  // Bus pass issued.
+  optional bool bus_pass_issued = 9;
+  // Notes (driver contact, private van...).
+  mysms.common.v1.NullableString details = 10;
 }
 message UpdateStudentTransportResponse {
   StudentTransport student_transport = 1;

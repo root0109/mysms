@@ -9,8 +9,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * attendance.member_record: the person of each staff and student record, kept from hr's and sis's events. A row
- * changes only to a newer source row version, so a late or repeated event changes nothing.
+ * attendance.member_record: the person of each student record, kept from sis's events. A row changes only to a
+ * newer source row version, so a late or repeated event changes nothing.
  */
 @Repository
 public class MemberRecordRepository {

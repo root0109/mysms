@@ -3,16 +3,15 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ForumPostVote;
-import com.mysms.learning.lms.api.model.ForumPostVoteUpdate;
 import com.mysms.learning.lms.business.ForumPostVoteService;
 import com.mysms.lms.v1.CreateForumPostVoteRequest;
 import com.mysms.lms.v1.CreateForumPostVoteResponse;
 import com.mysms.lms.v1.DeleteForumPostVoteRequest;
 import com.mysms.lms.v1.DeleteForumPostVoteResponse;
 import com.mysms.lms.v1.ForumPostVoteServiceGrpc;
+import com.mysms.lms.v1.ForumPostVoteUpdate;
 import com.mysms.lms.v1.ListForumPostVotesRequest;
 import com.mysms.lms.v1.ListForumPostVotesResponse;
-import com.mysms.lms.v1.UpdateForumPostVoteRequest;
 import com.mysms.lms.v1.UpdateForumPostVoteResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -50,12 +49,12 @@ public class ForumPostVoteResolver extends ForumPostVoteServiceGrpc.ForumPostVot
     }
 
     @Override
-    public void updateForumPostVote(UpdateForumPostVoteRequest request,
+    public void updateForumPostVote(ForumPostVoteUpdate request,
             StreamObserver<UpdateForumPostVoteResponse> out) {
         ForumPostVote updated = service.updateForumPostVote(
-                bridge.id(request.getForumPostVote().getId(), "id"),
-                bridge.requiredIfMatch(request.getForumPostVote().getEtag()),
-                bridge.changes(request.getForumPostVote(), request.getUpdateMask(), ForumPostVoteUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ForumPostVoteProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateForumPostVoteResponse.newBuilder(), "forum_post_vote", updated).build());

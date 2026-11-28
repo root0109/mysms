@@ -1,7 +1,6 @@
 package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.TeacherSubject;
-import com.mysms.academics.api.model.TeacherSubjectUpdate;
 import com.mysms.academics.business.TeacherSubjectService;
 import com.mysms.academics.v1.CreateTeacherSubjectRequest;
 import com.mysms.academics.v1.CreateTeacherSubjectResponse;
@@ -12,7 +11,7 @@ import com.mysms.academics.v1.GetTeacherSubjectResponse;
 import com.mysms.academics.v1.ListTeacherSubjectsRequest;
 import com.mysms.academics.v1.ListTeacherSubjectsResponse;
 import com.mysms.academics.v1.TeacherSubjectServiceGrpc;
-import com.mysms.academics.v1.UpdateTeacherSubjectRequest;
+import com.mysms.academics.v1.TeacherSubjectUpdate;
 import com.mysms.academics.v1.UpdateTeacherSubjectResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -59,11 +58,11 @@ public class TeacherSubjectResolver extends TeacherSubjectServiceGrpc.TeacherSub
     }
 
     @Override
-    public void updateTeacherSubject(UpdateTeacherSubjectRequest request,
+    public void updateTeacherSubject(TeacherSubjectUpdate request,
             StreamObserver<UpdateTeacherSubjectResponse> out) {
-        TeacherSubject updated = service.updateTeacherSubject(bridge.id(request.getTeacherSubject().getId(), "id"),
-                bridge.requiredIfMatch(request.getTeacherSubject().getEtag()),
-                bridge.changes(request.getTeacherSubject(), request.getUpdateMask(), TeacherSubjectUpdate.class),
+        TeacherSubject updated = service.updateTeacherSubject(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                TeacherSubjectProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateTeacherSubjectResponse.newBuilder(), "teacher_subject", updated).build());

@@ -89,7 +89,7 @@ describe('ATT-06 Staff attendance', () => {
       fakeAcademics(),
     );
     expect(await screen.findByRole('heading', { name: '1 of 2 marked' })).toBeInTheDocument();
-    const read = api.calls.find((c) => c.path === '/v1/attendance/staff-attendance-days');
+    const read = api.calls.find((c) => c.path === '/v1/time-attendance/staff-attendance-days');
     expect(new URLSearchParams(read?.search).get('filter')).toBe(
       `attendanceDate >= "${academicsFixture.day}" AND attendanceDate <= "${academicsFixture.day}"`,
     );
@@ -103,7 +103,7 @@ describe('ATT-06 Staff attendance', () => {
     await userEvent.click(within(grid).getByRole('button', { name: 'Save Kavita Iyer' }));
     expect(await screen.findByRole('heading', { name: '2 of 2 marked' })).toBeInTheDocument();
     const created = api.calls.find(
-      (c) => c.method === 'POST' && c.path === '/v1/attendance/staff-attendance-days',
+      (c) => c.method === 'POST' && c.path === '/v1/time-attendance/staff-attendance-days',
     );
     expect(JSON.parse(created?.body ?? '{}')).toMatchObject({
       staffId: academicsFixture.teacherId,

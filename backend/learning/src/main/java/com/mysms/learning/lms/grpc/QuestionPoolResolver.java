@@ -4,8 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.QuestionPool;
 import com.mysms.learning.lms.api.model.QuestionPoolItem;
-import com.mysms.learning.lms.api.model.QuestionPoolItemUpdate;
-import com.mysms.learning.lms.api.model.QuestionPoolUpdate;
 import com.mysms.learning.lms.business.QuestionPoolService;
 import com.mysms.lms.v1.CreateQuestionPoolItemRequest;
 import com.mysms.lms.v1.CreateQuestionPoolItemResponse;
@@ -23,10 +21,10 @@ import com.mysms.lms.v1.ListQuestionPoolItemsRequest;
 import com.mysms.lms.v1.ListQuestionPoolItemsResponse;
 import com.mysms.lms.v1.ListQuestionPoolsRequest;
 import com.mysms.lms.v1.ListQuestionPoolsResponse;
+import com.mysms.lms.v1.QuestionPoolItemUpdate;
 import com.mysms.lms.v1.QuestionPoolServiceGrpc;
-import com.mysms.lms.v1.UpdateQuestionPoolItemRequest;
+import com.mysms.lms.v1.QuestionPoolUpdate;
 import com.mysms.lms.v1.UpdateQuestionPoolItemResponse;
-import com.mysms.lms.v1.UpdateQuestionPoolRequest;
 import com.mysms.lms.v1.UpdateQuestionPoolResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -68,11 +66,11 @@ public class QuestionPoolResolver extends QuestionPoolServiceGrpc.QuestionPoolSe
     }
 
     @Override
-    public void updateQuestionPool(UpdateQuestionPoolRequest request, StreamObserver<UpdateQuestionPoolResponse> out) {
+    public void updateQuestionPool(QuestionPoolUpdate request, StreamObserver<UpdateQuestionPoolResponse> out) {
         QuestionPool updated = service.updateQuestionPool(
-                bridge.id(request.getQuestionPool().getId(), "id"),
-                bridge.requiredIfMatch(request.getQuestionPool().getEtag()),
-                bridge.changes(request.getQuestionPool(), request.getUpdateMask(), QuestionPoolUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QuestionPoolProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateQuestionPoolResponse.newBuilder(), "question_pool", updated).build());
     }
@@ -113,13 +111,13 @@ public class QuestionPoolResolver extends QuestionPoolServiceGrpc.QuestionPoolSe
     }
 
     @Override
-    public void updateQuestionPoolItem(UpdateQuestionPoolItemRequest request,
+    public void updateQuestionPoolItem(QuestionPoolItemUpdate request,
             StreamObserver<UpdateQuestionPoolItemResponse> out) {
         QuestionPoolItem updated = service.updateQuestionPoolItem(
                 bridge.id(request.getQuestionPoolId(), "questionPoolId"),
-                bridge.id(request.getQuestionPoolItem().getId(), "id"),
-                bridge.requiredIfMatch(request.getQuestionPoolItem().getEtag()),
-                bridge.changes(request.getQuestionPoolItem(), request.getUpdateMask(), QuestionPoolItemUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QuestionPoolItemProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateQuestionPoolItemResponse.newBuilder(), "question_pool_item", updated).build());

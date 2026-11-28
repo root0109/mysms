@@ -88,7 +88,7 @@ public class BreachService extends AppTransactionManager {
     /** The Board's detailed report is due this long after the school became aware. */
     private static final Duration BOARD_REPORT_WITHIN = Duration.ofHours(72);
     private static final long SECONDS_PER_HOUR = 3600;
-    private static final Pattern MODULE = Pattern.compile("^[a-z]{2,30}$");
+    private static final Pattern MODULE = Pattern.compile("^[a-z][a-z_]{1,29}$");
     private static final String REPORTED = "reported";
     private static final String TRIAGED = "triaged";
     private static final String CONTAINED = "contained";
@@ -250,6 +250,9 @@ public class BreachService extends AppTransactionManager {
             List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
             requireKnown(entity, new ArrayList<>());
+            if (fields.isEmpty()) {
+                return dto(entity, notifications.ofBreaches(List.of(id)), now());
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (repository.update(entity, expected) == 0) {
                 throw new PreconditionFailedException("The breach changed since it was read.");

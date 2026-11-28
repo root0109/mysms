@@ -1,0 +1,33 @@
+{
+ "module": "time_attendance",
+ "resources": [
+  {
+   "name": "StaffAttendance",
+   "table": "time_attendance.staff_attendance",
+   "ops": [
+    "Create",
+    "Get",
+    "List",
+    "Update"
+   ],
+   "collection": "/v1/time-attendance/staff-attendance-days",
+   "item": "/v1/time-attendance/staff-attendance-days/{id}",
+   "scope": "tenant",
+   "fixtures": [],
+   "create": {
+    "staffId": "94e5fd97-afcc-59b8-a83f-327e849cb5e7",
+    "attendanceDate": "2026-01-10",
+    "status": "present"
+   },
+   "update": {
+    "remark": "Updated remark"
+   },
+   "patch": {
+    "clears": "remark",
+    "keeps": "status"
+   },
+   "duplicateConflicts": true,
+   "partition": "attendanceDate"
+  }
+ ]
+}

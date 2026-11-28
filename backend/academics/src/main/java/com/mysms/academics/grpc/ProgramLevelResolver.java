@@ -1,7 +1,6 @@
 package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.ProgramLevel;
-import com.mysms.academics.api.model.ProgramLevelUpdate;
 import com.mysms.academics.business.ProgramLevelService;
 import com.mysms.academics.v1.CreateProgramLevelRequest;
 import com.mysms.academics.v1.CreateProgramLevelResponse;
@@ -12,7 +11,7 @@ import com.mysms.academics.v1.GetProgramLevelResponse;
 import com.mysms.academics.v1.ListProgramLevelsRequest;
 import com.mysms.academics.v1.ListProgramLevelsResponse;
 import com.mysms.academics.v1.ProgramLevelServiceGrpc;
-import com.mysms.academics.v1.UpdateProgramLevelRequest;
+import com.mysms.academics.v1.ProgramLevelUpdate;
 import com.mysms.academics.v1.UpdateProgramLevelResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,10 +55,10 @@ public class ProgramLevelResolver extends ProgramLevelServiceGrpc.ProgramLevelSe
     }
 
     @Override
-    public void updateProgramLevel(UpdateProgramLevelRequest request, StreamObserver<UpdateProgramLevelResponse> out) {
-        ProgramLevel updated = service.updateProgramLevel(bridge.id(request.getProgramLevel().getId(), "id"),
-                bridge.requiredIfMatch(request.getProgramLevel().getEtag()),
-                bridge.changes(request.getProgramLevel(), request.getUpdateMask(), ProgramLevelUpdate.class),
+    public void updateProgramLevel(ProgramLevelUpdate request, StreamObserver<UpdateProgramLevelResponse> out) {
+        ProgramLevel updated = service.updateProgramLevel(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ProgramLevelProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateProgramLevelResponse.newBuilder(), "program_level", updated).build());
     }

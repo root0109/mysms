@@ -29,7 +29,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
  */
 public final class ModuleDatabase implements AutoCloseable {
 
-    private static final Pattern MODULE = Pattern.compile("^[a-z]+$");
+    private static final Pattern MODULE = Pattern.compile("^[a-z][a-z_]*$");
     private static final Pattern ROLE = Pattern.compile("^[a-z_][a-z0-9_]{0,62}$");
     private static final String BIND_TENANT = "SELECT set_config('app.tenant_id', :tenant, true)";
     private static final Logger LOG = LoggerFactory.getLogger(ModuleDatabase.class);
@@ -77,11 +77,16 @@ public final class ModuleDatabase implements AutoCloseable {
         return definition;
     }
 
-    /** Binds `mysms.<module>.datasource.*` and opens the module's database (migrating it unless disabled). */
+    /**
+     * Binds `mysms.<module>.datasource.*` and opens the module's database (migrating it unless disabled). A canonical
+     * Spring property name holds no underscore, so an area named with one (time_attendance) reads its keys at the
+     * hyphenated prefix (`mysms.time-attendance.datasource.*`).
+     */
     public static ModuleDatabase open(String module, Environment environment, boolean tenantScoped) {
+        String prefix = "mysms." + module.replace('_', '-') + ".datasource";
         ModuleDatabaseSettings settings = Binder.get(environment)
-                .bind("mysms." + module + ".datasource", Bindable.of(ModuleDatabaseSettings.class))
-                .orElseThrow(() -> new IllegalStateException("mysms." + module + ".datasource is not configured"));
+                .bind(prefix, Bindable.of(ModuleDatabaseSettings.class))
+                .orElseThrow(() -> new IllegalStateException(prefix + " is not configured"));
         return open(module, settings, tenantScoped);
     }
 

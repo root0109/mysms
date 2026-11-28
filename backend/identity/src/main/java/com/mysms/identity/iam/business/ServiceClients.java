@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -11,13 +12,22 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * The configured service clients iam issues client-credentials tokens to, one per module. iam holds only the SHA-256
- * of each secret, compares in constant time, and grants only the configured permissions. Secrets are long random
- * strings, so a plain SHA-256 is the right hash, as for refresh tokens.
+ * The configured service clients iam issues client-credentials tokens to, one per module or area. iam holds only the
+ * SHA-256 of each secret, compares in constant time, and grants only the configured permissions. Secrets are long
+ * random strings, so a plain SHA-256 is the right hash, as for refresh tokens.
+ *
+ * <p>An area name may hold an underscore ({@code time_attendance}), which no configuration source keeps alike: a
+ * properties file gives {@code time_attendance} or {@code time-attendance}, an environment variable cannot carry a
+ * separator inside a map key ({@code MYSMS_IAM_SERVICECLIENTS_TIMEATTENDANCE_SECRETSHA256} binds {@code
+ * timeattendance}). Clients are therefore keyed by the name without separators, and the client id a module sends
+ * (its area code) is looked up the same way.
  */
 public final class ServiceClients {
 
-    private static final Pattern MODULE = Pattern.compile("[a-z]+");
+    /** A configured client name: an area code, or its hyphenated or separator-free spelling. */
+    private static final Pattern MODULE = Pattern.compile("[a-z][a-z_-]*");
+    /** A client id as a module sends it: its area code. */
+    private static final Pattern CLIENT_ID = Pattern.compile("[a-z][a-z_]*");
     private static final Pattern SHA256_HEX = Pattern.compile("[0-9a-f]{64}");
 
     /**
@@ -42,6 +52,7 @@ public final class ServiceClients {
      * @param tokenTtl the lifetime of a service token (short: the provider fetches a new one before it expires)
      */
     public ServiceClients(Map<String, Client> clients, Duration tokenTtl) {
+        Map<String, Client> byKey = new HashMap<>();
         clients.forEach((module, client) -> {
             if (!MODULE.matcher(module).matches()) {
                 throw new IllegalStateException("mysms.iam.service-clients: '" + module + "' is not a module name");
@@ -50,11 +61,14 @@ public final class ServiceClients {
                 throw new IllegalStateException("mysms.iam.service-clients." + module
                         + ".secret-sha256 must be the lower-case hex SHA-256 of the client secret");
             }
+            if (byKey.put(key(module), client) != null) {
+                throw new IllegalStateException("mysms.iam.service-clients: '" + module + "' is configured twice");
+            }
         });
         if (tokenTtl.isNegative() || tokenTtl.isZero() || tokenTtl.compareTo(Duration.ofHours(1)) > 0) {
             throw new IllegalStateException("mysms.iam.token.service-token-ttl must be positive and at most one hour");
         }
-        this.clients = Map.copyOf(clients);
+        this.clients = Map.copyOf(byKey);
         this.tokenTtl = tokenTtl;
     }
 
@@ -63,11 +77,16 @@ public final class ServiceClients {
         if (clientId == null || secret == null) {
             return Optional.empty();
         }
-        Client client = clients.get(clientId);
+        Client client = CLIENT_ID.matcher(clientId).matches() ? clients.get(key(clientId)) : null;
         byte[] given = sha256(secret);
         // the digest is computed and compared whether or not the client exists: no timing difference
         byte[] expected = client == null ? new byte[given.length] : HexFormat.of().parseHex(client.secretSha256());
         return MessageDigest.isEqual(given, expected) && client != null ? Optional.of(client) : Optional.empty();
+    }
+
+    /** The lookup key of a client name: without its separators ({@code time_attendance} → {@code timeattendance}). */
+    private static String key(String module) {
+        return module.replace("_", "").replace("-", "");
     }
 
     public Duration tokenTtl() {

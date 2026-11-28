@@ -188,6 +188,9 @@ public class ConversationService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -456,6 +459,9 @@ public class ConversationService extends AppTransactionManager {
             assertValidConversationMessage(entity, false);
             scope.requireWritable(institutionOfConversationMessage(entity));
             assertUniqueConversationMessage(entity);
+            if (fields.isEmpty()) {
+                return conversationMessageMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return conversationMessageMapper.toDto(entity);
@@ -643,6 +649,9 @@ public class ConversationService extends AppTransactionManager {
             assertValidConversationParticipant(entity, false);
             scope.requireWritable(institutionOfConversationParticipant(entity));
             assertUniqueConversationParticipant(entity);
+            if (fields.isEmpty()) {
+                return conversationParticipantMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return conversationParticipantMapper.toDto(entity);

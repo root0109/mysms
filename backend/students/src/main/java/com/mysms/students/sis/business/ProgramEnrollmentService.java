@@ -157,6 +157,9 @@ public class ProgramEnrollmentService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -330,6 +333,9 @@ public class ProgramEnrollmentService extends AppTransactionManager {
             assertValidProgramEnrollmentSubject(entity, false);
             scope.requireWritable(institutionOfProgramEnrollmentSubject(entity));
             assertUniqueProgramEnrollmentSubject(entity);
+            if (fields.isEmpty()) {
+                return programEnrollmentSubjectMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return programEnrollmentSubjectMapper.toDto(entity);

@@ -9,6 +9,8 @@ import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.core.testkit.TestTransactions;
+import com.mysms.platform.PlatformTenants;
+import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.org.config.OrgDatabaseConfig;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -59,6 +61,9 @@ class OrgAcademicYearWorkflowComponentTest {
     @Autowired
     @Qualifier(OrgDatabaseConfig.DATABASE)
     private ModuleDatabase database;
+    @Autowired
+    @Qualifier(PlatformDatabaseConfig.DATABASE)
+    private ModuleDatabase platform;
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
@@ -82,6 +87,7 @@ class OrgAcademicYearWorkflowComponentTest {
                 "org.academic_year.close_academic_year");
 
         School() {
+            PlatformTenants.register(platform, tenant);
             sql("INSERT INTO org.institution (id, tenant_id, code, name, row_version) VALUES ('" + institution
                     + "', :tenantId, 'S" + institution.toString().substring(0, 8) + "', 'Test school', 1)");
         }

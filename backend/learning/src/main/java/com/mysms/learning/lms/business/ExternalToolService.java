@@ -218,6 +218,9 @@ public class ExternalToolService extends AppTransactionManager implements Initia
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -390,6 +393,9 @@ public class ExternalToolService extends AppTransactionManager implements Initia
             assertValidExternalToolInstitution(entity, false);
             scope.requireWritable(institutionOfExternalToolInstitution(entity));
             assertUniqueExternalToolInstitution(entity);
+            if (fields.isEmpty()) {
+                return externalToolInstitutionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return externalToolInstitutionMapper.toDto(entity);
@@ -543,6 +549,9 @@ public class ExternalToolService extends AppTransactionManager implements Initia
             assertValidExternalToolOption(entity, false);
             scope.requireWritable(institutionOfExternalToolOption(entity));
             assertUniqueExternalToolOption(entity);
+            if (fields.isEmpty()) {
+                return externalToolOptionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return externalToolOptionMapper.toDto(entity);
@@ -700,6 +709,9 @@ public class ExternalToolService extends AppTransactionManager implements Initia
             assertValidExternalToolRole(entity, false);
             scope.requireWritable(institutionOfExternalToolRole(entity));
             assertUniqueExternalToolRole(entity);
+            if (fields.isEmpty()) {
+                return externalToolRoleMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return externalToolRoleMapper.toDto(entity);
@@ -858,6 +870,9 @@ public class ExternalToolService extends AppTransactionManager implements Initia
             assertValidExternalToolSetting(entity, false);
             scope.requireWritable(institutionOfExternalToolSetting(entity));
             assertUniqueExternalToolSetting(entity);
+            if (fields.isEmpty()) {
+                return dtoExternalToolSetting(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return dtoExternalToolSetting(entity);

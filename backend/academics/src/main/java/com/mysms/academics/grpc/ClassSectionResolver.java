@@ -1,11 +1,11 @@
 package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.ClassSection;
-import com.mysms.academics.api.model.ClassSectionUpdate;
 import com.mysms.academics.api.model.ClassSubject;
-import com.mysms.academics.api.model.ClassSubjectUpdate;
 import com.mysms.academics.business.ClassSectionService;
 import com.mysms.academics.v1.ClassSectionServiceGrpc;
+import com.mysms.academics.v1.ClassSectionUpdate;
+import com.mysms.academics.v1.ClassSubjectUpdate;
 import com.mysms.academics.v1.CreateClassSectionRequest;
 import com.mysms.academics.v1.CreateClassSectionResponse;
 import com.mysms.academics.v1.CreateClassSubjectRequest;
@@ -22,9 +22,7 @@ import com.mysms.academics.v1.ListClassSectionsRequest;
 import com.mysms.academics.v1.ListClassSectionsResponse;
 import com.mysms.academics.v1.ListClassSubjectsRequest;
 import com.mysms.academics.v1.ListClassSubjectsResponse;
-import com.mysms.academics.v1.UpdateClassSectionRequest;
 import com.mysms.academics.v1.UpdateClassSectionResponse;
-import com.mysms.academics.v1.UpdateClassSubjectRequest;
 import com.mysms.academics.v1.UpdateClassSubjectResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -68,10 +66,10 @@ public class ClassSectionResolver extends ClassSectionServiceGrpc.ClassSectionSe
     }
 
     @Override
-    public void updateClassSection(UpdateClassSectionRequest request, StreamObserver<UpdateClassSectionResponse> out) {
-        ClassSection updated = service.updateClassSection(bridge.id(request.getClassSection().getId(), "id"),
-                bridge.requiredIfMatch(request.getClassSection().getEtag()),
-                bridge.changes(request.getClassSection(), request.getUpdateMask(), ClassSectionUpdate.class),
+    public void updateClassSection(ClassSectionUpdate request, StreamObserver<UpdateClassSectionResponse> out) {
+        ClassSection updated = service.updateClassSection(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ClassSectionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateClassSectionResponse.newBuilder(), "class_section", updated).build());
     }
@@ -105,10 +103,10 @@ public class ClassSectionResolver extends ClassSectionServiceGrpc.ClassSectionSe
     }
 
     @Override
-    public void updateClassSubject(UpdateClassSubjectRequest request, StreamObserver<UpdateClassSubjectResponse> out) {
+    public void updateClassSubject(ClassSubjectUpdate request, StreamObserver<UpdateClassSubjectResponse> out) {
         ClassSubject updated = service.updateClassSubject(bridge.id(request.getClassSectionId(), "classSectionId"),
-                bridge.id(request.getClassSubject().getId(), "id"), bridge.requiredIfMatch(request.getClassSubject().getEtag()),
-                bridge.changes(request.getClassSubject(), request.getUpdateMask(), ClassSubjectUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                ClassSubjectProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateClassSubjectResponse.newBuilder(), "class_subject", updated).build());
     }

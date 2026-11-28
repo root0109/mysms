@@ -74,6 +74,8 @@ public class AssignmentRepository {
                AND r.deleted_at IS NULL
             """;
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
+    /** The row locked for the rest of the transaction, so one approval request of an assignment runs at a time. */
+    private static final String FIND_BY_ID_FOR_UPDATE = FIND_BY_ID + " FOR UPDATE";
     private static final String INSERT = """
             INSERT INTO assessment.assignment
             (id, tenant_id, institution_id, academic_year_id, title, description, assignment_type_id,
@@ -193,6 +195,10 @@ public class AssignmentRepository {
 
     public Optional<AssignmentEntity> findById(UUID id) {
         return jdbc.sql(FIND_BY_ID).param("id", id).query(AssignmentRepository::map).optional();
+    }
+
+    public Optional<AssignmentEntity> findByIdForUpdate(UUID id) {
+        return jdbc.sql(FIND_BY_ID_FOR_UPDATE).param("id", id).query(AssignmentRepository::map).optional();
     }
 
     public Page<AssignmentEntity> list(PageRequest page, SqlFragment filter) {

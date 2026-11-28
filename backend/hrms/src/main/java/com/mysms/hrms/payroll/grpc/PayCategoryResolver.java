@@ -3,7 +3,6 @@ package com.mysms.hrms.payroll.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.payroll.api.model.PayCategory;
-import com.mysms.hrms.payroll.api.model.PayCategoryUpdate;
 import com.mysms.hrms.payroll.business.PayCategoryService;
 import com.mysms.payroll.v1.CreatePayCategoryRequest;
 import com.mysms.payroll.v1.CreatePayCategoryResponse;
@@ -14,7 +13,7 @@ import com.mysms.payroll.v1.GetPayCategoryResponse;
 import com.mysms.payroll.v1.ListPayCategoriesRequest;
 import com.mysms.payroll.v1.ListPayCategoriesResponse;
 import com.mysms.payroll.v1.PayCategoryServiceGrpc;
-import com.mysms.payroll.v1.UpdatePayCategoryRequest;
+import com.mysms.payroll.v1.PayCategoryUpdate;
 import com.mysms.payroll.v1.UpdatePayCategoryResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class PayCategoryResolver extends PayCategoryServiceGrpc.PayCategoryServi
     }
 
     @Override
-    public void updatePayCategory(UpdatePayCategoryRequest request, StreamObserver<UpdatePayCategoryResponse> out) {
+    public void updatePayCategory(PayCategoryUpdate request, StreamObserver<UpdatePayCategoryResponse> out) {
         PayCategory updated = payCategoryService.updatePayCategory(
-                bridge.id(request.getPayCategory().getId(), "id"),
-                bridge.requiredIfMatch(request.getPayCategory().getEtag()),
-                bridge.changes(request.getPayCategory(), request.getUpdateMask(), PayCategoryUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PayCategoryProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePayCategoryResponse.newBuilder(), "pay_category", updated).build());
     }

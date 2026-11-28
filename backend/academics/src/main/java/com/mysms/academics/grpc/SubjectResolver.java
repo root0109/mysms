@@ -1,7 +1,6 @@
 package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.Subject;
-import com.mysms.academics.api.model.SubjectUpdate;
 import com.mysms.academics.business.SubjectService;
 import com.mysms.academics.v1.CreateSubjectRequest;
 import com.mysms.academics.v1.CreateSubjectResponse;
@@ -12,7 +11,7 @@ import com.mysms.academics.v1.GetSubjectResponse;
 import com.mysms.academics.v1.ListSubjectsRequest;
 import com.mysms.academics.v1.ListSubjectsResponse;
 import com.mysms.academics.v1.SubjectServiceGrpc;
-import com.mysms.academics.v1.UpdateSubjectRequest;
+import com.mysms.academics.v1.SubjectUpdate;
 import com.mysms.academics.v1.UpdateSubjectResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -55,10 +54,10 @@ public class SubjectResolver extends SubjectServiceGrpc.SubjectServiceImplBase {
     }
 
     @Override
-    public void updateSubject(UpdateSubjectRequest request, StreamObserver<UpdateSubjectResponse> out) {
-        Subject updated = service.updateSubject(bridge.id(request.getSubject().getId(), "id"),
-                bridge.requiredIfMatch(request.getSubject().getEtag()),
-                bridge.changes(request.getSubject(), request.getUpdateMask(), SubjectUpdate.class), request.getValidateOnly());
+    public void updateSubject(SubjectUpdate request, StreamObserver<UpdateSubjectResponse> out) {
+        Subject updated = service.updateSubject(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SubjectProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSubjectResponse.newBuilder(), "subject", updated).build());
     }
 

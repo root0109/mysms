@@ -15,9 +15,9 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Keeps attendance.member_record — the person of each staff and student record — in step with hr.staff and
- * sis.student from their created and updated events (attendance never reads another module's schema), so privacy's
- * tasks and the attendance.after_leaving sweep find a data principal's attendance ({@link AttendancePrivacyTaskHandler}).
+ * Keeps attendance.member_record — the person of each student record — in step with sis.student from its created
+ * and updated events (attendance never reads another module's schema), so privacy's tasks and the
+ * attendance.after_leaving sweep find a data principal's attendance ({@link AttendancePrivacyTaskHandler}).
  * An entry changes only to a newer row version, so out-of-order and repeated deliveries are harmless; a deleted record
  * keeps its entry, since its attendance stays the person's. Runs inside the event's tenant (messaging's
  * InboxProcessor: exactly once per event).
@@ -25,7 +25,7 @@ import tools.jackson.databind.json.JsonMapper;
 @Component
 public class MemberRecordSync implements EventSubscriptions {
 
-    private static final Map<String, String> KINDS = Map.of("hr.staff", "staff", "sis.student", "student");
+    private static final Map<String, String> KINDS = Map.of("sis.student", "student");
 
     private final MemberRecordRepository records;
     private final JsonMapper json;
@@ -44,8 +44,7 @@ public class MemberRecordSync implements EventSubscriptions {
 
     @Override
     public Map<String, EventHandler> handlers() {
-        return Map.of("hr.staff.created", this::apply, "hr.staff.updated", this::apply,
-                "sis.student.created", this::apply, "sis.student.updated", this::apply);
+        return Map.of("sis.student.created", this::apply, "sis.student.updated", this::apply);
     }
 
     /** Applies one record event; whether the stored entry changed. */

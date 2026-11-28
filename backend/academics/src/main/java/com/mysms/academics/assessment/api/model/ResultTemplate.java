@@ -215,7 +215,7 @@ public class ResultTemplate {
   }
 
   /**
-   * State.
+   * State. Changed only by generating results and by cancelling the marksheet.
    * @return status
    */
   

@@ -5,18 +5,11 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Question;
 import com.mysms.learning.lms.api.model.QuestionAcceptedAnswer;
-import com.mysms.learning.lms.api.model.QuestionAcceptedAnswerUpdate;
 import com.mysms.learning.lms.api.model.QuestionBlank;
-import com.mysms.learning.lms.api.model.QuestionBlankUpdate;
 import com.mysms.learning.lms.api.model.QuestionHotspot;
-import com.mysms.learning.lms.api.model.QuestionHotspotUpdate;
 import com.mysms.learning.lms.api.model.QuestionMatchPair;
-import com.mysms.learning.lms.api.model.QuestionMatchPairUpdate;
 import com.mysms.learning.lms.api.model.QuestionOption;
-import com.mysms.learning.lms.api.model.QuestionOptionUpdate;
 import com.mysms.learning.lms.api.model.QuestionPattern;
-import com.mysms.learning.lms.api.model.QuestionPatternUpdate;
-import com.mysms.learning.lms.api.model.QuestionUpdate;
 import com.mysms.learning.lms.business.QuestionService;
 import com.mysms.lms.v1.CreateQuestionAcceptedAnswerRequest;
 import com.mysms.lms.v1.CreateQuestionAcceptedAnswerResponse;
@@ -76,22 +69,22 @@ import com.mysms.lms.v1.ListQuestionPatternsRequest;
 import com.mysms.lms.v1.ListQuestionPatternsResponse;
 import com.mysms.lms.v1.ListQuestionsRequest;
 import com.mysms.lms.v1.ListQuestionsResponse;
+import com.mysms.lms.v1.QuestionAcceptedAnswerUpdate;
+import com.mysms.lms.v1.QuestionBlankUpdate;
+import com.mysms.lms.v1.QuestionHotspotUpdate;
+import com.mysms.lms.v1.QuestionMatchPairUpdate;
+import com.mysms.lms.v1.QuestionOptionUpdate;
+import com.mysms.lms.v1.QuestionPatternUpdate;
 import com.mysms.lms.v1.QuestionServiceGrpc;
+import com.mysms.lms.v1.QuestionUpdate;
 import com.mysms.lms.v1.SearchQuestionBankRequest;
 import com.mysms.lms.v1.SearchQuestionBankResponse;
-import com.mysms.lms.v1.UpdateQuestionAcceptedAnswerRequest;
 import com.mysms.lms.v1.UpdateQuestionAcceptedAnswerResponse;
-import com.mysms.lms.v1.UpdateQuestionBlankRequest;
 import com.mysms.lms.v1.UpdateQuestionBlankResponse;
-import com.mysms.lms.v1.UpdateQuestionHotspotRequest;
 import com.mysms.lms.v1.UpdateQuestionHotspotResponse;
-import com.mysms.lms.v1.UpdateQuestionMatchPairRequest;
 import com.mysms.lms.v1.UpdateQuestionMatchPairResponse;
-import com.mysms.lms.v1.UpdateQuestionOptionRequest;
 import com.mysms.lms.v1.UpdateQuestionOptionResponse;
-import com.mysms.lms.v1.UpdateQuestionPatternRequest;
 import com.mysms.lms.v1.UpdateQuestionPatternResponse;
-import com.mysms.lms.v1.UpdateQuestionRequest;
 import com.mysms.lms.v1.UpdateQuestionResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -134,10 +127,10 @@ public class QuestionResolver extends QuestionServiceGrpc.QuestionServiceImplBas
     }
 
     @Override
-    public void updateQuestion(UpdateQuestionRequest request, StreamObserver<UpdateQuestionResponse> out) {
-        Question updated = service.updateQuestion(bridge.id(request.getQuestion().getId(), "id"),
-                bridge.requiredIfMatch(request.getQuestion().getEtag()),
-                bridge.changes(request.getQuestion(), request.getUpdateMask(), QuestionUpdate.class), request.getValidateOnly());
+    public void updateQuestion(QuestionUpdate request, StreamObserver<UpdateQuestionResponse> out) {
+        Question updated = service.updateQuestion(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QuestionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateQuestionResponse.newBuilder(), "question", updated).build());
     }
 
@@ -170,11 +163,11 @@ public class QuestionResolver extends QuestionServiceGrpc.QuestionServiceImplBas
     }
 
     @Override
-    public void updateQuestionOption(UpdateQuestionOptionRequest request, StreamObserver<UpdateQuestionOptionResponse> out) {
+    public void updateQuestionOption(QuestionOptionUpdate request, StreamObserver<UpdateQuestionOptionResponse> out) {
         QuestionOption updated = service.updateQuestionOption(bridge.id(request.getQuestionId(), "questionId"),
-                bridge.id(request.getQuestionOption().getId(), "id"),
-                bridge.requiredIfMatch(request.getQuestionOption().getEtag()),
-                bridge.changes(request.getQuestionOption(), request.getUpdateMask(), QuestionOptionUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QuestionOptionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateQuestionOptionResponse.newBuilder(), "question_option", updated).build());
     }
@@ -214,13 +207,12 @@ public class QuestionResolver extends QuestionServiceGrpc.QuestionServiceImplBas
     }
 
     @Override
-    public void updateQuestionAcceptedAnswer(UpdateQuestionAcceptedAnswerRequest request,
+    public void updateQuestionAcceptedAnswer(QuestionAcceptedAnswerUpdate request,
             StreamObserver<UpdateQuestionAcceptedAnswerResponse> out) {
         QuestionAcceptedAnswer updated = service.updateQuestionAcceptedAnswer(bridge.id(request.getQuestionId(), "questionId"),
-                bridge.id(request.getQuestionAcceptedAnswer().getId(), "id"),
-                bridge.requiredIfMatch(request.getQuestionAcceptedAnswer().getEtag()),
-                bridge.changes(request.getQuestionAcceptedAnswer(), request.getUpdateMask(),
-                QuestionAcceptedAnswerUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QuestionAcceptedAnswerProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateQuestionAcceptedAnswerResponse.newBuilder(), "question_accepted_answer", updated).build());
     }
@@ -256,10 +248,10 @@ public class QuestionResolver extends QuestionServiceGrpc.QuestionServiceImplBas
     }
 
     @Override
-    public void updateQuestionBlank(UpdateQuestionBlankRequest request, StreamObserver<UpdateQuestionBlankResponse> out) {
+    public void updateQuestionBlank(QuestionBlankUpdate request, StreamObserver<UpdateQuestionBlankResponse> out) {
         QuestionBlank updated = service.updateQuestionBlank(bridge.id(request.getQuestionId(), "questionId"),
-                bridge.id(request.getQuestionBlank().getId(), "id"), bridge.requiredIfMatch(request.getQuestionBlank().getEtag()),
-                bridge.changes(request.getQuestionBlank(), request.getUpdateMask(), QuestionBlankUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                QuestionBlankProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateQuestionBlankResponse.newBuilder(), "question_blank", updated).build());
     }
@@ -294,11 +286,11 @@ public class QuestionResolver extends QuestionServiceGrpc.QuestionServiceImplBas
     }
 
     @Override
-    public void updateQuestionHotspot(UpdateQuestionHotspotRequest request, StreamObserver<UpdateQuestionHotspotResponse> out) {
+    public void updateQuestionHotspot(QuestionHotspotUpdate request, StreamObserver<UpdateQuestionHotspotResponse> out) {
         QuestionHotspot updated = service.updateQuestionHotspot(bridge.id(request.getQuestionId(), "questionId"),
-                bridge.id(request.getQuestionHotspot().getId(), "id"),
-                bridge.requiredIfMatch(request.getQuestionHotspot().getEtag()),
-                bridge.changes(request.getQuestionHotspot(), request.getUpdateMask(), QuestionHotspotUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QuestionHotspotProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateQuestionHotspotResponse.newBuilder(), "question_hotspot", updated).build());
     }
@@ -335,12 +327,12 @@ public class QuestionResolver extends QuestionServiceGrpc.QuestionServiceImplBas
     }
 
     @Override
-    public void updateQuestionMatchPair(UpdateQuestionMatchPairRequest request,
+    public void updateQuestionMatchPair(QuestionMatchPairUpdate request,
             StreamObserver<UpdateQuestionMatchPairResponse> out) {
         QuestionMatchPair updated = service.updateQuestionMatchPair(bridge.id(request.getQuestionId(), "questionId"),
-                bridge.id(request.getQuestionMatchPair().getId(), "id"),
-                bridge.requiredIfMatch(request.getQuestionMatchPair().getEtag()),
-                bridge.changes(request.getQuestionMatchPair(), request.getUpdateMask(), QuestionMatchPairUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QuestionMatchPairProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateQuestionMatchPairResponse.newBuilder(), "question_match_pair", updated).build());
     }
@@ -376,11 +368,11 @@ public class QuestionResolver extends QuestionServiceGrpc.QuestionServiceImplBas
     }
 
     @Override
-    public void updateQuestionPattern(UpdateQuestionPatternRequest request, StreamObserver<UpdateQuestionPatternResponse> out) {
+    public void updateQuestionPattern(QuestionPatternUpdate request, StreamObserver<UpdateQuestionPatternResponse> out) {
         QuestionPattern updated = service.updateQuestionPattern(bridge.id(request.getQuestionId(), "questionId"),
-                bridge.id(request.getQuestionPattern().getId(), "id"),
-                bridge.requiredIfMatch(request.getQuestionPattern().getEtag()),
-                bridge.changes(request.getQuestionPattern(), request.getUpdateMask(), QuestionPatternUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QuestionPatternProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateQuestionPatternResponse.newBuilder(), "question_pattern", updated).build());
     }

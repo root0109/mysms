@@ -40,10 +40,10 @@ public final class ConfigurationRule implements ConformanceRule {
 
     private static final String FILE = "src/main/resources/application.properties";
     private static final Set<String> LIBRARIES = Set.of("core", "auth-client", "privacy-client", "messaging", "conformance");
-    private static final Pattern SERVICE_KEY = Pattern.compile("SERVICE_KEY = \"([a-z]+)-service\"");
+    private static final Pattern SERVICE_KEY = Pattern.compile("SERVICE_KEY = \"([a-z_]+)-service\"");
     private static final Pattern SERVICES = Pattern.compile("SERVICES = List\\.of\\(([^;]*)\\);");
-    private static final Pattern NAME = Pattern.compile("\"([a-z]+)\"");
-    private static final Pattern SERVE = Pattern.compile("serve\\(areas, \"([a-z]+)\"((?:, \"[a-z]+\")+)\\);");
+    private static final Pattern NAME = Pattern.compile("\"([a-z_]+)\"");
+    private static final Pattern SERVE = Pattern.compile("serve\\(areas, \"([a-z_]+)\"((?:, \"[a-z_]+\")+)\\);");
 
     @Override
     public List<Violation> check(SourceTree tree) {

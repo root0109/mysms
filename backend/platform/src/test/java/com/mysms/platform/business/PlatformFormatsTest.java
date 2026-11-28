@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** The text formats the platform writes: report CSV and the download's Content-Disposition. */
+/** The text formats the platform writes and reads: report CSV, the download's Content-Disposition, record types. */
 class PlatformFormatsTest {
 
     @Test
@@ -21,5 +21,15 @@ class PlatformFormatsTest {
         assertThat(GcsFileStore.disposition("प्रगति \"report\".pdf"))
                 .isEqualTo("attachment; filename=\"______ _report_.pdf\"; filename*=UTF-8''"
                         + "%E0%A4%AA%E0%A5%8D%E0%A4%B0%E0%A4%97%E0%A4%A4%E0%A4%BF%20%22report%22.pdf");
+    }
+
+    @Test
+    void aRecordTypeIsSchemaDotTableAndASchemaMayHoldAnUnderscore() {
+        assertThat(FileObjectService.isRecordType("lms.course")).isTrue();
+        assertThat(FileObjectService.isRecordType("time_attendance.staff_attendance")).isTrue();
+        assertThat(FileObjectService.isRecordType("_lms.course")).isFalse();
+        assertThat(FileObjectService.isRecordType("lms.Course")).isFalse();
+        assertThat(FileObjectService.isRecordType("lms")).isFalse();
+        assertThat(FileObjectService.isRecordType("lms." + "x".repeat(77))).isFalse();
     }
 }

@@ -8,13 +8,14 @@ careers, and a DPDP privacy and consent centre.
 
 | Part | What | Docs |
 |---|---|---|
-| Backend | Java 17, Spring Boot 4.1, plain Spring JDBC, PostgreSQL 16, Flyway. 10 domain modules (kernel: platform, identity, privacy, comms; products: hrms, students, academics, finance, campus, learning) serving 22 areas, one schema each; each module runs as its own service or all together in one process (`app`). REST and gRPC on every operation; events through an outbox to RabbitMQ (or Pub/Sub) | [backend/README.md](backend/README.md), [ARCHITECTURE.md](ARCHITECTURE.md) |
-| Database | One schema per module, one Flyway baseline each, row-level security per tenant, no cross-schema foreign keys | [database/README.md](database/README.md) |
+| Backend | Java 17, Spring Boot 4.1, plain Spring JDBC, PostgreSQL 16, Flyway. 10 domain modules (kernel: platform, identity, privacy, comms; products: hrms, students, academics, finance, campus, learning) serving 23 areas, one schema each; each module runs as its own service or all together in one process (`app`). REST and gRPC on every operation; events through an outbox to RabbitMQ (or Pub/Sub) | [backend/README.md](backend/README.md), [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Database | One schema per area, one Flyway baseline each, row-level security per tenant, no cross-module foreign keys (the hrms schemas may link) | [database/README.md](database/README.md) |
 | Clients | pnpm/turbo workspace: web app, platform console, phone apps (student, parent, teacher), tablet app; shared SDK generated from the backend's OpenAPI | [clients/README.md](clients/README.md), [ui/README.md](ui/README.md) |
 
-The 22 areas (schemas and contracts): `master`, `platform`, `iam`, `org`, `people`, `academics`, `sis`, `hr`,
-`payroll`, `admission`, `attendance`, `facility`, `timetable`, `assessment`, `lms`, `finance`, `library`, `transport`,
-`comms`, `frontoffice`, `careers`, `privacy` — served by the modules of [ARCHITECTURE.md §1](ARCHITECTURE.md).
+The 23 areas (schemas and contracts): `master`, `platform`, `iam`, `org`, `people`, `academics`, `sis`, `hr`,
+`payroll`, `time_attendance`, `admission`, `attendance`, `facility`, `timetable`, `assessment`, `lms`, `finance`,
+`library`, `transport`, `comms`, `frontoffice`, `careers`, `privacy` — served by the modules of
+[ARCHITECTURE.md §1](ARCHITECTURE.md).
 
 ## Build and run
 

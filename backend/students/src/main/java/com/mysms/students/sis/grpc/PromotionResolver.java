@@ -5,7 +5,6 @@ import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.Operation;
 import com.mysms.students.sis.api.model.Promotion;
 import com.mysms.students.sis.api.model.PromotionList;
-import com.mysms.students.sis.api.model.PromotionUpdate;
 import com.mysms.students.sis.business.PromotionService;
 import com.mysms.students.sis.business.PromotionWorkflowService;
 import com.mysms.sis.v1.ApplyPromotionsRequest;
@@ -21,11 +20,11 @@ import com.mysms.sis.v1.GetPromotionResponse;
 import com.mysms.sis.v1.ListPromotionsRequest;
 import com.mysms.sis.v1.ListPromotionsResponse;
 import com.mysms.sis.v1.PromotionServiceGrpc;
+import com.mysms.sis.v1.PromotionUpdate;
 import com.mysms.sis.v1.ProposePromotionsRequest;
 import com.mysms.sis.v1.ProposePromotionsResponse;
 import com.mysms.sis.v1.RejectPromotionRequest;
 import com.mysms.sis.v1.RejectPromotionResponse;
-import com.mysms.sis.v1.UpdatePromotionRequest;
 import com.mysms.sis.v1.UpdatePromotionResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -69,10 +68,10 @@ public class PromotionResolver extends PromotionServiceGrpc.PromotionServiceImpl
     }
 
     @Override
-    public void updatePromotion(UpdatePromotionRequest request, StreamObserver<UpdatePromotionResponse> out) {
+    public void updatePromotion(PromotionUpdate request, StreamObserver<UpdatePromotionResponse> out) {
         Promotion updated = promotionService.updatePromotion(
-                bridge.id(request.getPromotion().getId(), "id"), bridge.requiredIfMatch(request.getPromotion().getEtag()),
-                bridge.changes(request.getPromotion(), request.getUpdateMask(), PromotionUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                PromotionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePromotionResponse.newBuilder(), "promotion", updated).build());
     }

@@ -177,10 +177,11 @@ grpc.client.academics-service.address=${MYSMS_ACADEMICS_GRPC_ADDRESS:in-process:
 
 > Added with the kernel-and-products reorganisation ([MODULE-AND-PRODUCT-REORGANISATION.md](docs/design/MODULE-AND-PRODUCT-REORGANISATION.md) §3, §11). Where §2, §3, §10.5 and §14 say *module* for a schema, its contract or its packages, read **area**; every rule of those sections still holds, per area.
 
-- **An area** is one database schema with its contract: its protos (`mysms.<area>.v1`), its operation table (`META-INF/mysms/operations/<area>.json`), its URL prefix (`/v1/<area>`), its configuration namespace (`mysms.<area>.*`), its `ModuleDatabase`, transaction manager, outbox, Flyway history (`database/migrations/<area>`) and service identity. Areas keep the 22 names of the former modules; contracts, operation ids, permission codes and schemas did not change.
-- **A domain module** (still a flat Maven module, still its own microservice) serves one or more areas. Its pom packages each area's migration folder (`${mysms.migrations.dir}/<area>`): that list *is* the module's set of areas, read by conformance and by `ModuleChecks.moduleSchemas`. The ten modules: `platform` (platform, master, org), `identity` (iam, people), `privacy`, `comms` (kernel); `hrms` (hr, payroll); `students` (sis, admission, careers), `academics` (academics, timetable, attendance, assessment), `finance`, `campus` (library, transport, frontoffice, facility); `learning` (lms).
+- **An area** is one database schema with its contract: its protos (`mysms.<area>.v1`), its operation table (`META-INF/mysms/operations/<area>.json`), its URL prefix (`/v1/<area>`), its configuration namespace (`mysms.<area>.*`), its `ModuleDatabase`, transaction manager, outbox, Flyway history (`database/migrations/<area>`) and service identity. Areas keep the 22 names of the former modules; contracts, operation ids, permission codes and schemas did not change. A 23rd area, `time_attendance` (hrms, staff attendance; ARC-7 step 2c), was added afterwards: there are 23 areas.
+- **A domain module** (still a flat Maven module, still its own microservice) serves one or more areas. Its pom packages each area's migration folder (`${mysms.migrations.dir}/<area>`): that list *is* the module's set of areas, read by conformance and by `ModuleChecks.moduleSchemas`. The ten modules: `platform` (platform, master, org), `identity` (iam, people), `privacy`, `comms` (kernel); `hrms` (hr, payroll, time_attendance); `students` (sis, admission, careers), `academics` (academics, timetable, attendance, assessment), `finance`, `campus` (library, transport, frontoffice, facility); `learning` (lms).
 - **Packages.** An area named like its module uses the module's root package `com.mysms.<module>` with the §3 layer packages; any other area uses `com.mysms.<module>.<area>` with the same layer packages. Nothing else lives under `com.mysms.<module>` but the one `<Module>Application` (`@SpringBootApplication(nameGenerator = FullyQualifiedAnnotationBeanNameGenerator.class)`, so two areas may each have, say, a `PersonMapper`). A module serving several areas sets `mysms.spotbugs.onlyAnalyze` to its root package and every layer package of every area (conformance §3).
-- **Inside a module** an area may read and join its sibling areas' schemas and declare foreign keys into them (`ModuleChecks.foreignSchemaReferences(moduleSchemas, …)`, conformance §14 allow the module's own schemas); across modules everything in §10 and §14 holds unchanged. An area may still call a sibling area over gRPC (the in-process server); replacing such calls by direct Java calls between the areas' business services is allowed and preferred.
+- **Inside a module** an area may read and join its sibling areas' schemas and declare foreign keys into them (`ModuleChecks.foreignSchemaReferences(moduleSchemas, …)`, conformance §14 allow the module's own schemas); across modules everything in §10 and §14 holds unchanged. An area may still call a sibling area over gRPC (the in-process server); replacing such calls by direct Java calls between the areas' business services is allowed and preferred. Since ARC-7 step 3 (2026-11-27) every sibling call in the codebase is direct: the caller checks the callee operation's permission through auth-client's `SiblingAccess` (the check the gRPC edge made) and keeps the callee's `request_id` rules through core's `InProcessIdempotency`; the callee's business service runs its own transaction on its own area's transaction manager, outside any transaction of the caller, and the caller maps the callee's refusals to the same answers its gRPC hop gave.
+- **Area names with an underscore** (`time_attendance`). The area code keeps the underscore wherever an identifier allows it: schema, migration folder, proto package (`mysms.time_attendance.v1`), operation table file, permission codes (`time_attendance.staff_attendance.read`), event types, `mysms.auth.modules[i]`, broker queues. The URL prefix and the configuration namespace hyphenate it (`/v1/time-attendance`, `mysms.time-attendance.*`), because a canonical Spring property name cannot hold an underscore; environment variables drop it (`MYSMS_TIMEATTENDANCE_…`, `MYSMS_IAM_SERVICECLIENTS_TIMEATTENDANCE_SECRETSHA256`), because Spring reads `_` in a variable name as `.`. Java packages drop it (`com.mysms.hrms.timeattendance`); bean names are lower camel case (`timeAttendanceDatabase`). Guards that validate area or module codes accept `[a-z][a-z_]*`.
 - **Configuration.** One `application.properties` per module: `spring.application.name=<module>`, `mysms.auth.modules[i]` = its areas, then each area's keys (`mysms.<area>.*`). Callers address an area's gRPC service at its module's host (`dns:///<module>-service…`, `MYSMS_<MODULE>_SERVICE_PORT_RPC`); the per-area variable `MYSMS_<AREA>_GRPC_ADDRESS` still overrides it.
 - **gRPC callers.** A module may call what any of its areas may (the union of their ARCHITECTURE §2 rows), from any of its areas' `integration` packages (G1, G4).
 - **OpenAPI.** core publishes one springdoc group per area (`OpenApiGroupsEnvironmentPostProcessor`: `/v3/api-docs/<area>`, paths `/v1/<area>/**`); each area's `<Area>OpenApiComponentTest` boots its module and writes `backend/<module>/target/openapi/<area>/api-docs.yml`, the input of that area's SDK namespace (G8).
@@ -476,7 +477,9 @@ import com.mysms.core.paging.PagingInfo;              // every list: data + pagi
 | `"field": null` | `Optional.empty()` | cleared — a 422 when the type argument is `@NotNull`/`@NotBlank`: a required column can change, never be cleared |
 | `"field": value` | `Optional.of(value)` | set (after the type argument's constraints pass) |
 
-A write-only secret (§4) is replaced, never wiped: its type argument is `@NotNull` (`Optional<@NotNull String> keySecret`), so JSON null is a 422 and an absent one keeps the stored envelope — unless the contract documents that null removes it (an optional integration key such as lms `Settings.unsplashAccessKey`). Shape checks a service runs on the request before applying it read a field through `Patches.value(changes.getX())`. The rule is for PATCH bodies only: every other contract DTO (resources, create bodies, workflow requests, responses) keeps plain nullable properties, and an `Optional` field anywhere else is a D2 violation. Unknown properties are ignored like on every body (§7.1a). The service applies each field with one explicit line through core's `Patches` (§8.3) — never reflection, never MapStruct — then **re-validates the merged DTO** and runs its business checks exactly as before (§4 patch flow rule). Over gRPC the update keeps `Update<Resource>Request` + `FieldMask`, and `ProtoBridge.changes` builds the same three states from it: a masked field the message holds is its value, a masked field it does not hold is null (cleared; a masked bool or number is sent as its default so a mask can switch a flag off), an unmasked field is absent (unchanged) — a list field is never replaced unless masked. Every module is on this shape: core's `UpdateMask`, `ProtoBridge.updateMask`, D2's transitional allow-list and the clients' masked-update branch are gone, and conformance D2 checks every PATCH contract.
+A write-only secret (§4) is replaced, never wiped: its type argument is `@NotNull` (`Optional<@NotNull String> keySecret`), so JSON null is a 422 and an absent one keeps the stored envelope — unless the contract documents that null removes it (an optional integration key such as lms `Settings.unsplashAccessKey`). Shape checks a service runs on the request before applying it read a field through `Patches.value(changes.getX())`. The rule is for PATCH bodies only: every other contract DTO (resources, create bodies, workflow requests, responses) keeps plain nullable properties, and an `Optional` field anywhere else is a D2 violation. Unknown properties are ignored like on every body (§7.1a). The service applies each field with one explicit line through core's `Patches` (§8.3) — never reflection, never MapStruct — then **re-validates the merged DTO** and runs its business checks exactly as before (§4 patch flow rule). Over gRPC the update takes the partial resource directly, as the reference's `rpc patch(OrganizationPartial) returns (Organization)` does (ARC-9, owner decision 2026-11-26): the RPC keeps its name `Update<Resource>`, its request is the `<Resource>Update` message — the row's `id`, `etag` (required, If-Match), `validate_only` and `request_id` where the operation has them, the parent ids REST carries in the path, then one field per writable field of the REST body — and there is no `FieldMask`. The same three states, field by field: **unset** is absent (unchanged); a field that may be cleared is a `mysms.common.v1.Nullable*` wrapper (core's `patch.proto`: `NullableString` — also UUIDs, dates, times and decimals, which are strings on the wire —, `NullableBool`, `NullableInt32`, `NullableInt64`, `NullableTimestamp`, `NullableDuration`; `oneof kind { google.protobuf.NullValue null = 1; <type> value = 2; }`) whose **null** clears it and whose **value** sets it; a field the contract never lets be cleared (type argument `@NotNull`/`@NotBlank`) is a plain proto3 `optional` (so false and 0 are sent), an enum is `optional <Enum>` whose `_UNSPECIFIED` value is its null (422 where the field is required, as REST's null), free-form JSON is a `google.protobuf.Value` (its `null_value` clears), and a list travels in a `StringList` wrapper, so an unset list is absent and never replaced. Each resource's `<Resource>ProtoBridge` (in the module's `grpc` package, beside the resolver) reads the message into the **same** REST `<Resource>Update` DTO with one explicit line per field through `ProtoBridge`'s readers (`text`, `uuid`, `date`, `flag`, `number`, `int64`, `time`, `duration`, `choice`, `json`, `texts`, `message`), validates it with `bridge.patch(changes)` like REST's `@Valid`, and the resolver hands it to the same business service — hand-written like the rest of our mappers, never MapStruct (§8.3). Every area's update RPCs take `<Resource>Update` messages (ARC-9's two batches, 2026-11-26): no proto carries an `update_mask` and `ProtoBridge` has no mask reader; the field numbers the old `Update<Resource>Request` messages used are gone with those messages, and a `<Resource>Update` that reuses an older message name reserves them (`reserved 1 to N;`). On REST every module is on the `Optional` shape: core's `UpdateMask`, `ProtoBridge.updateMask`, D2's transitional allow-list and the clients' masked-update branch are gone, and conformance D2 checks every PATCH contract.
+
+**An empty PATCH changes nothing (owner decision 2026-11-26).** A body or message that sets no field (`{}`, an update message with only its keys) answers the row as it is — after the service's checks (If-Match, scope, validation of the stored row), without a write: no new version (the ETag stays), no audit record, no event. The service returns the loaded row as soon as `apply(...)` answers no field names, before the write stamp (`onUpdatingData`); the CRUD contract test expects the version unchanged for `{}`, and the gRPC parity contract for an empty `<Resource>Update`.
 
 ```java
 // ✗ plain nullable properties + an updateMask query parameter decide what a patch changes
@@ -519,11 +522,52 @@ private static List<String> apply(FeeHeadEntity entity, FeeHeadUpdate changes) {
 List<String> fields = apply(entity, changes);
 validator.validate(mapper.toDto(entity));
 assertValid(entity, false);
+if (fields.isEmpty()) {
+    return mapper.toDto(entity);              // an empty PATCH: the row as it is, no write, version, audit or event
+}
+entity.onUpdatingData(Actor.current(), clock);
 …
 audit.recordUpdate(AGGREGATE, id, fields);
 ```
 
-Two flaws of the reference service are **not** copied: patching through MapStruct (`@MappingTarget` with a null-value strategy — §8.3 still bans it), and gRPC list fields that are always replaced (here an unmasked list is absent, so unchanged). Each resource's `crud-spec.json` entry names a clearable field (`patch.clears`) and a required one (`patch.keeps`), and the CRUD contract test checks all three states on them.
+```proto
+// ✓ finance.proto (shortened) — the update RPC takes the partial resource; new message, new numbers (lock)
+service FeeHeadService {
+  rpc UpdateFeeHead(FeeHeadUpdate) returns (UpdateFeeHeadResponse);
+}
+message FeeHeadUpdate {
+  string id = 1;
+  string etag = 2;                                   // required: If-Match
+  bool validate_only = 3;
+  optional string name = 6;                          // may change, never be cleared
+  mysms.common.v1.NullableString description = 7;    // null clears, a value sets
+  mysms.common.v1.NullableString default_amount = 8; // a decimal: a string on the wire
+  optional bool is_active = 11;                      // false is sent
+}
+
+// ✗ the reference's always-replaced list, a mask, or a plain string for a field that may be cleared
+repeated string alias = 6;
+google.protobuf.FieldMask update_mask = 2;
+string description = 5;
+```
+
+```java
+// ✓ grpc/FeeHeadProtoBridge.java (shortened) — one explicit line per field into the REST body, validated like @Valid
+static FeeHeadUpdate changes(ProtoBridge bridge, com.mysms.finance.v1.FeeHeadUpdate request) {
+    FeeHeadUpdate changes = new FeeHeadUpdate();
+    changes.setName(ProtoBridge.text(request.hasName(), request.getName()));
+    changes.setDescription(ProtoBridge.text(request.hasDescription(), request.getDescription()));
+    changes.setDefaultAmount(ProtoBridge.text(request.hasDefaultAmount(), request.getDefaultAmount()));
+    changes.setIsActive(ProtoBridge.flag(request.hasIsActive(), request.getIsActive()));
+    return bridge.patch(changes);
+}
+
+// ✓ grpc/FeeHeadResolver.java — the same business service as REST's controller
+FeeHead updated = service.updateFeeHead(bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+        FeeHeadProtoBridge.changes(bridge, request), request.getValidateOnly());
+```
+
+Two flaws of the reference service are **not** copied: patching through MapStruct (`@MappingTarget` with a null-value strategy — §8.3 still bans it), and gRPC list fields that are always replaced (here an unset `StringList` is absent, so unchanged). Each resource's `crud-spec.json` entry names a clearable field (`patch.clears`) and a required one (`patch.keeps`), and the CRUD contract test checks all three states on them over REST, and the gRPC parity contract over the `<Resource>Update` message (an empty message keeps the version, a wrapper holding null clears `patch.clears`, an UNSPECIFIED required enum is refused like REST's null).
 
 **7.3 One update method: PATCH.** A resource is never replaced as a whole with `PUT` next to its `PATCH`. `PUT` exists only where the contract defines an idempotent *set the value at this key* operation (today `iam.SetMySetting`; conformance D2 checks the contracts).
 
@@ -708,8 +752,8 @@ core/src/main/resources/proto/mysms/common/v1/   # shared messages (paging, Erro
 syntax = "proto3";
 package mysms.sis.v1;
 
-import "google/protobuf/field_mask.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";   // the Nullable* wrappers of <Resource>Update messages (§7.2)
 
 option java_multiple_files = true;
 option java_outer_classname = "SisProto";
@@ -717,6 +761,7 @@ option java_package = "com.mysms.sis.v1";   // com.mysms.<module>.v1, always
 
 service StudentCategoryService {
   rpc GetStudentCategory(GetStudentCategoryRequest) returns (GetStudentCategoryResponse);
+  rpc UpdateStudentCategory(StudentCategoryUpdate) returns (UpdateStudentCategoryResponse);  // PATCH: §7.2
 }
 ```
 

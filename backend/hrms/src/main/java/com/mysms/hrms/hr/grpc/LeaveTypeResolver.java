@@ -3,7 +3,6 @@ package com.mysms.hrms.hr.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.hr.api.model.LeaveType;
-import com.mysms.hrms.hr.api.model.LeaveTypeUpdate;
 import com.mysms.hrms.hr.business.LeaveTypeService;
 import com.mysms.hr.v1.CreateLeaveTypeRequest;
 import com.mysms.hr.v1.CreateLeaveTypeResponse;
@@ -12,9 +11,9 @@ import com.mysms.hr.v1.DeleteLeaveTypeResponse;
 import com.mysms.hr.v1.GetLeaveTypeRequest;
 import com.mysms.hr.v1.GetLeaveTypeResponse;
 import com.mysms.hr.v1.LeaveTypeServiceGrpc;
+import com.mysms.hr.v1.LeaveTypeUpdate;
 import com.mysms.hr.v1.ListLeaveTypesRequest;
 import com.mysms.hr.v1.ListLeaveTypesResponse;
-import com.mysms.hr.v1.UpdateLeaveTypeRequest;
 import com.mysms.hr.v1.UpdateLeaveTypeResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class LeaveTypeResolver extends LeaveTypeServiceGrpc.LeaveTypeServiceImpl
     }
 
     @Override
-    public void updateLeaveType(UpdateLeaveTypeRequest request, StreamObserver<UpdateLeaveTypeResponse> out) {
+    public void updateLeaveType(LeaveTypeUpdate request, StreamObserver<UpdateLeaveTypeResponse> out) {
         LeaveType updated = leaveTypeService.updateLeaveType(
-                bridge.id(request.getLeaveType().getId(), "id"),
-                bridge.requiredIfMatch(request.getLeaveType().getEtag()),
-                bridge.changes(request.getLeaveType(), request.getUpdateMask(), LeaveTypeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LeaveTypeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLeaveTypeResponse.newBuilder(), "leave_type", updated).build());
     }

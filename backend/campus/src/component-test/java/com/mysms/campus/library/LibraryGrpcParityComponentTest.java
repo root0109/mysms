@@ -421,8 +421,8 @@ class LibraryGrpcParityComponentTest {
                 grpc(get, set(request(get), "id", reservation.path("id").asString()).build(), theirs));
         MethodDescriptor update = rpc("UpdateReservation");
         DynamicMessage.Builder editing = request(update);
-        JsonFormat.parser().merge("{\"updateMask\":\"reference\",\"reservation\":{\"id\":\""
-                + reservation.path("id").asString() + "\",\"reference\":\"Mine\",\"etag\":\"\\\"1\\\"\"}}", editing);
+        JsonFormat.parser().merge("{\"id\":\"" + reservation.path("id").asString()
+                + "\",\"reference\":{\"value\":\"Mine\"},\"etag\":\"\\\"1\\\"\"}", editing);
         Answer refused = rest("PATCH", item, theirs, "{\"reference\":\"Mine\"}", "If-Match", "\"1\"");
         assertThat(refused.status()).as("another member's reservation").isEqualTo(404);
         GrpcParityContract.assertSameAnswer(refused, grpc(update, editing.build(), theirs));

@@ -1,7 +1,6 @@
 package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.ExamSession;
-import com.mysms.academics.assessment.api.model.ExamSessionUpdate;
 import com.mysms.academics.assessment.business.ExamSessionService;
 import com.mysms.assessment.v1.CancelExamSessionRequest;
 import com.mysms.assessment.v1.CancelExamSessionResponse;
@@ -12,6 +11,7 @@ import com.mysms.assessment.v1.CreateExamSessionResponse;
 import com.mysms.assessment.v1.DeleteExamSessionRequest;
 import com.mysms.assessment.v1.DeleteExamSessionResponse;
 import com.mysms.assessment.v1.ExamSessionServiceGrpc;
+import com.mysms.assessment.v1.ExamSessionUpdate;
 import com.mysms.assessment.v1.GetExamSessionRequest;
 import com.mysms.assessment.v1.GetExamSessionResponse;
 import com.mysms.assessment.v1.ListExamSessionsRequest;
@@ -22,7 +22,6 @@ import com.mysms.assessment.v1.ResetExamSessionRequest;
 import com.mysms.assessment.v1.ResetExamSessionResponse;
 import com.mysms.assessment.v1.ScheduleExamSessionRequest;
 import com.mysms.assessment.v1.ScheduleExamSessionResponse;
-import com.mysms.assessment.v1.UpdateExamSessionRequest;
 import com.mysms.assessment.v1.UpdateExamSessionResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -66,11 +65,11 @@ public class ExamSessionResolver extends ExamSessionServiceGrpc.ExamSessionServi
     }
 
     @Override
-    public void updateExamSession(UpdateExamSessionRequest request, StreamObserver<UpdateExamSessionResponse> out) {
+    public void updateExamSession(ExamSessionUpdate request, StreamObserver<UpdateExamSessionResponse> out) {
         ExamSession updated = examSessionService.updateExamSession(
-                bridge.id(request.getExamSession().getId(), "id"),
-                bridge.requiredIfMatch(request.getExamSession().getEtag()),
-                bridge.changes(request.getExamSession(), request.getUpdateMask(), ExamSessionUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExamSessionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateExamSessionResponse.newBuilder(), "exam_session", updated).build());
     }

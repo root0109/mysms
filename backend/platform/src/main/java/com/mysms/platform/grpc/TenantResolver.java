@@ -10,7 +10,6 @@ import com.mysms.platform.api.model.ReportDefinition;
 import com.mysms.platform.api.model.SearchHit;
 import com.mysms.platform.api.model.StockImage;
 import com.mysms.platform.api.model.Tenant;
-import com.mysms.platform.api.model.TenantUpdate;
 import com.mysms.platform.business.BrandingService;
 import com.mysms.platform.business.GlobalSearchService;
 import com.mysms.platform.business.ImportService;
@@ -42,7 +41,7 @@ import com.mysms.platform.v1.SearchStockImagesResponse;
 import com.mysms.platform.v1.StartImportRequest;
 import com.mysms.platform.v1.StartImportResponse;
 import com.mysms.platform.v1.TenantServiceGrpc;
-import com.mysms.platform.v1.UpdateTenantRequest;
+import com.mysms.platform.v1.TenantUpdate;
 import com.mysms.platform.v1.UpdateTenantResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -97,11 +96,11 @@ public class TenantResolver extends TenantServiceGrpc.TenantServiceImplBase {
     }
 
     @Override
-    public void updateTenant(UpdateTenantRequest request, StreamObserver<UpdateTenantResponse> out) {
+    public void updateTenant(TenantUpdate request, StreamObserver<UpdateTenantResponse> out) {
         Tenant updated = tenantService.updateTenant(
-                bridge.id(request.getTenant().getId(), "id"),
-                bridge.requiredIfMatch(request.getTenant().getEtag()),
-                bridge.changes(request.getTenant(), request.getUpdateMask(), TenantUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                TenantProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateTenantResponse.newBuilder(), "tenant", updated).build());
     }
 

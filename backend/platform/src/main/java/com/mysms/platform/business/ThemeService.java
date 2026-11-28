@@ -163,6 +163,9 @@ public class ThemeService extends AppTransactionManager {
             tokens.ifPresent(merged::setTokens);
             validator.validate(merged);
             assertFiles(entity);
+            if (fields.isEmpty()) {
+                return merged;
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity).tokens(merged.getTokens());

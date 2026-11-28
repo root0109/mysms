@@ -154,6 +154,9 @@ public class ProgrammingExerciseService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -330,6 +333,9 @@ public class ProgrammingExerciseService extends AppTransactionManager {
             assertValidExerciseTestCase(entity, false);
             scope.requireWritable(institutionOfExerciseTestCase(entity));
             assertUniqueExerciseTestCase(entity);
+            if (fields.isEmpty()) {
+                return exerciseTestCaseMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return exerciseTestCaseMapper.toDto(entity);

@@ -31,9 +31,6 @@ public class TeachingAssignmentUpdate {
   private @Nullable Optional<Integer> periodsPerWeek;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Optional<Integer> periodsRemaining;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Optional<@Size(max = 40) String> teacherRole;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -99,26 +96,6 @@ public class TeachingAssignmentUpdate {
     this.periodsPerWeek = periodsPerWeek;
   }
 
-  public TeachingAssignmentUpdate periodsRemaining(@Nullable Optional<Integer> periodsRemaining) {
-    this.periodsRemaining = periodsRemaining;
-    return this;
-  }
-
-  /**
-   * Periods not yet scheduled.
-   * @return periodsRemaining
-   */
-  
-  @JsonProperty("periodsRemaining")
-  public @Nullable Optional<Integer> getPeriodsRemaining() {
-    return periodsRemaining;
-  }
-
-  @JsonProperty("periodsRemaining")
-  public void setPeriodsRemaining(@Nullable Optional<Integer> periodsRemaining) {
-    this.periodsRemaining = periodsRemaining;
-  }
-
   public TeachingAssignmentUpdate teacherRole(@Nullable Optional<String> teacherRole) {
     this.teacherRole = teacherRole;
     return this;
@@ -171,14 +148,13 @@ public class TeachingAssignmentUpdate {
     return Objects.equals(this.classSubjectId, teachingAssignmentUpdate.classSubjectId) &&
         Objects.equals(this.staffId, teachingAssignmentUpdate.staffId) &&
         Objects.equals(this.periodsPerWeek, teachingAssignmentUpdate.periodsPerWeek) &&
-        Objects.equals(this.periodsRemaining, teachingAssignmentUpdate.periodsRemaining) &&
         Objects.equals(this.teacherRole, teachingAssignmentUpdate.teacherRole) &&
         Objects.equals(this.isActive, teachingAssignmentUpdate.isActive);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(classSubjectId, staffId, periodsPerWeek, periodsRemaining, teacherRole, isActive);
+    return Objects.hash(classSubjectId, staffId, periodsPerWeek, teacherRole, isActive);
   }
 
   @Override
@@ -188,7 +164,6 @@ public class TeachingAssignmentUpdate {
     sb.append("    classSubjectId: ").append(toIndentedString(classSubjectId)).append("\n");
     sb.append("    staffId: ").append(toIndentedString(staffId)).append("\n");
     sb.append("    periodsPerWeek: ").append(toIndentedString(periodsPerWeek)).append("\n");
-    sb.append("    periodsRemaining: ").append(toIndentedString(periodsRemaining)).append("\n");
     sb.append("    teacherRole: ").append(toIndentedString(teacherRole)).append("\n");
     sb.append("    isActive: ").append(toIndentedString(isActive)).append("\n");
     sb.append("}");

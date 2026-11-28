@@ -4,7 +4,6 @@ import com.mysms.academics.assessment.api.model.Assignment;
 import com.mysms.academics.assessment.api.model.AssignmentAllocation;
 import com.mysms.academics.assessment.api.model.AssignmentAllocationUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentApproval;
-import com.mysms.academics.assessment.api.model.AssignmentApprovalUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentSubject;
 import com.mysms.academics.assessment.api.model.AssignmentSubjectUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentUpdate;
@@ -13,6 +12,7 @@ import com.mysms.academics.assessment.api.model.CancelAssignmentRequest;
 import com.mysms.academics.assessment.api.model.FinishAssignmentRequest;
 import com.mysms.academics.assessment.api.model.PublishAssignmentRequest;
 import com.mysms.academics.assessment.api.model.RejectAssignmentRequest;
+import com.mysms.academics.assessment.api.model.RequestAssignmentApprovalRequest;
 import com.mysms.academics.assessment.api.model.ResetAssignmentRequest;
 import com.mysms.academics.assessment.config.AssessmentDatabaseConfig;
 import com.mysms.academics.assessment.config.AssessmentEventsConfig;
@@ -85,6 +85,7 @@ public class AssignmentService extends AppTransactionManager {
     static final String PERMISSION_RESET_ASSIGNMENT = "assessment.assignment.reset_assignment";
     static final String PERMISSION_APPROVE_ASSIGNMENT = "assessment.assignment.approve_assignment";
     static final String PERMISSION_REJECT_ASSIGNMENT = "assessment.assignment.reject_assignment";
+    static final String PERMISSION_REQUEST_ASSIGNMENT_APPROVAL = "assessment.assignment.request_assignment_approval";
     static final String PERMISSION_FINISH_ASSIGNMENT = "assessment.assignment.finish_assignment";
 
     public static final String ASSIGNMENT_ALLOCATION_AGGREGATE = AssignmentAllocationEntity.TABLE;
@@ -97,9 +98,6 @@ public class AssignmentService extends AppTransactionManager {
     public static final String ASSIGNMENT_APPROVAL_AGGREGATE = AssignmentApprovalEntity.TABLE;
     static final String ASSIGNMENT_APPROVAL_PERMISSION_LIST = "assessment.assignment_approval.read";
     static final String ASSIGNMENT_APPROVAL_PERMISSION_GET = "assessment.assignment_approval.read";
-    static final String ASSIGNMENT_APPROVAL_PERMISSION_CREATE = "assessment.assignment_approval.create";
-    static final String ASSIGNMENT_APPROVAL_PERMISSION_UPDATE = "assessment.assignment_approval.update";
-    static final String ASSIGNMENT_APPROVAL_PERMISSION_DELETE = "assessment.assignment_approval.delete";
 
     public static final String ASSIGNMENT_SUBJECT_AGGREGATE = AssignmentSubjectEntity.TABLE;
     static final String ASSIGNMENT_SUBJECT_PERMISSION_LIST = "assessment.assignment_subject.read";
@@ -209,6 +207,9 @@ public class AssignmentService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -381,6 +382,45 @@ public class AssignmentService extends AppTransactionManager {
                             : request.getReason());
             outbox.publish(ASSIGNMENT_APPROVAL_AGGREGATE + ".reject", ASSIGNMENT_APPROVAL_AGGREGATE,
                     approval.getId(), AssessmentEvents.payload(approval.getId()));
+            return mapper.toDto(entity);
+        });
+    }
+
+    /**
+     * assessment.RequestAssignmentApproval: send a draft for review. The pending approval is recorded in the caller's
+     * name (its creator) and is decided by approve or reject; the assignment itself does not change, so it gets
+     * neither an audit record nor an event. One review waits at a time: a second request is a state conflict. Only
+     * once the caller may see and change the assignment is its row locked, so two concurrent requests cannot both pass
+     * that check; the checks after it read the row as locked.
+     */
+    public Assignment requestAssignmentApproval(UUID id, RequestAssignmentApprovalRequest request) {
+        DataScope scope = DataScope.current(PERMISSION_REQUEST_ASSIGNMENT_APPROVAL);
+        return doInWriteTransaction(() -> {
+            Optional<UUID> institution = institutionOf(loadVisible(scope, id));
+            scope.requireWritable(institution);
+            AssignmentEntity entity = repository.findByIdForUpdate(id)
+                    .filter(locked -> institution.equals(institutionOf(locked)))
+                    .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id));
+            OptionalInt expected = Etags.bodyVersion(request == null ? null : request.getEtag());
+            if (expected.isPresent() && expected.getAsInt() != entity.getRowVersion()) {
+                throw new PreconditionFailedException("The etag does not match the current version.");
+            }
+            if (!"draft".equals(entity.getStatus())) {
+                throw new InvalidStateException("Only a draft assignment can be sent for approval.");
+            }
+            if (assignmentApprovalRepository.findPendingForAssignment(id).isPresent()) {
+                throw new InvalidStateException("The assignment already waits for a decision.");
+            }
+            AssignmentApprovalEntity approval = AssignmentApprovalEntity.builder()
+                    .assignmentId(id)
+                    .decision("pending")
+                    .build();
+            approval.onCreatingData(Actor.current(), clock);
+            approval.setTenantId(entity.getTenantId());
+            AssignmentApprovalEntity stored = assignmentApprovalRepository.insert(approval);
+            audit.recordCreate(ASSIGNMENT_APPROVAL_AGGREGATE, stored.getId());
+            outbox.publish(ASSIGNMENT_APPROVAL_AGGREGATE + AssessmentEvents.CREATED, ASSIGNMENT_APPROVAL_AGGREGATE,
+                    stored.getId(), AssessmentEvents.payload(stored.getId()));
             return mapper.toDto(entity);
         });
     }
@@ -616,6 +656,9 @@ public class AssignmentService extends AppTransactionManager {
             assertValidAssignmentAllocation(entity, false);
             scope.requireWritable(institutionOfAssignmentAllocation(entity));
             assertUniqueAssignmentAllocation(entity);
+            if (fields.isEmpty()) {
+                return assignmentAllocationMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return assignmentAllocationMapper.toDto(entity);
@@ -697,7 +740,7 @@ public class AssignmentService extends AppTransactionManager {
         }
     }
 
-    // ---- AssignmentApproval ----
+    // ---- AssignmentApproval: a record of the Assignment aggregate, written only by its workflow ----
 
     public AssignmentApproval getAssignmentApproval(UUID assignmentId, UUID id) {
         return doInReadTransaction(() -> {
@@ -722,91 +765,6 @@ public class AssignmentService extends AppTransactionManager {
         });
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
-    public AssignmentApproval createAssignmentApproval(UUID assignmentId, AssignmentApproval request,
-            boolean validateOnly) {
-        validator.validate(request);
-        AssignmentApprovalEntity entity = assignmentApprovalMapper.toEntity(request);
-        entity.setAssignmentId(assignmentId);
-        entity.onCreatingData(Actor.current(), clock);
-        entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
-        DataScope scope = DataScope.current(ASSIGNMENT_APPROVAL_PERMISSION_CREATE);
-        return doInWriteTransaction(() -> {
-            if (!assignmentApprovalRepository.existsAssignmentId(entity.getAssignmentId())) {
-                throw new ResourceNotFoundException("assessment.assignment", entity.getAssignmentId());
-            }
-            if (!scope.canRead(institutionOfAssignmentApproval(entity))) {
-                throw new ResourceNotFoundException("assessment.assignment", entity.getAssignmentId());
-            }
-            assertValidAssignmentApproval(entity, true);
-            scope.requireWritable(institutionOfAssignmentApproval(entity));
-            assertUniqueAssignmentApproval(entity);
-            if (validateOnly) {
-                return assignmentApprovalMapper.toDto(entity);
-            }
-            AssignmentApprovalEntity stored = assignmentApprovalRepository.insert(entity);
-            audit.recordCreate(ASSIGNMENT_APPROVAL_AGGREGATE, stored.getId());
-            outbox.publish(ASSIGNMENT_APPROVAL_AGGREGATE + AssessmentEvents.CREATED, ASSIGNMENT_APPROVAL_AGGREGATE,
-                    stored.getId(),
-                    AssessmentEvents.payload(stored.getId()));
-            return assignmentApprovalMapper.toDto(stored);
-        });
-    }
-
-    /**
-     * Partial update under If-Match (§7.2): a field the request leaves out is kept, a null one is cleared and a value
-     * is set; the merged row must validate and stay in the caller's scope.
-     */
-    public AssignmentApproval updateAssignmentApproval(UUID assignmentId, UUID id, String ifMatch,
-            AssignmentApprovalUpdate changes, boolean validateOnly) {
-        int expected = Etags.expectedVersion(ifMatch);
-        return doInWriteTransaction(() -> {
-            DataScope scope = DataScope.current(ASSIGNMENT_APPROVAL_PERMISSION_UPDATE);
-            AssignmentApprovalEntity entity = loadVisibleAssignmentApproval(scope, assignmentId, id);
-            scope.requireWritable(institutionOfAssignmentApproval(entity));
-            if (entity.getRowVersion() != expected) {
-                throw new PreconditionFailedException("If-Match does not match the current ETag.");
-            }
-            List<String> fields = applyAssignmentApproval(entity, changes);
-            validator.validate(assignmentApprovalMapper.toDto(entity));
-            assertValidAssignmentApproval(entity, false);
-            scope.requireWritable(institutionOfAssignmentApproval(entity));
-            assertUniqueAssignmentApproval(entity);
-            entity.onUpdatingData(Actor.current(), clock);
-            if (validateOnly) {
-                return assignmentApprovalMapper.toDto(entity);
-            }
-            if (assignmentApprovalRepository.update(entity, expected) == 0) {
-                throw new PreconditionFailedException("If-Match does not match the current ETag.");
-            }
-            entity.setRowVersion(expected + 1);
-            audit.recordUpdate(ASSIGNMENT_APPROVAL_AGGREGATE, id, fields);
-            outbox.publish(ASSIGNMENT_APPROVAL_AGGREGATE + AssessmentEvents.UPDATED, ASSIGNMENT_APPROVAL_AGGREGATE, id,
-                    AssessmentEvents.payload(id));
-            return assignmentApprovalMapper.toDto(entity);
-        });
-    }
-
-    /** Soft delete under If-Match; refused while live rows of this module still reference the row. */
-    public void deleteAssignmentApproval(UUID assignmentId, UUID id, String ifMatch) {
-        int expected = Etags.expectedVersion(ifMatch);
-        runInWriteTransaction(() -> {
-            DataScope scope = DataScope.current(ASSIGNMENT_APPROVAL_PERMISSION_DELETE);
-            AssignmentApprovalEntity entity = loadVisibleAssignmentApproval(scope, assignmentId, id);
-            scope.requireWritable(institutionOfAssignmentApproval(entity));
-            if (entity.getRowVersion() != expected) {
-                throw new PreconditionFailedException("If-Match does not match the current ETag.");
-            }
-            entity.onDeletingData(Actor.current(), clock);
-            if (assignmentApprovalRepository.softDelete(entity, expected) == 0) {
-                throw new PreconditionFailedException("If-Match does not match the current ETag.");
-            }
-            audit.recordDelete(ASSIGNMENT_APPROVAL_AGGREGATE, id);
-            outbox.publish(ASSIGNMENT_APPROVAL_AGGREGATE + AssessmentEvents.DELETED, ASSIGNMENT_APPROVAL_AGGREGATE, id,
-                    AssessmentEvents.payload(id));
-        });
-    }
-
     /** The live row, if the caller may see it: another parent's row, or a row outside the caller's scope, is 404. */
     private AssignmentApprovalEntity loadVisibleAssignmentApproval(DataScope scope, UUID assignmentId, UUID id) {
         AssignmentApprovalEntity entity = assignmentApprovalRepository.findById(id)
@@ -820,37 +778,6 @@ public class AssignmentService extends AppTransactionManager {
     /** The institution of the assessment.assignment the row belongs to. */
     private Optional<UUID> institutionOfAssignmentApproval(AssignmentApprovalEntity entity) {
         return assignmentApprovalRepository.institutionOf(entity.getAssignmentId());
-    }
-
-    /** Applies the fields the request carries (§7.2); answers their names for the audit record. */
-    private static List<String> applyAssignmentApproval(AssignmentApprovalEntity entity, AssignmentApprovalUpdate changes) {
-        Patches patch = new Patches();
-        patch.apply("decision", changes.getDecision(), v -> entity.setDecision(v == null ? null : v.getValue()));
-        patch.apply("comments", changes.getComments(), entity::setComments);
-        patch.apply("decidedByUserId", changes.getDecidedByUserId(), entity::setDecidedByUserId);
-        patch.apply("decidedAt", changes.getDecidedAt(), entity::setDecidedAt);
-        return patch.applied();
-    }
-
-    /** Business invariants beyond the field shapes the contract validates (422 with every failing field). */
-    private void assertValidAssignmentApproval(AssignmentApprovalEntity entity, boolean creating) {
-        List<FieldError> errors = new ArrayList<>();
-        if (entity.getAssignmentId() == null) {
-            errors.add(new FieldError("assignmentId", "must not be null", "NotNull"));
-        }
-        if (!creating && entity.getDecision() == null) {
-            errors.add(new FieldError("decision", "must not be null", "NotNull"));
-        }
-        if (entity.getAssignmentId() != null && !assignmentApprovalRepository.existsAssignmentId(entity.getAssignmentId())) {
-            errors.add(new FieldError("assignmentId", "assignment does not exist", "NOT_FOUND"));
-        }
-        if (!errors.isEmpty()) {
-            throw new ValidationFailedException(errors);
-        }
-    }
-
-    private void assertUniqueAssignmentApproval(AssignmentApprovalEntity entity) {
-
     }
 
     // ---- AssignmentSubject ----
@@ -927,6 +854,9 @@ public class AssignmentService extends AppTransactionManager {
             assertValidAssignmentSubject(entity, false);
             scope.requireWritable(institutionOfAssignmentSubject(entity));
             assertUniqueAssignmentSubject(entity);
+            if (fields.isEmpty()) {
+                return assignmentSubjectMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return assignmentSubjectMapper.toDto(entity);

@@ -37,7 +37,7 @@ class PayrollOpenApiComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "payroll", "hr");
+        DATABASE.register(registry, "payroll", "hr", "time_attendance");
         registry.add("mysms.auth.api-docs", () -> true);
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);

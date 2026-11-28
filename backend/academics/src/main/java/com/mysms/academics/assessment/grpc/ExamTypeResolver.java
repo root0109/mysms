@@ -1,18 +1,17 @@
 package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.ExamType;
-import com.mysms.academics.assessment.api.model.ExamTypeUpdate;
 import com.mysms.academics.assessment.business.ExamTypeService;
 import com.mysms.assessment.v1.CreateExamTypeRequest;
 import com.mysms.assessment.v1.CreateExamTypeResponse;
 import com.mysms.assessment.v1.DeleteExamTypeRequest;
 import com.mysms.assessment.v1.DeleteExamTypeResponse;
 import com.mysms.assessment.v1.ExamTypeServiceGrpc;
+import com.mysms.assessment.v1.ExamTypeUpdate;
 import com.mysms.assessment.v1.GetExamTypeRequest;
 import com.mysms.assessment.v1.GetExamTypeResponse;
 import com.mysms.assessment.v1.ListExamTypesRequest;
 import com.mysms.assessment.v1.ListExamTypesResponse;
-import com.mysms.assessment.v1.UpdateExamTypeRequest;
 import com.mysms.assessment.v1.UpdateExamTypeResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,11 +55,11 @@ public class ExamTypeResolver extends ExamTypeServiceGrpc.ExamTypeServiceImplBas
     }
 
     @Override
-    public void updateExamType(UpdateExamTypeRequest request, StreamObserver<UpdateExamTypeResponse> out) {
+    public void updateExamType(ExamTypeUpdate request, StreamObserver<UpdateExamTypeResponse> out) {
         ExamType updated = examTypeService.updateExamType(
-                bridge.id(request.getExamType().getId(), "id"),
-                bridge.requiredIfMatch(request.getExamType().getEtag()),
-                bridge.changes(request.getExamType(), request.getUpdateMask(), ExamTypeUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExamTypeProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateExamTypeResponse.newBuilder(), "exam_type", updated).build());
     }
 

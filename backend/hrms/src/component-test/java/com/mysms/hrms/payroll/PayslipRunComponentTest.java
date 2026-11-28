@@ -60,7 +60,7 @@ class PayslipRunComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "payroll", "hr");
+        DATABASE.register(registry, "payroll", "hr", "time_attendance");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }
@@ -370,6 +370,60 @@ class PayslipRunComponentTest {
                 "PF deduction 1209.68");     // 2500.00 x 15 / 31 = 1209.677...
         assertThat(joined.path("netAmount").asString()).isEqualTo("10887.09");
         assertThat(school.payslips(later)).as("a salary that starts after the period pays nothing in it").isEmpty();
+    }
+
+    @Test
+    void approvedUnpaidLeaveOnWorkingDaysIsDeductedAsALineOfItsOwn() throws Exception {
+        School school = new School();
+        UUID asha = school.salary(UUID.randomUUID(), "2025-04-01", "BASIC", "30000.00", "HRA", "12000.50", "PF",
+                "3600.00");
+        school.staffAccount(asha, UUID.randomUUID());
+        UUID year = UUID.randomUUID();
+        UUID unpaid = UUID.randomUUID();
+        UUID paid = UUID.randomUUID();
+        school.sql("INSERT INTO hr.leave_type (id, tenant_id, institution_id, name, code, max_days_per_year, is_paid)"
+                        + " VALUES ('" + unpaid + "', :tenantId, '" + school.institution + "', 'Unpaid', 'LWP', 30,"
+                        + " false), ('" + paid + "', :tenantId, '" + school.institution + "', 'Casual', 'CL', 10, true)",
+                // Republic Day, a holiday of every school of the tenant (hr's copy of org's calendar)
+                "INSERT INTO hr.holiday_record (tenant_id, holiday_id, title, start_date, end_date, source_version,"
+                        + " synced_at) VALUES (:tenantId, '" + UUID.randomUUID() + "', 'Republic Day', '2026-01-26',"
+                        + " '2026-01-26', 1, now())");
+        String[][] leave = {
+            {"2026-01-12", "2026-01-13", "full_day", "approved", "unpaid"},   // Monday and Tuesday: 2
+            {"2026-01-13", "2026-01-13", "forenoon", "approved", "unpaid"},   // the 13th again: a day is at most 1
+            {"2026-01-14", "2026-01-14", "afternoon", "approved", "unpaid"},  // Wednesday: 0.5
+            {"2026-01-10", "2026-01-11", "full_day", "approved", "unpaid"},   // a weekend: 0
+            {"2026-01-26", "2026-01-26", "forenoon", "approved", "unpaid"},   // the holiday: 0
+            {"2026-01-15", "2026-01-15", "full_day", "approved", "paid"},     // paid leave: 0
+            {"2026-01-16", "2026-01-16", "full_day", "pending", "unpaid"},    // not approved: 0
+            {"2026-01-19", "2026-01-19", "full_day", "cancelled", "unpaid"},  // called off: 0
+            {"2026-02-02", "2026-02-03", "full_day", "approved", "unpaid"}};  // another month: 0
+        for (String[] application : leave) {
+            school.sql("INSERT INTO hr.leave_application (tenant_id, institution_id, academic_year_id, staff_id,"
+                    + " leave_type_id, from_at, to_at, day_part, status) VALUES (:tenantId, '" + school.institution
+                    + "', '" + year + "', '" + asha + "', '" + ("paid".equals(application[4]) ? paid : unpaid)
+                    + "', '" + application[0] + "T00:00:00Z', '" + application[1] + "T00:00:00Z', '"
+                    + application[2] + "', '" + application[3] + "')");
+        }
+
+        Reply run = school.generate(school.officer, "2026-01-01", "2026-01-31");
+        assertThat(run.body().path("result").path("generated").asInt()).as(run.text()).isEqualTo(1);
+        JsonNode payslip = school.payslips(asha).get(0);
+        // January 2026 has 22 weekdays, less the holiday: 21 working days, 2.5 of them unpaid leave;
+        // 42000.50 x 2.5 / 21 = 105001.25 / 21 = 5000.0595... = 5000.06
+        assertThat(school.lines(payslip.path("id").asString())).containsExactly("BASIC earning 30000.00",
+                "HRA earning 12000.50", "PF deduction 3600.00", "UNPAID_LEAVE deduction 5000.06");
+        assertThat(payslip.path("leaveDays").asString()).isEqualTo("2.5");
+        assertThat(payslip.path("leaveDeduction").asString()).isEqualTo("5000.06");
+        assertThat(payslip.path("grossAmount").asString()).isEqualTo("42000.50");
+        // 3600.00 + 5000.06
+        assertThat(payslip.path("deductionTotal").asString()).isEqualTo("8600.06");
+        // 42000.50 - 8600.06
+        assertThat(payslip.path("netAmount").asString()).isEqualTo("33400.44");
+        // (42000.50 - 5000.06) x 100 / 42000.50 = 88.0952... = 88.10
+        assertThat(payslip.path("payPercentage").asString()).isEqualTo("88.10");
+        assertThat(school.count("payslip_line", "component_code = 'UNPAID_LEAVE' AND staff_salary_component_id IS NULL"))
+                .as("the leave line stands for no salary component").isEqualTo(1);
     }
 
     @Test

@@ -3,16 +3,15 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.CohortEnrollment;
-import com.mysms.learning.lms.api.model.CohortEnrollmentUpdate;
 import com.mysms.learning.lms.business.CohortEnrollmentService;
 import com.mysms.lms.v1.CohortEnrollmentServiceGrpc;
+import com.mysms.lms.v1.CohortEnrollmentUpdate;
 import com.mysms.lms.v1.DeleteCohortEnrollmentRequest;
 import com.mysms.lms.v1.DeleteCohortEnrollmentResponse;
 import com.mysms.lms.v1.GetCohortEnrollmentRequest;
 import com.mysms.lms.v1.GetCohortEnrollmentResponse;
 import com.mysms.lms.v1.ListCohortEnrollmentsRequest;
 import com.mysms.lms.v1.ListCohortEnrollmentsResponse;
-import com.mysms.lms.v1.UpdateCohortEnrollmentRequest;
 import com.mysms.lms.v1.UpdateCohortEnrollmentResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -48,11 +47,11 @@ public class CohortEnrollmentResolver extends CohortEnrollmentServiceGrpc.Cohort
     }
 
     @Override
-    public void updateCohortEnrollment(UpdateCohortEnrollmentRequest request,
+    public void updateCohortEnrollment(CohortEnrollmentUpdate request,
             StreamObserver<UpdateCohortEnrollmentResponse> out) {
-        CohortEnrollment updated = service.updateCohortEnrollment(bridge.id(request.getCohortEnrollment().getId(), "id"),
-                bridge.requiredIfMatch(request.getCohortEnrollment().getEtag()),
-                bridge.changes(request.getCohortEnrollment(), request.getUpdateMask(), CohortEnrollmentUpdate.class),
+        CohortEnrollment updated = service.updateCohortEnrollment(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CohortEnrollmentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCohortEnrollmentResponse.newBuilder(), "cohort_enrollment", updated).build());
     }

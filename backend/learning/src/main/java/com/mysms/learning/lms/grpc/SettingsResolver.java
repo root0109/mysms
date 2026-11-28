@@ -5,10 +5,7 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Settings;
 import com.mysms.learning.lms.api.model.SettingsPrimaryCountry;
-import com.mysms.learning.lms.api.model.SettingsPrimaryCountryUpdate;
 import com.mysms.learning.lms.api.model.SettingsSidebarItem;
-import com.mysms.learning.lms.api.model.SettingsSidebarItemUpdate;
-import com.mysms.learning.lms.api.model.SettingsUpdate;
 import com.mysms.learning.lms.business.SettingsService;
 import com.mysms.lms.v1.CreateSettingsPrimaryCountryRequest;
 import com.mysms.lms.v1.CreateSettingsPrimaryCountryResponse;
@@ -32,12 +29,12 @@ import com.mysms.lms.v1.ListSettingsSidebarItemsRequest;
 import com.mysms.lms.v1.ListSettingsSidebarItemsResponse;
 import com.mysms.lms.v1.SendContactMessageRequest;
 import com.mysms.lms.v1.SendContactMessageResponse;
+import com.mysms.lms.v1.SettingsPrimaryCountryUpdate;
 import com.mysms.lms.v1.SettingsServiceGrpc;
-import com.mysms.lms.v1.UpdateSettingsPrimaryCountryRequest;
+import com.mysms.lms.v1.SettingsSidebarItemUpdate;
+import com.mysms.lms.v1.SettingsUpdate;
 import com.mysms.lms.v1.UpdateSettingsPrimaryCountryResponse;
-import com.mysms.lms.v1.UpdateSettingsRequest;
 import com.mysms.lms.v1.UpdateSettingsResponse;
-import com.mysms.lms.v1.UpdateSettingsSidebarItemRequest;
 import com.mysms.lms.v1.UpdateSettingsSidebarItemResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -66,9 +63,9 @@ public class SettingsResolver extends SettingsServiceGrpc.SettingsServiceImplBas
     }
 
     @Override
-    public void updateSettings(UpdateSettingsRequest request, StreamObserver<UpdateSettingsResponse> out) {
-        Settings updated = service.updateSettings(bridge.requiredIfMatch(request.getSettings().getEtag()),
-                bridge.changes(request.getSettings(), request.getUpdateMask(), SettingsUpdate.class), false);
+    public void updateSettings(SettingsUpdate request, StreamObserver<UpdateSettingsResponse> out) {
+        Settings updated = service.updateSettings(bridge.requiredIfMatch(request.getEtag()),
+                SettingsProtoBridge.changes(bridge, request), false);
         ProtoBridge.send(out, bridge.reply(UpdateSettingsResponse.newBuilder(), "settings", updated).build());
     }
 
@@ -100,12 +97,12 @@ public class SettingsResolver extends SettingsServiceGrpc.SettingsServiceImplBas
     }
 
     @Override
-    public void updateSettingsSidebarItem(UpdateSettingsSidebarItemRequest request,
+    public void updateSettingsSidebarItem(SettingsSidebarItemUpdate request,
             StreamObserver<UpdateSettingsSidebarItemResponse> out) {
         SettingsSidebarItem updated = service.updateSettingsSidebarItem(bridge.id(request.getSettingsId(), "settingsId"),
-                bridge.id(request.getSettingsSidebarItem().getId(), "id"),
-                bridge.requiredIfMatch(request.getSettingsSidebarItem().getEtag()),
-                bridge.changes(request.getSettingsSidebarItem(), request.getUpdateMask(), SettingsSidebarItemUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SettingsSidebarItemProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSettingsSidebarItemResponse.newBuilder(), "settings_sidebar_item",
                 updated).build());
@@ -148,13 +145,12 @@ public class SettingsResolver extends SettingsServiceGrpc.SettingsServiceImplBas
     }
 
     @Override
-    public void updateSettingsPrimaryCountry(UpdateSettingsPrimaryCountryRequest request,
+    public void updateSettingsPrimaryCountry(SettingsPrimaryCountryUpdate request,
             StreamObserver<UpdateSettingsPrimaryCountryResponse> out) {
         SettingsPrimaryCountry updated = service.updateSettingsPrimaryCountry(bridge.id(request.getSettingsId(), "settingsId"),
-                bridge.id(request.getSettingsPrimaryCountry().getId(), "id"),
-                bridge.requiredIfMatch(request.getSettingsPrimaryCountry().getEtag()),
-                bridge.changes(request.getSettingsPrimaryCountry(), request.getUpdateMask(),
-                SettingsPrimaryCountryUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SettingsPrimaryCountryProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSettingsPrimaryCountryResponse.newBuilder(), "settings_primary_country",
                 updated).build());
     }

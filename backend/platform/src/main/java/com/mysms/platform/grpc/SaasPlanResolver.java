@@ -3,7 +3,6 @@ package com.mysms.platform.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.api.model.SaasPlan;
-import com.mysms.platform.api.model.SaasPlanUpdate;
 import com.mysms.platform.business.SaasPlanService;
 import com.mysms.platform.v1.CreateSaasPlanRequest;
 import com.mysms.platform.v1.CreateSaasPlanResponse;
@@ -14,7 +13,7 @@ import com.mysms.platform.v1.GetSaasPlanResponse;
 import com.mysms.platform.v1.ListSaasPlansRequest;
 import com.mysms.platform.v1.ListSaasPlansResponse;
 import com.mysms.platform.v1.SaasPlanServiceGrpc;
-import com.mysms.platform.v1.UpdateSaasPlanRequest;
+import com.mysms.platform.v1.SaasPlanUpdate;
 import com.mysms.platform.v1.UpdateSaasPlanResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class SaasPlanResolver extends SaasPlanServiceGrpc.SaasPlanServiceImplBas
     }
 
     @Override
-    public void updateSaasPlan(UpdateSaasPlanRequest request, StreamObserver<UpdateSaasPlanResponse> out) {
+    public void updateSaasPlan(SaasPlanUpdate request, StreamObserver<UpdateSaasPlanResponse> out) {
         SaasPlan updated = service.updateSaasPlan(
-                bridge.id(request.getSaasPlan().getId(), "id"),
-                bridge.requiredIfMatch(request.getSaasPlan().getEtag()),
-                bridge.changes(request.getSaasPlan(), request.getUpdateMask(), SaasPlanUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SaasPlanProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSaasPlanResponse.newBuilder(), "saas_plan", updated).build());
     }
 

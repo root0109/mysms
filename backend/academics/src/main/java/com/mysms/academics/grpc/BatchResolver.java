@@ -1,9 +1,9 @@
 package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.Batch;
-import com.mysms.academics.api.model.BatchUpdate;
 import com.mysms.academics.business.BatchService;
 import com.mysms.academics.v1.BatchServiceGrpc;
+import com.mysms.academics.v1.BatchUpdate;
 import com.mysms.academics.v1.CreateBatchRequest;
 import com.mysms.academics.v1.CreateBatchResponse;
 import com.mysms.academics.v1.DeleteBatchRequest;
@@ -12,7 +12,6 @@ import com.mysms.academics.v1.GetBatchRequest;
 import com.mysms.academics.v1.GetBatchResponse;
 import com.mysms.academics.v1.ListBatchesRequest;
 import com.mysms.academics.v1.ListBatchesResponse;
-import com.mysms.academics.v1.UpdateBatchRequest;
 import com.mysms.academics.v1.UpdateBatchResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -55,10 +54,10 @@ public class BatchResolver extends BatchServiceGrpc.BatchServiceImplBase {
     }
 
     @Override
-    public void updateBatch(UpdateBatchRequest request, StreamObserver<UpdateBatchResponse> out) {
-        Batch updated = service.updateBatch(bridge.id(request.getBatch().getId(), "id"),
-                bridge.requiredIfMatch(request.getBatch().getEtag()),
-                bridge.changes(request.getBatch(), request.getUpdateMask(), BatchUpdate.class), request.getValidateOnly());
+    public void updateBatch(BatchUpdate request, StreamObserver<UpdateBatchResponse> out) {
+        Batch updated = service.updateBatch(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                BatchProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateBatchResponse.newBuilder(), "batch", updated).build());
     }
 

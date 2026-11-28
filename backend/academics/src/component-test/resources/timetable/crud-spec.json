@@ -20,7 +20,9 @@
     "name": "t-name-f2dc1378",
     "startTime": "09:00"
    },
-   "update": {},
+   "update": {
+    "name": "t-name-f2dc1378"
+   },
    "patch": {
     "clears": "durationMinutes",
     "keeps": "name"
@@ -163,7 +165,9 @@
     "sessionId": "45d5d7cd-9c8e-5c86-9d7b-01c09fcd429d",
     "studentId": "0cad88ca-ed22-56b7-af9d-2c91c38124b7"
    },
-   "update": {},
+   "update": {
+    "studentId": "0cad88ca-ed22-56b7-af9d-2c91c38124b7"
+   },
    "patch": {
     "keeps": "studentId"
    },

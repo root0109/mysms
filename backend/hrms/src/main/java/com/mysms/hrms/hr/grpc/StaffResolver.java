@@ -5,8 +5,6 @@ import com.mysms.core.paging.Page;
 import com.mysms.hrms.hr.api.model.LeaveBalanceSummary;
 import com.mysms.hrms.hr.api.model.Staff;
 import com.mysms.hrms.hr.api.model.StaffDepartment;
-import com.mysms.hrms.hr.api.model.StaffDepartmentUpdate;
-import com.mysms.hrms.hr.api.model.StaffUpdate;
 import com.mysms.hrms.hr.business.StaffService;
 import com.mysms.hr.v1.ChangeStaffStatusRequest;
 import com.mysms.hr.v1.ChangeStaffStatusResponse;
@@ -30,10 +28,10 @@ import com.mysms.hr.v1.ListStaffDepartmentsRequest;
 import com.mysms.hr.v1.ListStaffDepartmentsResponse;
 import com.mysms.hr.v1.ListStaffRequest;
 import com.mysms.hr.v1.ListStaffResponse;
+import com.mysms.hr.v1.StaffDepartmentUpdate;
 import com.mysms.hr.v1.StaffServiceGrpc;
-import com.mysms.hr.v1.UpdateStaffDepartmentRequest;
+import com.mysms.hr.v1.StaffUpdate;
 import com.mysms.hr.v1.UpdateStaffDepartmentResponse;
-import com.mysms.hr.v1.UpdateStaffRequest;
 import com.mysms.hr.v1.UpdateStaffResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -75,10 +73,10 @@ public class StaffResolver extends StaffServiceGrpc.StaffServiceImplBase {
     }
 
     @Override
-    public void updateStaff(UpdateStaffRequest request, StreamObserver<UpdateStaffResponse> out) {
+    public void updateStaff(StaffUpdate request, StreamObserver<UpdateStaffResponse> out) {
         Staff updated = staffService.updateStaff(
-                bridge.id(request.getStaff().getId(), "id"), bridge.requiredIfMatch(request.getStaff().getEtag()),
-                bridge.changes(request.getStaff(), request.getUpdateMask(), StaffUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                StaffProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStaffResponse.newBuilder(), "staff", updated).build());
     }
 
@@ -118,12 +116,12 @@ public class StaffResolver extends StaffServiceGrpc.StaffServiceImplBase {
     }
 
     @Override
-    public void updateStaffDepartment(UpdateStaffDepartmentRequest request,
+    public void updateStaffDepartment(StaffDepartmentUpdate request,
             StreamObserver<UpdateStaffDepartmentResponse> out) {
         StaffDepartment updated = staffService.updateStaffDepartment(
-                bridge.id(request.getStaffId(), "staffId"), bridge.id(request.getStaffDepartment().getId(), "id"),
-                bridge.requiredIfMatch(request.getStaffDepartment().getEtag()),
-                bridge.changes(request.getStaffDepartment(), request.getUpdateMask(), StaffDepartmentUpdate.class),
+                bridge.id(request.getStaffId(), "staffId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StaffDepartmentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStaffDepartmentResponse.newBuilder(),
                 "staff_department", updated).build());

@@ -4,8 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.DriveItem;
 import com.mysms.learning.lms.api.model.DriveItemShare;
-import com.mysms.learning.lms.api.model.DriveItemShareUpdate;
-import com.mysms.learning.lms.api.model.DriveItemUpdate;
 import com.mysms.learning.lms.business.DriveItemService;
 import com.mysms.lms.v1.CreateDriveItemRequest;
 import com.mysms.lms.v1.CreateDriveItemResponse;
@@ -16,6 +14,8 @@ import com.mysms.lms.v1.DeleteDriveItemResponse;
 import com.mysms.lms.v1.DeleteDriveItemShareRequest;
 import com.mysms.lms.v1.DeleteDriveItemShareResponse;
 import com.mysms.lms.v1.DriveItemServiceGrpc;
+import com.mysms.lms.v1.DriveItemShareUpdate;
+import com.mysms.lms.v1.DriveItemUpdate;
 import com.mysms.lms.v1.GetDriveItemRequest;
 import com.mysms.lms.v1.GetDriveItemResponse;
 import com.mysms.lms.v1.ListDriveItemSharesRequest;
@@ -24,9 +24,7 @@ import com.mysms.lms.v1.ListDriveItemsRequest;
 import com.mysms.lms.v1.ListDriveItemsResponse;
 import com.mysms.lms.v1.ShareDriveItemRequest;
 import com.mysms.lms.v1.ShareDriveItemResponse;
-import com.mysms.lms.v1.UpdateDriveItemRequest;
 import com.mysms.lms.v1.UpdateDriveItemResponse;
-import com.mysms.lms.v1.UpdateDriveItemShareRequest;
 import com.mysms.lms.v1.UpdateDriveItemShareResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -68,11 +66,11 @@ public class DriveItemResolver extends DriveItemServiceGrpc.DriveItemServiceImpl
     }
 
     @Override
-    public void updateDriveItem(UpdateDriveItemRequest request, StreamObserver<UpdateDriveItemResponse> out) {
+    public void updateDriveItem(DriveItemUpdate request, StreamObserver<UpdateDriveItemResponse> out) {
         DriveItem updated = service.updateDriveItem(
-                bridge.id(request.getDriveItem().getId(), "id"),
-                bridge.requiredIfMatch(request.getDriveItem().getEtag()),
-                bridge.changes(request.getDriveItem(), request.getUpdateMask(), DriveItemUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                DriveItemProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateDriveItemResponse.newBuilder(), "drive_item", updated).build());
     }
@@ -104,13 +102,13 @@ public class DriveItemResolver extends DriveItemServiceGrpc.DriveItemServiceImpl
     }
 
     @Override
-    public void updateDriveItemShare(UpdateDriveItemShareRequest request,
+    public void updateDriveItemShare(DriveItemShareUpdate request,
             StreamObserver<UpdateDriveItemShareResponse> out) {
         DriveItemShare updated = service.updateDriveItemShare(
                 bridge.id(request.getDriveItemId(), "driveItemId"),
-                bridge.id(request.getDriveItemShare().getId(), "id"),
-                bridge.requiredIfMatch(request.getDriveItemShare().getEtag()),
-                bridge.changes(request.getDriveItemShare(), request.getUpdateMask(), DriveItemShareUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                DriveItemShareProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateDriveItemShareResponse.newBuilder(), "drive_item_share", updated).build());

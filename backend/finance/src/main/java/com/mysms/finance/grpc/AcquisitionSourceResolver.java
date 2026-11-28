@@ -3,9 +3,9 @@ package com.mysms.finance.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.finance.api.model.AcquisitionSource;
-import com.mysms.finance.api.model.AcquisitionSourceUpdate;
 import com.mysms.finance.business.AcquisitionSourceService;
 import com.mysms.finance.v1.AcquisitionSourceServiceGrpc;
+import com.mysms.finance.v1.AcquisitionSourceUpdate;
 import com.mysms.finance.v1.CreateAcquisitionSourceRequest;
 import com.mysms.finance.v1.CreateAcquisitionSourceResponse;
 import com.mysms.finance.v1.DeleteAcquisitionSourceRequest;
@@ -14,7 +14,6 @@ import com.mysms.finance.v1.GetAcquisitionSourceRequest;
 import com.mysms.finance.v1.GetAcquisitionSourceResponse;
 import com.mysms.finance.v1.ListAcquisitionSourcesRequest;
 import com.mysms.finance.v1.ListAcquisitionSourcesResponse;
-import com.mysms.finance.v1.UpdateAcquisitionSourceRequest;
 import com.mysms.finance.v1.UpdateAcquisitionSourceResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -61,12 +60,12 @@ public class AcquisitionSourceResolver extends AcquisitionSourceServiceGrpc.Acqu
     }
 
     @Override
-    public void updateAcquisitionSource(UpdateAcquisitionSourceRequest request,
+    public void updateAcquisitionSource(AcquisitionSourceUpdate request,
             StreamObserver<UpdateAcquisitionSourceResponse> out) {
         AcquisitionSource updated = service.updateAcquisitionSource(
-                bridge.id(request.getAcquisitionSource().getId(), "id"),
-                bridge.requiredIfMatch(request.getAcquisitionSource().getEtag()),
-                bridge.changes(request.getAcquisitionSource(), request.getUpdateMask(), AcquisitionSourceUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AcquisitionSourceProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAcquisitionSourceResponse.newBuilder(), "acquisition_source",
                 updated).build());

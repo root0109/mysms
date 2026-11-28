@@ -171,6 +171,9 @@ public class PlagiarismAccountService extends AppTransactionManager implements I
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return dto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return dto(entity);
@@ -354,6 +357,9 @@ public class PlagiarismAccountService extends AppTransactionManager implements I
             assertValidPlagiarismUserLink(entity, false);
             scope.requireWritable(institutionOfPlagiarismUserLink(entity));
             assertUniquePlagiarismUserLink(entity);
+            if (fields.isEmpty()) {
+                return plagiarismUserLinkMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return plagiarismUserLinkMapper.toDto(entity);

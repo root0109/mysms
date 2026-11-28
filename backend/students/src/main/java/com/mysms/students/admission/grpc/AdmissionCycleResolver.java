@@ -1,11 +1,11 @@
 package com.mysms.students.admission.grpc;
 
+import com.mysms.admission.v1.AdmissionCycleFeeUpdate;
 import com.mysms.students.admission.api.model.AdmissionCycle;
 import com.mysms.students.admission.api.model.AdmissionCycleFee;
-import com.mysms.students.admission.api.model.AdmissionCycleFeeUpdate;
-import com.mysms.students.admission.api.model.AdmissionCycleUpdate;
 import com.mysms.students.admission.business.AdmissionCycleService;
 import com.mysms.admission.v1.AdmissionCycleServiceGrpc;
+import com.mysms.admission.v1.AdmissionCycleUpdate;
 import com.mysms.admission.v1.CancelAdmissionCycleRequest;
 import com.mysms.admission.v1.CancelAdmissionCycleResponse;
 import com.mysms.admission.v1.CloseAdmissionCycleRequest;
@@ -34,9 +34,7 @@ import com.mysms.admission.v1.ResetAdmissionCycleRequest;
 import com.mysms.admission.v1.ResetAdmissionCycleResponse;
 import com.mysms.admission.v1.StartAdmissionRequest;
 import com.mysms.admission.v1.StartAdmissionResponse;
-import com.mysms.admission.v1.UpdateAdmissionCycleFeeRequest;
 import com.mysms.admission.v1.UpdateAdmissionCycleFeeResponse;
-import com.mysms.admission.v1.UpdateAdmissionCycleRequest;
 import com.mysms.admission.v1.UpdateAdmissionCycleResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -80,11 +78,11 @@ public class AdmissionCycleResolver extends AdmissionCycleServiceGrpc.AdmissionC
     }
 
     @Override
-    public void updateAdmissionCycle(UpdateAdmissionCycleRequest request, StreamObserver<UpdateAdmissionCycleResponse> out) {
+    public void updateAdmissionCycle(AdmissionCycleUpdate request, StreamObserver<UpdateAdmissionCycleResponse> out) {
         AdmissionCycle updated = service.updateAdmissionCycle(
-                bridge.id(request.getAdmissionCycle().getId(), "id"),
-                bridge.requiredIfMatch(request.getAdmissionCycle().getEtag()),
-                bridge.changes(request.getAdmissionCycle(), request.getUpdateMask(), AdmissionCycleUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AdmissionCycleProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAdmissionCycleResponse.newBuilder(), "admission_cycle", updated).build());
     }
@@ -123,13 +121,13 @@ public class AdmissionCycleResolver extends AdmissionCycleServiceGrpc.AdmissionC
     }
 
     @Override
-    public void updateAdmissionCycleFee(UpdateAdmissionCycleFeeRequest request,
+    public void updateAdmissionCycleFee(AdmissionCycleFeeUpdate request,
             StreamObserver<UpdateAdmissionCycleFeeResponse> out) {
         AdmissionCycleFee updated = service.updateAdmissionCycleFee(
                 bridge.id(request.getAdmissionCycleId(), "admissionCycleId"),
-                bridge.id(request.getAdmissionCycleFee().getId(), "id"),
-                bridge.requiredIfMatch(request.getAdmissionCycleFee().getEtag()),
-                bridge.changes(request.getAdmissionCycleFee(), request.getUpdateMask(), AdmissionCycleFeeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AdmissionCycleFeeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateAdmissionCycleFeeResponse.newBuilder(), "admission_cycle_fee", updated).build());

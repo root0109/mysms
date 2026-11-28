@@ -5,14 +5,9 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ExternalTool;
 import com.mysms.learning.lms.api.model.ExternalToolInstitution;
-import com.mysms.learning.lms.api.model.ExternalToolInstitutionUpdate;
 import com.mysms.learning.lms.api.model.ExternalToolOption;
-import com.mysms.learning.lms.api.model.ExternalToolOptionUpdate;
 import com.mysms.learning.lms.api.model.ExternalToolRole;
-import com.mysms.learning.lms.api.model.ExternalToolRoleUpdate;
 import com.mysms.learning.lms.api.model.ExternalToolSetting;
-import com.mysms.learning.lms.api.model.ExternalToolSettingUpdate;
-import com.mysms.learning.lms.api.model.ExternalToolUpdate;
 import com.mysms.learning.lms.business.ExternalToolService;
 import com.mysms.lms.v1.ActivateExternalToolRequest;
 import com.mysms.lms.v1.ActivateExternalToolResponse;
@@ -36,7 +31,12 @@ import com.mysms.lms.v1.DeleteExternalToolRoleRequest;
 import com.mysms.lms.v1.DeleteExternalToolRoleResponse;
 import com.mysms.lms.v1.DeleteExternalToolSettingRequest;
 import com.mysms.lms.v1.DeleteExternalToolSettingResponse;
+import com.mysms.lms.v1.ExternalToolInstitutionUpdate;
+import com.mysms.lms.v1.ExternalToolOptionUpdate;
+import com.mysms.lms.v1.ExternalToolRoleUpdate;
 import com.mysms.lms.v1.ExternalToolServiceGrpc;
+import com.mysms.lms.v1.ExternalToolSettingUpdate;
+import com.mysms.lms.v1.ExternalToolUpdate;
 import com.mysms.lms.v1.GetExternalToolInstitutionRequest;
 import com.mysms.lms.v1.GetExternalToolInstitutionResponse;
 import com.mysms.lms.v1.GetExternalToolOptionRequest;
@@ -57,15 +57,10 @@ import com.mysms.lms.v1.ListExternalToolSettingsRequest;
 import com.mysms.lms.v1.ListExternalToolSettingsResponse;
 import com.mysms.lms.v1.ListExternalToolsRequest;
 import com.mysms.lms.v1.ListExternalToolsResponse;
-import com.mysms.lms.v1.UpdateExternalToolInstitutionRequest;
 import com.mysms.lms.v1.UpdateExternalToolInstitutionResponse;
-import com.mysms.lms.v1.UpdateExternalToolOptionRequest;
 import com.mysms.lms.v1.UpdateExternalToolOptionResponse;
-import com.mysms.lms.v1.UpdateExternalToolRequest;
 import com.mysms.lms.v1.UpdateExternalToolResponse;
-import com.mysms.lms.v1.UpdateExternalToolRoleRequest;
 import com.mysms.lms.v1.UpdateExternalToolRoleResponse;
-import com.mysms.lms.v1.UpdateExternalToolSettingRequest;
 import com.mysms.lms.v1.UpdateExternalToolSettingResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -110,11 +105,11 @@ public class ExternalToolResolver extends ExternalToolServiceGrpc.ExternalToolSe
     }
 
     @Override
-    public void updateExternalTool(UpdateExternalToolRequest request, StreamObserver<UpdateExternalToolResponse> out) {
+    public void updateExternalTool(ExternalToolUpdate request, StreamObserver<UpdateExternalToolResponse> out) {
         ExternalTool updated = service.updateExternalTool(
-                bridge.id(request.getExternalTool().getId(), "id"),
-                bridge.requiredIfMatch(request.getExternalTool().getEtag()),
-                bridge.changes(request.getExternalTool(), request.getUpdateMask(), ExternalToolUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExternalToolProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateExternalToolResponse.newBuilder(), "external_tool", updated).build());
     }
@@ -155,14 +150,13 @@ public class ExternalToolResolver extends ExternalToolServiceGrpc.ExternalToolSe
     }
 
     @Override
-    public void updateExternalToolSetting(UpdateExternalToolSettingRequest request,
+    public void updateExternalToolSetting(ExternalToolSettingUpdate request,
             StreamObserver<UpdateExternalToolSettingResponse> out) {
         ExternalToolSetting updated = service.updateExternalToolSetting(
                 bridge.id(request.getExternalToolId(), "externalToolId"),
-                bridge.id(request.getExternalToolSetting().getId(), "id"),
-                bridge.requiredIfMatch(request.getExternalToolSetting().getEtag()),
-                bridge.changes(request.getExternalToolSetting(), request.getUpdateMask(),
-                        ExternalToolSettingUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExternalToolSettingProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateExternalToolSettingResponse.newBuilder(), "external_tool_setting", updated).build());
     }
@@ -207,14 +201,13 @@ public class ExternalToolResolver extends ExternalToolServiceGrpc.ExternalToolSe
     }
 
     @Override
-    public void updateExternalToolInstitution(UpdateExternalToolInstitutionRequest request,
+    public void updateExternalToolInstitution(ExternalToolInstitutionUpdate request,
             StreamObserver<UpdateExternalToolInstitutionResponse> out) {
         ExternalToolInstitution updated = service.updateExternalToolInstitution(
                 bridge.id(request.getExternalToolId(), "externalToolId"),
-                bridge.id(request.getExternalToolInstitution().getId(), "id"),
-                bridge.requiredIfMatch(request.getExternalToolInstitution().getEtag()),
-                bridge.changes(request.getExternalToolInstitution(), request.getUpdateMask(),
-                        ExternalToolInstitutionUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExternalToolInstitutionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateExternalToolInstitutionResponse.newBuilder(), "external_tool_institution", updated).build());
     }
@@ -258,13 +251,13 @@ public class ExternalToolResolver extends ExternalToolServiceGrpc.ExternalToolSe
     }
 
     @Override
-    public void updateExternalToolRole(UpdateExternalToolRoleRequest request,
+    public void updateExternalToolRole(ExternalToolRoleUpdate request,
             StreamObserver<UpdateExternalToolRoleResponse> out) {
         ExternalToolRole updated = service.updateExternalToolRole(
                 bridge.id(request.getExternalToolId(), "externalToolId"),
-                bridge.id(request.getExternalToolRole().getId(), "id"),
-                bridge.requiredIfMatch(request.getExternalToolRole().getEtag()),
-                bridge.changes(request.getExternalToolRole(), request.getUpdateMask(), ExternalToolRoleUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExternalToolRoleProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateExternalToolRoleResponse.newBuilder(), "external_tool_role", updated).build());
@@ -309,14 +302,13 @@ public class ExternalToolResolver extends ExternalToolServiceGrpc.ExternalToolSe
     }
 
     @Override
-    public void updateExternalToolOption(UpdateExternalToolOptionRequest request,
+    public void updateExternalToolOption(ExternalToolOptionUpdate request,
             StreamObserver<UpdateExternalToolOptionResponse> out) {
         ExternalToolOption updated = service.updateExternalToolOption(
                 bridge.id(request.getExternalToolId(), "externalToolId"),
-                bridge.id(request.getExternalToolOption().getId(), "id"),
-                bridge.requiredIfMatch(request.getExternalToolOption().getEtag()),
-                bridge.changes(request.getExternalToolOption(), request.getUpdateMask(),
-                        ExternalToolOptionUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExternalToolOptionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateExternalToolOptionResponse.newBuilder(), "external_tool_option", updated).build());
     }

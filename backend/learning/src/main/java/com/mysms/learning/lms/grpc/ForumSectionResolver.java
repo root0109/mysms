@@ -3,18 +3,17 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ForumSection;
-import com.mysms.learning.lms.api.model.ForumSectionUpdate;
 import com.mysms.learning.lms.business.ForumSectionService;
 import com.mysms.lms.v1.CreateForumSectionRequest;
 import com.mysms.lms.v1.CreateForumSectionResponse;
 import com.mysms.lms.v1.DeleteForumSectionRequest;
 import com.mysms.lms.v1.DeleteForumSectionResponse;
 import com.mysms.lms.v1.ForumSectionServiceGrpc;
+import com.mysms.lms.v1.ForumSectionUpdate;
 import com.mysms.lms.v1.GetForumSectionRequest;
 import com.mysms.lms.v1.GetForumSectionResponse;
 import com.mysms.lms.v1.ListForumSectionsRequest;
 import com.mysms.lms.v1.ListForumSectionsResponse;
-import com.mysms.lms.v1.UpdateForumSectionRequest;
 import com.mysms.lms.v1.UpdateForumSectionResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class ForumSectionResolver extends ForumSectionServiceGrpc.ForumSectionSe
     }
 
     @Override
-    public void updateForumSection(UpdateForumSectionRequest request, StreamObserver<UpdateForumSectionResponse> out) {
+    public void updateForumSection(ForumSectionUpdate request, StreamObserver<UpdateForumSectionResponse> out) {
         ForumSection updated = service.updateForumSection(
-                bridge.id(request.getForumSection().getId(), "id"),
-                bridge.requiredIfMatch(request.getForumSection().getEtag()),
-                bridge.changes(request.getForumSection(), request.getUpdateMask(), ForumSectionUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ForumSectionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateForumSectionResponse.newBuilder(), "forum_section", updated).build());
     }

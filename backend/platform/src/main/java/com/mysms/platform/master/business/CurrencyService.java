@@ -118,6 +118,9 @@ public class CurrencyService extends AppTransactionManager {
             validator.validate(mapper.toDto(entity));
             assertValid(entity);
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (!validateOnly) {
                 if (repository.update(entity, expected) == 0) {

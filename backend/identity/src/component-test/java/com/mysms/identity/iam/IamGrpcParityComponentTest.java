@@ -378,17 +378,21 @@ class IamGrpcParityComponentTest {
                 grpc("ListSettingValues", admin, "{\"filter\":\"nope = 1\"}"));
 
         String etag = JSON.writeValueAsString(read.body().path("etag").asString());
-        String update = "{\"updateMask\":\"value\",\"settingValue\":{\"value\":\"light\",\"id\":\"" + id + "\",\"etag\":";
+        String update = "{\"value\":\"light\",\"id\":\"" + id + "\",\"etag\":";
         same(rest("PATCH", path + "/" + id, admin, "{\"value\":\"light\"}", "If-Match", "\"99\""),
-                grpc("UpdateSettingValue", admin, update + "\"99\"}}"));
+                grpc("UpdateSettingValue", admin, update + "\"99\"}"));
         same(rest("PATCH", path + "/" + id, admin, "{\"value\":\"light\"}"),
-                grpc("UpdateSettingValue", admin, update + "\"\"}}"));
+                grpc("UpdateSettingValue", admin, update + "\"\"}"));
         same(rest("PATCH", path + "/" + id, admin, "{\"value\":\"nope\"}", "If-Match", read.body().path("etag")
-                .asString()), grpc("UpdateSettingValue", admin, update.replace("light", "nope") + etag + "}}"));
-        JsonNode updated = ok(grpc("UpdateSettingValue", admin, update + etag + "}}")).path("settingValue");
+                .asString()), grpc("UpdateSettingValue", admin, update.replace("light", "nope") + etag + "}"));
+        JsonNode updated = ok(grpc("UpdateSettingValue", admin, update + etag + "}")).path("settingValue");
         Answer reread = rest("GET", path + "/" + id, admin, null);
         GrpcParity.assertSameResource(reread.body(), updated);
         assertThat(updated.path("value").asString()).isEqualTo("light");
+        JsonNode unchanged = ok(grpc("UpdateSettingValue", admin, "{\"id\":\"" + id + "\",\"etag\":"
+                + JSON.writeValueAsString(updated.path("etag").asString()) + "}")).path("settingValue");
+        assertThat(unchanged.path("etag").asString()).as("an empty update changes nothing")
+                .isEqualTo(updated.path("etag").asString());
         same(rest("DELETE", path + "/" + id, admin, null), grpc("DeleteSettingValue", admin, "{\"id\":\"" + id + "\"}"));
         ok(grpc("DeleteSettingValue", admin, "{\"id\":\"" + id + "\",\"etag\":"
                 + JSON.writeValueAsString(reread.body().path("etag").asString()) + "}"));

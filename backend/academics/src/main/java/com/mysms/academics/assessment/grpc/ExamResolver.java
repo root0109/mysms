@@ -2,9 +2,7 @@ package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.Exam;
 import com.mysms.academics.assessment.api.model.ExamInvigilator;
-import com.mysms.academics.assessment.api.model.ExamInvigilatorUpdate;
 import com.mysms.academics.assessment.api.model.ExamResultList;
-import com.mysms.academics.assessment.api.model.ExamUpdate;
 import com.mysms.academics.assessment.business.ExamService;
 import com.mysms.assessment.v1.AllocateExamRoomsRequest;
 import com.mysms.assessment.v1.AllocateExamRoomsResponse;
@@ -20,7 +18,9 @@ import com.mysms.assessment.v1.DeleteExamInvigilatorRequest;
 import com.mysms.assessment.v1.DeleteExamInvigilatorResponse;
 import com.mysms.assessment.v1.DeleteExamRequest;
 import com.mysms.assessment.v1.DeleteExamResponse;
+import com.mysms.assessment.v1.ExamInvigilatorUpdate;
 import com.mysms.assessment.v1.ExamServiceGrpc;
+import com.mysms.assessment.v1.ExamUpdate;
 import com.mysms.assessment.v1.GetExamInvigilatorRequest;
 import com.mysms.assessment.v1.GetExamInvigilatorResponse;
 import com.mysms.assessment.v1.GetExamRequest;
@@ -41,9 +41,7 @@ import com.mysms.assessment.v1.ResetExamRequest;
 import com.mysms.assessment.v1.ResetExamResponse;
 import com.mysms.assessment.v1.ScheduleExamRequest;
 import com.mysms.assessment.v1.ScheduleExamResponse;
-import com.mysms.assessment.v1.UpdateExamInvigilatorRequest;
 import com.mysms.assessment.v1.UpdateExamInvigilatorResponse;
-import com.mysms.assessment.v1.UpdateExamRequest;
 import com.mysms.assessment.v1.UpdateExamResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -86,10 +84,10 @@ public class ExamResolver extends ExamServiceGrpc.ExamServiceImplBase {
     }
 
     @Override
-    public void updateExam(UpdateExamRequest request, StreamObserver<UpdateExamResponse> out) {
+    public void updateExam(ExamUpdate request, StreamObserver<UpdateExamResponse> out) {
         Exam updated = examService.updateExam(
-                bridge.id(request.getExam().getId(), "id"), bridge.requiredIfMatch(request.getExam().getEtag()),
-                bridge.changes(request.getExam(), request.getUpdateMask(), ExamUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                ExamProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateExamResponse.newBuilder(), "exam", updated).build());
     }
 
@@ -129,12 +127,12 @@ public class ExamResolver extends ExamServiceGrpc.ExamServiceImplBase {
     }
 
     @Override
-    public void updateExamInvigilator(UpdateExamInvigilatorRequest request,
+    public void updateExamInvigilator(ExamInvigilatorUpdate request,
             StreamObserver<UpdateExamInvigilatorResponse> out) {
         ExamInvigilator updated = examService.updateExamInvigilator(
-                bridge.id(request.getExamId(), "examId"), bridge.id(request.getExamInvigilator().getId(), "id"),
-                bridge.requiredIfMatch(request.getExamInvigilator().getEtag()),
-                bridge.changes(request.getExamInvigilator(), request.getUpdateMask(), ExamInvigilatorUpdate.class),
+                bridge.id(request.getExamId(), "examId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExamInvigilatorProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateExamInvigilatorResponse.newBuilder(),
                 "exam_invigilator", updated).build());

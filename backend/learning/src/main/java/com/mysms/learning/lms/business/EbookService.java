@@ -153,6 +153,9 @@ public class EbookService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -344,6 +347,9 @@ public class EbookService extends AppTransactionManager {
             assertValidRelatedMaterial(entity, false);
             scope.requireWritable(institutionOfRelatedMaterial(entity));
             assertUniqueRelatedMaterial(entity);
+            if (fields.isEmpty()) {
+                return relatedMaterialMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return relatedMaterialMapper.toDto(entity);

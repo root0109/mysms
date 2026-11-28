@@ -281,6 +281,9 @@ public class SessionService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -907,6 +910,9 @@ public class SessionService extends AppTransactionManager {
             assertValidSessionStudent(entity, false);
             scope.requireWritable(institutionOfSessionStudent(entity));
             assertUniqueSessionStudent(entity);
+            if (fields.isEmpty()) {
+                return sessionStudentMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return sessionStudentMapper.toDto(entity);

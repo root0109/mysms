@@ -10,7 +10,6 @@ import com.mysms.academics.assessment.api.model.Assignment;
 import com.mysms.academics.assessment.api.model.AssignmentAllocation;
 import com.mysms.academics.assessment.api.model.AssignmentAllocationUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentApproval;
-import com.mysms.academics.assessment.api.model.AssignmentApprovalUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentSubject;
 import com.mysms.academics.assessment.api.model.AssignmentSubjectUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentUpdate;
@@ -18,6 +17,7 @@ import com.mysms.academics.assessment.api.model.CancelAssignmentRequest;
 import com.mysms.academics.assessment.api.model.FinishAssignmentRequest;
 import com.mysms.academics.assessment.api.model.PublishAssignmentRequest;
 import com.mysms.academics.assessment.api.model.RejectAssignmentRequest;
+import com.mysms.academics.assessment.api.model.RequestAssignmentApprovalRequest;
 import com.mysms.academics.assessment.api.model.ResetAssignmentRequest;
 import com.mysms.core.web.ReadMask;
 import java.net.URI;
@@ -79,20 +79,6 @@ public class AssignmentController implements AssignmentApi {
     }
 
     @Override
-    public ResponseEntity<AssignmentApproval> createAssignmentApproval(UUID assignmentId,
-            AssignmentApproval assignmentApproval, UUID idempotencyKey, Boolean validateOnly) {
-        boolean dryRun = Boolean.TRUE.equals(validateOnly);
-        AssignmentApproval created =
-                assignmentService.createAssignmentApproval(assignmentId, assignmentApproval, dryRun);
-        if (dryRun) {
-            return ResponseEntity.ok(created);
-        }
-        return ResponseEntity.created(
-                URI.create("/v1/assessment/assignments/" + assignmentId + "/approvals/" + created.getId()))
-                        .eTag(created.getEtag()).body(created);
-    }
-
-    @Override
     public ResponseEntity<AssignmentSubject> createAssignmentSubject(UUID assignmentId,
             AssignmentSubject assignmentSubject, UUID idempotencyKey, Boolean validateOnly) {
         boolean dryRun = Boolean.TRUE.equals(validateOnly);
@@ -116,13 +102,6 @@ public class AssignmentController implements AssignmentApi {
     public ResponseEntity<Void> deleteAssignmentAllocation(UUID assignmentId, UUID assignmentAllocationId,
             String ifMatch) {
         assignmentService.deleteAssignmentAllocation(assignmentId, assignmentAllocationId, ifMatch);
-        return ResponseEntity.noContent().build();
-    }
-
-    @Override
-    public ResponseEntity<Void> deleteAssignmentApproval(UUID assignmentId, UUID assignmentApprovalId,
-            String ifMatch) {
-        assignmentService.deleteAssignmentApproval(assignmentId, assignmentApprovalId, ifMatch);
         return ResponseEntity.noContent().build();
     }
 
@@ -222,6 +201,14 @@ public class AssignmentController implements AssignmentApi {
     }
 
     @Override
+    public ResponseEntity<Assignment> requestAssignmentApproval(UUID assignmentId,
+            RequestAssignmentApprovalRequest requestAssignmentApprovalRequest, UUID idempotencyKey) {
+        Assignment unchanged =
+                assignmentService.requestAssignmentApproval(assignmentId, requestAssignmentApprovalRequest);
+        return ResponseEntity.ok().eTag(unchanged.getEtag()).body(unchanged);
+    }
+
+    @Override
     public ResponseEntity<Assignment> resetAssignment(UUID assignmentId,
             ResetAssignmentRequest resetAssignmentRequest, UUID idempotencyKey) {
         Assignment changed = assignmentService.resetAssignment(assignmentId, resetAssignmentRequest);
@@ -243,17 +230,6 @@ public class AssignmentController implements AssignmentApi {
         AssignmentAllocation updated =
                 assignmentService.updateAssignmentAllocation(assignmentId, assignmentAllocationId, ifMatch,
                         assignmentAllocationUpdate,
-                Boolean.TRUE.equals(validateOnly));
-        return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
-    }
-
-    @Override
-    public ResponseEntity<AssignmentApproval> updateAssignmentApproval(UUID assignmentId,
-            UUID assignmentApprovalId, String ifMatch, AssignmentApprovalUpdate assignmentApprovalUpdate,
-            Boolean validateOnly) {
-        AssignmentApproval updated =
-                assignmentService.updateAssignmentApproval(assignmentId, assignmentApprovalId, ifMatch,
-                        assignmentApprovalUpdate,
                 Boolean.TRUE.equals(validateOnly));
         return ResponseEntity.ok().eTag(updated.getEtag()).body(updated);
     }

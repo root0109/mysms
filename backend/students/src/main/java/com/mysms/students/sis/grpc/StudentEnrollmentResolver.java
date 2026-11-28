@@ -3,7 +3,6 @@ package com.mysms.students.sis.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.StudentEnrollment;
-import com.mysms.students.sis.api.model.StudentEnrollmentUpdate;
 import com.mysms.students.sis.business.StudentEnrollmentService;
 import com.mysms.sis.v1.CreateStudentEnrollmentRequest;
 import com.mysms.sis.v1.CreateStudentEnrollmentResponse;
@@ -16,7 +15,7 @@ import com.mysms.sis.v1.ListClassRosterResponse;
 import com.mysms.sis.v1.ListStudentEnrollmentsRequest;
 import com.mysms.sis.v1.ListStudentEnrollmentsResponse;
 import com.mysms.sis.v1.StudentEnrollmentServiceGrpc;
-import com.mysms.sis.v1.UpdateStudentEnrollmentRequest;
+import com.mysms.sis.v1.StudentEnrollmentUpdate;
 import com.mysms.sis.v1.UpdateStudentEnrollmentResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -69,12 +68,12 @@ public class StudentEnrollmentResolver extends StudentEnrollmentServiceGrpc.Stud
     }
 
     @Override
-    public void updateStudentEnrollment(UpdateStudentEnrollmentRequest request,
+    public void updateStudentEnrollment(StudentEnrollmentUpdate request,
             StreamObserver<UpdateStudentEnrollmentResponse> out) {
         StudentEnrollment updated = service.updateStudentEnrollment(
-                bridge.id(request.getStudentEnrollment().getId(), "id"),
-                bridge.requiredIfMatch(request.getStudentEnrollment().getEtag()),
-                bridge.changes(request.getStudentEnrollment(), request.getUpdateMask(), StudentEnrollmentUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StudentEnrollmentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateStudentEnrollmentResponse.newBuilder(), "student_enrollment", updated).build());

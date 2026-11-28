@@ -3,7 +3,6 @@ package com.mysms.platform.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.api.model.SystemSetting;
-import com.mysms.platform.api.model.SystemSettingUpdate;
 import com.mysms.platform.business.SystemSettingService;
 import com.mysms.platform.v1.CreateSystemSettingRequest;
 import com.mysms.platform.v1.CreateSystemSettingResponse;
@@ -14,7 +13,7 @@ import com.mysms.platform.v1.GetSystemSettingResponse;
 import com.mysms.platform.v1.ListSystemSettingsRequest;
 import com.mysms.platform.v1.ListSystemSettingsResponse;
 import com.mysms.platform.v1.SystemSettingServiceGrpc;
-import com.mysms.platform.v1.UpdateSystemSettingRequest;
+import com.mysms.platform.v1.SystemSettingUpdate;
 import com.mysms.platform.v1.UpdateSystemSettingResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -58,12 +57,12 @@ public class SystemSettingResolver extends SystemSettingServiceGrpc.SystemSettin
     }
 
     @Override
-    public void updateSystemSetting(UpdateSystemSettingRequest request,
+    public void updateSystemSetting(SystemSettingUpdate request,
             StreamObserver<UpdateSystemSettingResponse> out) {
         SystemSetting updated = service.updateSystemSetting(
-                bridge.id(request.getSystemSetting().getId(), "id"),
-                bridge.requiredIfMatch(request.getSystemSetting().getEtag()),
-                bridge.changes(request.getSystemSetting(), request.getUpdateMask(), SystemSettingUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SystemSettingProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSystemSettingResponse.newBuilder(), "system_setting",
                 updated).build());

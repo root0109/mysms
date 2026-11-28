@@ -7,8 +7,6 @@ import com.mysms.academics.timetable.api.model.Operation;
 import com.mysms.academics.timetable.api.model.Session;
 import com.mysms.academics.timetable.api.model.SessionList;
 import com.mysms.academics.timetable.api.model.SessionStudent;
-import com.mysms.academics.timetable.api.model.SessionStudentUpdate;
-import com.mysms.academics.timetable.api.model.SessionUpdate;
 import com.mysms.academics.timetable.api.model.TimetableView;
 import com.mysms.academics.timetable.business.SessionService;
 import com.mysms.timetable.v1.BatchConfirmSessionsRequest;
@@ -42,9 +40,9 @@ import com.mysms.timetable.v1.ListSessionsResponse;
 import com.mysms.timetable.v1.ResetSessionRequest;
 import com.mysms.timetable.v1.ResetSessionResponse;
 import com.mysms.timetable.v1.SessionServiceGrpc;
-import com.mysms.timetable.v1.UpdateSessionRequest;
+import com.mysms.timetable.v1.SessionStudentUpdate;
+import com.mysms.timetable.v1.SessionUpdate;
 import com.mysms.timetable.v1.UpdateSessionResponse;
-import com.mysms.timetable.v1.UpdateSessionStudentRequest;
 import com.mysms.timetable.v1.UpdateSessionStudentResponse;
 import io.grpc.stub.StreamObserver;
 import java.time.LocalDate;
@@ -88,10 +86,10 @@ public class SessionResolver extends SessionServiceGrpc.SessionServiceImplBase {
     }
 
     @Override
-    public void updateSession(UpdateSessionRequest request, StreamObserver<UpdateSessionResponse> out) {
-        Session updated = service.updateSession(bridge.id(request.getSession().getId(), "id"),
-                bridge.requiredIfMatch(request.getSession().getEtag()),
-                bridge.changes(request.getSession(), request.getUpdateMask(), SessionUpdate.class), request.getValidateOnly());
+    public void updateSession(SessionUpdate request, StreamObserver<UpdateSessionResponse> out) {
+        Session updated = service.updateSession(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SessionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSessionResponse.newBuilder(), "session", updated).build());
     }
 
@@ -124,11 +122,11 @@ public class SessionResolver extends SessionServiceGrpc.SessionServiceImplBase {
     }
 
     @Override
-    public void updateSessionStudent(UpdateSessionStudentRequest request, StreamObserver<UpdateSessionStudentResponse> out) {
+    public void updateSessionStudent(SessionStudentUpdate request, StreamObserver<UpdateSessionStudentResponse> out) {
         SessionStudent updated = service.updateSessionStudent(bridge.id(request.getSessionId(), "sessionId"),
-                bridge.id(request.getSessionStudent().getId(), "id"),
-                bridge.requiredIfMatch(request.getSessionStudent().getEtag()),
-                bridge.changes(request.getSessionStudent(), request.getUpdateMask(), SessionStudentUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SessionStudentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSessionStudentResponse.newBuilder(), "session_student", updated).build());
     }

@@ -14,6 +14,8 @@ class RabbitEventBusTest {
                 .isEqualTo("mysms-hrms");
         assertThat(RabbitEventBus.expectedPublisher(RabbitEventBus.DEFAULT_PUBLISHER_USER, "hr", "guest"))
                 .isEqualTo("mysms-hrms");
+        assertThat(RabbitEventBus.expectedPublisher(RabbitEventBus.DEFAULT_PUBLISHER_USER, "time_attendance", "guest"))
+                .isEqualTo("mysms-hrms");
         assertThat(RabbitEventBus.expectedPublisher("svc-{module}", "people", "guest")).isEqualTo("svc-identity");
         assertThat(RabbitEventBus.expectedPublisher(RabbitEventBus.DEFAULT_PUBLISHER_USER, "finance", "guest"))
                 .isEqualTo("mysms-finance");

@@ -1,5 +1,6 @@
 package com.mysms.platform.org.events;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -32,6 +33,25 @@ public final class OrgEvents {
         if (timezone != null && !timezone.isBlank()) {
             payload.put("timezone", timezone);
         }
+        payload.put("rowVersion", rowVersion);
+        return payload;
+    }
+
+    /**
+     * The payload of a holiday's events: the row as it now is (institution absent for a tenant-wide holiday) and the row
+     * version the event reflects. hrms keeps its copy of the calendar (hr.holiday_record) from these, so leave and pay
+     * count working days without reading org; the version lets it ignore a late event.
+     */
+    public static Map<String, Object> holiday(UUID id, UUID institutionId, String title, LocalDate startDate,
+            LocalDate endDate, int rowVersion) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("id", id.toString());
+        if (institutionId != null) {
+            payload.put("institutionId", institutionId.toString());
+        }
+        payload.put("title", title);
+        payload.put("startDate", startDate.toString());
+        payload.put("endDate", endDate.toString());
         payload.put("rowVersion", rowVersion);
         return payload;
     }

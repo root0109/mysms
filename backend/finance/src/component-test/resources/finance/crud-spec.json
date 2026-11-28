@@ -75,7 +75,9 @@
     "couponId": "fa5ff850-4b89-5af2-a2b2-84b6b88b8162",
     "lmsCourseId": "0196f000-0000-7000-8000-0000000c0c01"
    },
-   "update": {},
+   "update": {
+    "lmsCourseId": "0196f000-0000-7000-8000-0000000c0c01"
+   },
    "patch": {
     "clears": "lmsCohortId"
    },
@@ -188,7 +190,9 @@
     "sequence": 3,
     "sharePercent": "1"
    },
-   "update": {},
+   "update": {
+    "dueDays": 15
+   },
    "patch": {
     "clears": "dueDate",
     "keeps": "sharePercent"
@@ -218,7 +222,9 @@
     "feeHeadId": "4f0cc7b2-3359-57b5-bae4-7123ed10d77f",
     "sharePercent": "1"
    },
-   "update": {},
+   "update": {
+    "sequence": 2
+   },
    "patch": {
     "clears": "sequence",
     "keeps": "sharePercent"

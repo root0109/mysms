@@ -4,10 +4,10 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Annotation;
 import com.mysms.learning.lms.api.model.AnnotationShare;
-import com.mysms.learning.lms.api.model.AnnotationShareUpdate;
-import com.mysms.learning.lms.api.model.AnnotationUpdate;
 import com.mysms.learning.lms.business.AnnotationService;
 import com.mysms.lms.v1.AnnotationServiceGrpc;
+import com.mysms.lms.v1.AnnotationShareUpdate;
+import com.mysms.lms.v1.AnnotationUpdate;
 import com.mysms.lms.v1.CreateAnnotationRequest;
 import com.mysms.lms.v1.CreateAnnotationResponse;
 import com.mysms.lms.v1.CreateAnnotationShareRequest;
@@ -24,9 +24,7 @@ import com.mysms.lms.v1.ListAnnotationSharesRequest;
 import com.mysms.lms.v1.ListAnnotationSharesResponse;
 import com.mysms.lms.v1.ListAnnotationsRequest;
 import com.mysms.lms.v1.ListAnnotationsResponse;
-import com.mysms.lms.v1.UpdateAnnotationRequest;
 import com.mysms.lms.v1.UpdateAnnotationResponse;
-import com.mysms.lms.v1.UpdateAnnotationShareRequest;
 import com.mysms.lms.v1.UpdateAnnotationShareResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -68,10 +66,10 @@ public class AnnotationResolver extends AnnotationServiceGrpc.AnnotationServiceI
     }
 
     @Override
-    public void updateAnnotation(UpdateAnnotationRequest request, StreamObserver<UpdateAnnotationResponse> out) {
-        Annotation updated = service.updateAnnotation(bridge.id(request.getAnnotation().getId(), "id"),
-                bridge.requiredIfMatch(request.getAnnotation().getEtag()),
-                bridge.changes(request.getAnnotation(), request.getUpdateMask(), AnnotationUpdate.class),
+    public void updateAnnotation(AnnotationUpdate request, StreamObserver<UpdateAnnotationResponse> out) {
+        Annotation updated = service.updateAnnotation(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AnnotationProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAnnotationResponse.newBuilder(), "annotation", updated).build());
     }
@@ -105,11 +103,11 @@ public class AnnotationResolver extends AnnotationServiceGrpc.AnnotationServiceI
     }
 
     @Override
-    public void updateAnnotationShare(UpdateAnnotationShareRequest request, StreamObserver<UpdateAnnotationShareResponse> out) {
+    public void updateAnnotationShare(AnnotationShareUpdate request, StreamObserver<UpdateAnnotationShareResponse> out) {
         AnnotationShare updated = service.updateAnnotationShare(bridge.id(request.getAnnotationId(), "annotationId"),
-                bridge.id(request.getAnnotationShare().getId(), "id"),
-                bridge.requiredIfMatch(request.getAnnotationShare().getEtag()),
-                bridge.changes(request.getAnnotationShare(), request.getUpdateMask(), AnnotationShareUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AnnotationShareProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAnnotationShareResponse.newBuilder(), "annotation_share", updated).build());
     }

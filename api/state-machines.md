@@ -127,6 +127,13 @@ comments keeps the comments already given (they are replaced, never removed).
 | `assessment.CancelAssignment` | `status` ∈ {"draft", "published", "ongoing"} | `status` = "cancelled" | yes |
 | `assessment.ResetAssignment` | `status` ∈ {"cancelled"} | `status` = "draft" | no |
 
+The review of a draft lives in its approvals (`assessment.assignment_approval`), which only these steps write — the
+contract has no create, update or delete for them. `assessment.RequestAssignmentApproval` (draft, no review waiting;
+409 otherwise) records a pending approval in the caller's name and leaves the assignment as it is.
+`assessment.ApproveAssignment` decides the newest pending approval as approved and publishes the draft;
+`assessment.RejectAssignment` decides it as rejected and keeps the draft. Both keep the reason as the approval's
+comments and the decider and time from the caller's token (409 when no review waits).
+
 ## assessment.AssignmentSubmission (`assessment.assignment_submission`)
 
 | Operation | Allowed from | Sets | Reason kept |

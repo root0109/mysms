@@ -71,7 +71,7 @@ export const RESOURCE_SCREENS: readonly ResourceScreenDef[] = [
   { id: 'TT-02', resource: 'timetable.Session', group: 'academics', tool: 'takeAttendance' },
   { id: 'ATT-01', resource: 'attendance.AttendanceRegister', group: 'academics' },
   { id: 'ATT-02', resource: 'attendance.AttendanceSheet', group: 'academics', detail: 'ATT-03' },
-  { id: 'ATT-06', resource: 'attendance.StaffAttendance', group: 'people' },
+  { id: 'ATT-06', resource: 'time_attendance.StaffAttendance', group: 'people' },
   {
     id: 'ASM-01',
     resource: 'assessment.Homework',

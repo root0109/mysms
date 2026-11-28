@@ -3,9 +3,9 @@ package com.mysms.platform.master.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.master.api.model.City;
-import com.mysms.platform.master.api.model.CityUpdate;
 import com.mysms.platform.master.business.CityService;
 import com.mysms.master.v1.CityServiceGrpc;
+import com.mysms.master.v1.CityUpdate;
 import com.mysms.master.v1.CreateCityRequest;
 import com.mysms.master.v1.CreateCityResponse;
 import com.mysms.master.v1.DeleteCityRequest;
@@ -14,7 +14,6 @@ import com.mysms.master.v1.GetCityRequest;
 import com.mysms.master.v1.GetCityResponse;
 import com.mysms.master.v1.ListCitiesRequest;
 import com.mysms.master.v1.ListCitiesResponse;
-import com.mysms.master.v1.UpdateCityRequest;
 import com.mysms.master.v1.UpdateCityResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -59,11 +58,11 @@ public class CityResolver extends CityServiceGrpc.CityServiceImplBase {
     }
 
     @Override
-    public void updateCity(UpdateCityRequest request, StreamObserver<UpdateCityResponse> out) {
+    public void updateCity(CityUpdate request, StreamObserver<UpdateCityResponse> out) {
         City updated = service.updateCity(
-                bridge.id(request.getCity().getId(), "id"),
-                bridge.requiredIfMatch(request.getCity().getEtag()),
-                bridge.changes(request.getCity(), request.getUpdateMask(), CityUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CityProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCityResponse.newBuilder(), "city", updated).build());
     }
 

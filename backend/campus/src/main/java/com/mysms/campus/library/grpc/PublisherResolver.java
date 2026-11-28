@@ -3,7 +3,6 @@ package com.mysms.campus.library.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.library.api.model.Publisher;
-import com.mysms.campus.library.api.model.PublisherUpdate;
 import com.mysms.campus.library.business.PublisherService;
 import com.mysms.library.v1.CreatePublisherRequest;
 import com.mysms.library.v1.CreatePublisherResponse;
@@ -14,7 +13,7 @@ import com.mysms.library.v1.GetPublisherResponse;
 import com.mysms.library.v1.ListPublishersRequest;
 import com.mysms.library.v1.ListPublishersResponse;
 import com.mysms.library.v1.PublisherServiceGrpc;
-import com.mysms.library.v1.UpdatePublisherRequest;
+import com.mysms.library.v1.PublisherUpdate;
 import com.mysms.library.v1.UpdatePublisherResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,11 +56,11 @@ public class PublisherResolver extends PublisherServiceGrpc.PublisherServiceImpl
     }
 
     @Override
-    public void updatePublisher(UpdatePublisherRequest request, StreamObserver<UpdatePublisherResponse> out) {
+    public void updatePublisher(PublisherUpdate request, StreamObserver<UpdatePublisherResponse> out) {
         Publisher updated = service.updatePublisher(
-                bridge.id(request.getPublisher().getId(), "id"),
-                bridge.requiredIfMatch(request.getPublisher().getEtag()),
-                bridge.changes(request.getPublisher(), request.getUpdateMask(), PublisherUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PublisherProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePublisherResponse.newBuilder(), "publisher", updated).build());
     }

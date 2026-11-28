@@ -64,7 +64,7 @@ public final class ModulePropertiesEnvironmentPostProcessor implements Environme
             Properties properties = load(file);
             String name = properties.getProperty(NAME, "");
             String area = properties.getProperty(FIRST_AREA, "");
-            if (name.matches("[a-z]+") && area.matches("[a-z]+")
+            if (name.matches("[a-z]+") && area.matches("[a-z_]+")
                     && exists(sibling(file, "META-INF/mysms/operations/" + area + ".json"))) {
                 modules.add(new ModuleFile(name, properties));
             }

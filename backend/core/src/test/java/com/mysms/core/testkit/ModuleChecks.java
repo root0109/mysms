@@ -21,10 +21,10 @@ import java.util.stream.Stream;
  */
 public final class ModuleChecks {
 
-    /** The 22 area schemas. */
-    public static final Set<String> SCHEMAS = Set.of("master", "platform", "iam", "org", "people", "academics", "sis",
-            "hr", "payroll", "admission", "attendance", "facility", "timetable", "assessment", "lms", "finance",
-            "library", "transport", "comms", "frontoffice", "careers", "privacy");
+    /** The 23 area schemas. */
+    public static final Set<String> SCHEMAS = Set.of("master", "platform", "iam", "org", "people", "academics",
+            "sis", "hr", "payroll", "time_attendance", "admission", "attendance", "facility", "timetable",
+            "assessment", "lms", "finance", "library", "transport", "comms", "frontoffice", "careers", "privacy");
 
     private static final Pattern TEXT_BLOCK = Pattern.compile("\"\"\"(.*?)\"\"\"", Pattern.DOTALL);
     private static final Pattern STRING = Pattern.compile("\"((?:[^\"\\\\\\n]|\\\\.)*)\"");
@@ -37,12 +37,12 @@ public final class ModuleChecks {
     private static final Set<String> NOT_TABLES = Set.of("lateral", "unnest", "only", "generate_series");
     private static final Pattern CTE_NAME = Pattern.compile(
             "(?:\\bWITH(?:\\s+RECURSIVE)?\\s+|,\\s*)([a-z_][a-z0-9_]*)\\s+AS\\s*\\(", Pattern.CASE_INSENSITIVE);
-    private static final Pattern QUALIFIED = Pattern.compile("\\b([a-z]+)\\.([a-z_][a-z0-9_]*)\\b");
+    private static final Pattern QUALIFIED = Pattern.compile("\\b([a-z][a-z_]*)\\.([a-z_][a-z0-9_]*)\\b");
     private static final Pattern GRPC_IMPORT =
-            Pattern.compile("^import\\s+(?:static\\s+)?com\\.mysms\\.([a-z]+)\\.v1\\.", Pattern.MULTILINE);
-    private static final Pattern ROW = Pattern.compile("^\\| `([a-z]+)` \\| (.*) \\|$", Pattern.MULTILINE);
-    private static final Pattern CELL = Pattern.compile("`([a-z]+)`");
-    private static final Pattern MIGRATIONS = Pattern.compile("\\$\\{mysms\\.migrations\\.dir\\}/([a-z]+)<");
+            Pattern.compile("^import\\s+(?:static\\s+)?com\\.mysms\\.([a-z_]+)\\.v1\\.", Pattern.MULTILINE);
+    private static final Pattern ROW = Pattern.compile("^\\| `([a-z_]+)` \\| (.*) \\|$", Pattern.MULTILINE);
+    private static final Pattern CELL = Pattern.compile("`([a-z_]+)`");
+    private static final Pattern MIGRATIONS = Pattern.compile("\\$\\{mysms\\.migrations\\.dir\\}/([a-z_]+)<");
 
     private ModuleChecks() {
     }

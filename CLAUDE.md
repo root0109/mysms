@@ -23,8 +23,10 @@ React, React Native and front-end/mobile engineering, a master of design pattern
 
 ## 2. Architecture and modules
 
-- **Ten domain modules of 22 areas** (ARC-7, JAVA-CODING-RULES §2.2): an *area* is one schema with its contract
-  (protos, operation table, `/v1/<area>`, `mysms.<area>.*`); a module serves one or more areas. Kernel: `platform`,
+- **Ten domain modules of 23 areas** (ARC-7, JAVA-CODING-RULES §2.2): an *area* is one schema with its contract
+  (protos, operation table, `/v1/<area>`, `mysms.<area>.*`; an area named with an underscore hyphenates its URL and
+  configuration prefix, JAVA-CODING-RULES §2.2); a module serves one or more areas. Areas of one module call each other
+  directly in Java, never over gRPC; modules call each other over gRPC. Kernel: `platform`,
   `identity`, `privacy`, `comms`; products: `hrms`; school `students`, `academics`, `finance`, `campus`; `learning`.
   A product depends only on the kernel, except school → hrms by id and events; the kernel knows no product.
 
@@ -91,7 +93,8 @@ React, React Native and front-end/mobile engineering, a master of design pattern
 - Implementation agents and the coordinator run on **Claude Opus 5.5**.
 - One independent review per batch runs on **Claude Sonnet, the highest version in the owner's plan without separate
   billing**, as a separate agent that did not write the code. Sonnet reviews; it never implements.
-- **No Fable** for any work. **No Haiku.** Never a model that needs separate billing.
+- **Only these two models** do any work: Opus implements and coordinates, Sonnet reviews. **No Haiku.** Never a model
+  that needs separate billing.
 - If a model's usage limit is reached, fall back to the next best model and say so in the report; do not stop.
 - **At most two or three agents at a time.**
 

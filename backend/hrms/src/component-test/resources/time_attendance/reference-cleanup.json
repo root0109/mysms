@@ -1,0 +1,25 @@
+{
+ "module": "time_attendance",
+ "cleanup": [
+  {
+   "event": "hr.leave_application.deleted",
+   "table": "time_attendance.staff_attendance",
+   "column": "leave_application_id",
+   "action": "null the column",
+   "ownerId": "c373ebec-a311-5b7c-940e-be7571f5dd7d",
+   "rowId": "a4eaad67-fb2b-5390-81bd-d3cd5f07e66b",
+   "otherRowId": "2bf8ece4-42ed-57f5-94a2-776556f29bd0",
+   "fixtures": [
+    "INSERT INTO hr.staff (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '6a64e20f-55a4-5a40-9f6c-8dca7e01f71d', '0196f000-0000-7000-8000-00000000a001', 1, '0f006513-4cd0-5ff5-9c6a-b3bf60779a5b') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO hr.leave_application (tenant_id, institution_id, academic_year_id, staff_id, from_at, to_at, status, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 'e63e6f3e-8f0b-5a53-bd33-872c9a1ad482', '0f006513-4cd0-5ff5-9c6a-b3bf60779a5b', '2026-01-09T00:00:00Z', '2026-01-11T00:00:00Z', 'approved', 1, 'c373ebec-a311-5b7c-940e-be7571f5dd7d') ON CONFLICT (id) DO NOTHING"
+   ],
+   "row": "INSERT INTO time_attendance.staff_attendance (tenant_id, staff_id, attendance_date, status, row_version, leave_application_id, id) VALUES (:tenant, '0f006513-4cd0-5ff5-9c6a-b3bf60779a5b', '2026-01-10', 'on_leave', 1, 'c373ebec-a311-5b7c-940e-be7571f5dd7d', 'a4eaad67-fb2b-5390-81bd-d3cd5f07e66b')",
+   "otherFixtures": [
+    "INSERT INTO hr.staff (tenant_id, person_id, institution_id, row_version, id) VALUES (:tenant, '2b1f5a7e-1f2d-5d7a-90be-67e5cf61a8b4', '7a86f7d0-7e3a-52bd-9804-cb866553556c', 1, '4c138994-0650-5899-a443-5633bbe99a14') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO hr.leave_application (tenant_id, institution_id, academic_year_id, staff_id, from_at, to_at, status, row_version, id) VALUES (:tenant, '7a86f7d0-7e3a-52bd-9804-cb866553556c', '5b6f3a20-9f5e-5a1c-8f74-3f1f0fbc2d19', '4c138994-0650-5899-a443-5633bbe99a14', '2026-01-09T00:00:00Z', '2026-01-11T00:00:00Z', 'approved', 1, 'd4a9c0a7-67b5-5f43-9ce2-6f2d6a3b9b21') ON CONFLICT (id) DO NOTHING"
+   ],
+   "other": "INSERT INTO time_attendance.staff_attendance (tenant_id, staff_id, attendance_date, status, row_version, leave_application_id, id) VALUES (:tenant, '4c138994-0650-5899-a443-5633bbe99a14', '2026-01-10', 'on_leave', 1, 'd4a9c0a7-67b5-5f43-9ce2-6f2d6a3b9b21', '2bf8ece4-42ed-57f5-94a2-776556f29bd0')",
+   "softDeletable": true
+  }
+ ]
+}

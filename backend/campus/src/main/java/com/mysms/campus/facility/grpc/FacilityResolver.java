@@ -3,18 +3,17 @@ package com.mysms.campus.facility.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.facility.api.model.Facility;
-import com.mysms.campus.facility.api.model.FacilityUpdate;
 import com.mysms.campus.facility.business.FacilityService;
 import com.mysms.facility.v1.CreateFacilityRequest;
 import com.mysms.facility.v1.CreateFacilityResponse;
 import com.mysms.facility.v1.DeleteFacilityRequest;
 import com.mysms.facility.v1.DeleteFacilityResponse;
 import com.mysms.facility.v1.FacilityServiceGrpc;
+import com.mysms.facility.v1.FacilityUpdate;
 import com.mysms.facility.v1.GetFacilityRequest;
 import com.mysms.facility.v1.GetFacilityResponse;
 import com.mysms.facility.v1.ListFacilitiesRequest;
 import com.mysms.facility.v1.ListFacilitiesResponse;
-import com.mysms.facility.v1.UpdateFacilityRequest;
 import com.mysms.facility.v1.UpdateFacilityResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -55,10 +54,10 @@ public class FacilityResolver extends FacilityServiceGrpc.FacilityServiceImplBas
     }
 
     @Override
-    public void updateFacility(UpdateFacilityRequest request, StreamObserver<UpdateFacilityResponse> out) {
-        Facility updated = service.updateFacility(bridge.id(request.getFacility().getId(), "id"),
-                bridge.requiredIfMatch(request.getFacility().getEtag()),
-                bridge.changes(request.getFacility(), request.getUpdateMask(), FacilityUpdate.class), request.getValidateOnly());
+    public void updateFacility(FacilityUpdate request, StreamObserver<UpdateFacilityResponse> out) {
+        Facility updated = service.updateFacility(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                FacilityProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFacilityResponse.newBuilder(), "facility", updated).build());
     }
 

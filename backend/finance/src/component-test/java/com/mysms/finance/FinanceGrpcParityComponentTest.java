@@ -3,11 +3,9 @@ package com.mysms.finance;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.FieldMask;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
@@ -381,12 +379,12 @@ class FinanceGrpcParityComponentTest {
             ObjectNode changes = (ObjectNode) resource.path("update");
             String etag = read.body().path("etag").asString();
             GrpcParityContract.assertSameAnswer(rest("PATCH", collection + "/" + id, school.admin(), changes.toString(),
-                    "If-Match", "\"99\""), grpc(update, updating(update, field, id, "99", changes), school.admin()));
+                    "If-Match", "\"99\""), grpc(update, updating(update, parents, id, "99", changes), school.admin()));
             GrpcParityContract.assertSameAnswer(rest("PATCH", collection + "/" + id, school.admin(), changes.toString()),
-                    grpc(update, updating(update, field, id, "", changes), school.admin()));
+                    grpc(update, updating(update, parents, id, "", changes), school.admin()));
             GrpcParityContract.assertSameAnswer(rest("PATCH", collection + "/" + id, school.nobody(), changes.toString(),
-                    "If-Match", etag), grpc(update, updating(update, field, id, etag, changes), school.nobody()));
-            JsonNode updated = resource(grpc(update, updating(update, field, id, etag, changes), school.admin()));
+                    "If-Match", etag), grpc(update, updating(update, parents, id, etag, changes), school.nobody()));
+            JsonNode updated = resource(grpc(update, updating(update, parents, id, etag, changes), school.admin()));
             GrpcParity.assertSameResource(rest("GET", collection + "/" + id, school.admin(), null).body(), updated);
             changes.properties().forEach(change -> assertThat(updated.path(change.getKey()).asString())
                     .as(change.getKey()).isEqualTo(change.getValue().asString()));
@@ -414,16 +412,13 @@ class FinanceGrpcParityComponentTest {
         return request.build();
     }
 
-    /** An update: the row's id and etag in the resource, the changes, and a mask naming them. */
-    @SuppressWarnings("unchecked")
-    private DynamicMessage updating(MethodDescriptor update, String field, String id, String etag, ObjectNode changes) {
-        ObjectNode resource = changes.deepCopy().put("id", id).put("etag", etag);
-        DynamicMessage.Builder request = bridge.reply(request(update), field, JSON.convertValue(resource, Map.class));
-        FieldMask.Builder mask = FieldMask.newBuilder();
-        Descriptor type = update.getInputType().findFieldByName(field).getMessageType();
-        changes.propertyNames().forEach(name -> type.getFields().stream()
-                .filter(f -> f.getJsonName().equals(name)).forEach(f -> mask.addPaths(f.getName())));
-        return set(request, "update_mask", mask.build()).build();
+    /** An update: the {@code <Resource>Update} message of a REST PATCH body, keyed by its parents, id and etag. */
+    private DynamicMessage updating(MethodDescriptor update, Map<String, String> parents, String id, String etag,
+                                    ObjectNode changes) {
+        DynamicMessage.Builder request = contract().changes(update, changes);
+        parents.forEach((field, value) -> set(request, field, value));
+        set(request, "id", id);
+        return set(request, "etag", etag).build();
     }
 
     // ------------------------------------------------------------------ the state transitions of crud-spec.json
@@ -717,7 +712,7 @@ class FinanceGrpcParityComponentTest {
         String etag = read.path("etag").asString();
         Answer locked = rest("PATCH", INVOICES + "/" + again, office.admin(), rename.toString(), "If-Match", etag);
         assertThat(locked.status()).isEqualTo(409);
-        GrpcParityContract.assertSameAnswer(locked, grpc(update, updating(update, "invoice", again, etag, rename),
+        GrpcParityContract.assertSameAnswer(locked, grpc(update, updating(update, Map.of(), again, etag, rename),
                 office.admin()));
     }
 

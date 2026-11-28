@@ -375,6 +375,9 @@ public class ContentItemService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -1485,6 +1488,9 @@ public class ContentItemService extends AppTransactionManager {
             assertValidAssignmentGroup(entity, false);
             scope.requireWritable(institutionOfAssignmentGroup(entity));
             assertUniqueAssignmentGroup(entity);
+            if (fields.isEmpty()) {
+                return assignmentGroupMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return assignmentGroupMapper.toDto(entity);
@@ -1689,6 +1695,9 @@ public class ContentItemService extends AppTransactionManager {
             assertValidContentItemRating(entity, false);
             scope.requireWritable(institutionOfContentItemRating(entity));
             assertUniqueContentItemRating(entity);
+            if (fields.isEmpty()) {
+                return contentItemRatingMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return contentItemRatingMapper.toDto(entity);
@@ -1848,6 +1857,9 @@ public class ContentItemService extends AppTransactionManager {
             assertValidItemOverride(entity, false);
             scope.requireWritable(institutionOfItemOverride(entity));
             assertUniqueItemOverride(entity);
+            if (fields.isEmpty()) {
+                return itemOverrideMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return itemOverrideMapper.toDto(entity);

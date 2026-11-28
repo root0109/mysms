@@ -3,7 +3,6 @@ package com.mysms.campus.library.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.library.api.model.MediaCategory;
-import com.mysms.campus.library.api.model.MediaCategoryUpdate;
 import com.mysms.campus.library.business.MediaCategoryService;
 import com.mysms.library.v1.CreateMediaCategoryRequest;
 import com.mysms.library.v1.CreateMediaCategoryResponse;
@@ -14,7 +13,7 @@ import com.mysms.library.v1.GetMediaCategoryResponse;
 import com.mysms.library.v1.ListMediaCategoriesRequest;
 import com.mysms.library.v1.ListMediaCategoriesResponse;
 import com.mysms.library.v1.MediaCategoryServiceGrpc;
-import com.mysms.library.v1.UpdateMediaCategoryRequest;
+import com.mysms.library.v1.MediaCategoryUpdate;
 import com.mysms.library.v1.UpdateMediaCategoryResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,11 +56,11 @@ public class MediaCategoryResolver extends MediaCategoryServiceGrpc.MediaCategor
     }
 
     @Override
-    public void updateMediaCategory(UpdateMediaCategoryRequest request, StreamObserver<UpdateMediaCategoryResponse> out) {
+    public void updateMediaCategory(MediaCategoryUpdate request, StreamObserver<UpdateMediaCategoryResponse> out) {
         MediaCategory updated = service.updateMediaCategory(
-                bridge.id(request.getMediaCategory().getId(), "id"),
-                bridge.requiredIfMatch(request.getMediaCategory().getEtag()),
-                bridge.changes(request.getMediaCategory(), request.getUpdateMask(), MediaCategoryUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MediaCategoryProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMediaCategoryResponse.newBuilder(), "media_category", updated).build());
     }

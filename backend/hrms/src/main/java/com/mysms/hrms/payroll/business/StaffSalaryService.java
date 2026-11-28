@@ -155,6 +155,9 @@ public class StaffSalaryService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -329,6 +332,9 @@ public class StaffSalaryService extends AppTransactionManager {
             assertValidStaffSalaryComponent(entity, false);
             scope.requireWritable(institutionOfStaffSalaryComponent(entity));
             assertUniqueStaffSalaryComponent(entity);
+            if (fields.isEmpty()) {
+                return staffSalaryComponentMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return staffSalaryComponentMapper.toDto(entity);

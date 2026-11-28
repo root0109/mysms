@@ -106,15 +106,25 @@ DO $$ BEGIN
   RAISE EXCEPTION 'SMOKE FAIL: second open loan on one copy accepted';
 EXCEPTION WHEN unique_violation THEN NULL; END $$;
 
--- ---- 9. partition routing: staff attendance lands in its month ----
+-- ---- 9. partition routing: staff attendance (hrms time_attendance) lands in its month, and its in-module
+--         leave link (hr.leave_application, tenant-composite FK) can never point into another tenant ----
 INSERT INTO hr.staff (id, tenant_id, person_id, institution_id, employment_type, status)
 VALUES ('00000000-0000-0000-0000-000000000aa1', '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000003a2', '00000000-0000-0000-0000-0000000001a1', 'full_time', 'active');
-INSERT INTO attendance.staff_attendance (tenant_id, staff_id, attendance_date, status)
+INSERT INTO time_attendance.staff_attendance (tenant_id, staff_id, attendance_date, status)
 VALUES ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000aa1', '2026-07-15', 'present');
 DO $$ DECLARE n int; BEGIN
-  SELECT count(*) INTO n FROM attendance.staff_attendance_2026_07;
+  SELECT count(*) INTO n FROM time_attendance.staff_attendance_2026_07;
   IF n <> 1 THEN RAISE EXCEPTION 'SMOKE FAIL: staff attendance not routed to monthly partition'; END IF;
 END $$;
+INSERT INTO hr.staff (id, tenant_id, person_id, institution_id, employment_type, status)
+VALUES ('00000000-0000-0000-0000-000000000ab1', '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000003b1', '00000000-0000-0000-0000-0000000001b1', 'full_time', 'active');
+INSERT INTO hr.leave_application (id, tenant_id, institution_id, academic_year_id, staff_id, from_at, to_at, status)
+VALUES ('00000000-0000-0000-0000-00000000f1b1', '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000001b1', '00000000-0000-0000-0000-0000000002a1', '00000000-0000-0000-0000-000000000ab1', '2026-07-14', '2026-07-16', 'approved');
+DO $$ BEGIN
+  INSERT INTO time_attendance.staff_attendance (tenant_id, staff_id, attendance_date, status, leave_application_id)
+  VALUES ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000aa1', '2026-07-16', 'on_leave', '00000000-0000-0000-0000-00000000f1b1');
+  RAISE EXCEPTION 'SMOKE FAIL: staff attendance accepted another tenant''s leave application';
+EXCEPTION WHEN foreign_key_violation THEN NULL; END $$;
 
 COMMIT;
 
@@ -207,11 +217,13 @@ SELECT 'SMOKE2 OK' AS result;
 
 
 -- ============================================================================
--- SMOKE3: distributed-deployment invariants (no cross-schema coupling)
+-- SMOKE3: distributed-deployment invariants (no cross-module coupling)
 -- ============================================================================
 RESET ROLE; RESET app.tenant_id;
 
--- 1. ZERO cross-schema foreign keys anywhere (schemas may live on separate instances).
+-- 1. ZERO cross-module foreign keys anywhere (modules may live on separate instances). The schemas of one
+--    module deploy together, so a foreign key between hrms's own schemas (hr, payroll, time_attendance) is
+--    allowed — and only between them (owner decision, reorganisation 2c).
 DO $$
 DECLARE n int;
 BEGIN
@@ -223,8 +235,10 @@ BEGIN
   JOIN pg_namespace ns2 ON ns2.oid = c2.relnamespace
   WHERE con.contype = 'f'
     AND ns.nspname NOT IN ('pg_catalog','information_schema','public')
-    AND ns.nspname <> ns2.nspname;
-  IF n <> 0 THEN RAISE EXCEPTION 'SMOKE3 FAIL: % cross-schema foreign keys exist', n; END IF;
+    AND ns.nspname <> ns2.nspname
+    AND NOT (ns.nspname  IN ('hr','payroll','time_attendance')
+         AND ns2.nspname IN ('hr','payroll','time_attendance'));
+  IF n <> 0 THEN RAISE EXCEPTION 'SMOKE3 FAIL: % cross-module foreign keys exist', n; END IF;
 END $$;
 
 -- 2. Module-local infrastructure tables exist (idempotency/operation in every service schema,
@@ -234,7 +248,7 @@ DECLARE missing text;
 BEGIN
   SELECT string_agg(s || '.' || t, ', ') INTO missing FROM (
     SELECT s, t FROM unnest(ARRAY['platform','iam','org','people','academics','sis','hr','payroll',
-      'admission','attendance','facility','timetable','assessment','lms','finance','library',
+      'time_attendance','admission','attendance','facility','timetable','assessment','lms','finance','library',
       'transport','comms','frontoffice','careers']) s,
       unnest(ARRAY['idempotency_key','operation']) t
     UNION ALL

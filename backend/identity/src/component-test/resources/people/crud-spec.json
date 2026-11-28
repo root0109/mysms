@@ -206,7 +206,9 @@
     "name": "t-name-b5bdee81",
     "fileId": "ca50dde4-0b28-5d01-a2e4-d3d881ac6a54"
    },
-   "update": {},
+   "update": {
+    "name": "t-name-renamed"
+   },
    "patch": {
     "keeps": "name",
     "clears": "institutionId"
@@ -234,7 +236,9 @@
     "personId": "a2da1934-b1b5-5f1f-8564-66e9edef348f",
     "skillId": "a7c36910-35e7-58d8-92bb-39cf5435bc31"
    },
-   "update": {},
+   "update": {
+    "skillId": "a7c36910-35e7-58d8-92bb-39cf5435bc31"
+   },
    "patch": {
     "keeps": "skillId"
    },
@@ -261,7 +265,9 @@
     "network": "facebook",
     "handle": "t-handle-5910bd6b"
    },
-   "update": {},
+   "update": {
+    "handle": "t-handle-renamed"
+   },
    "patch": {
     "keeps": "network"
    },

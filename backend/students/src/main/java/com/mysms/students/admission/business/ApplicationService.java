@@ -265,6 +265,9 @@ public class ApplicationService extends AppTransactionManager implements Initial
                 access.scope().requireWritable(institutionOf(entity));
             }
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return dtoFor(access, entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return dtoFor(access, entity);
@@ -641,6 +644,9 @@ public class ApplicationService extends AppTransactionManager implements Initial
             assertValidApplicationEmergencyContact(entity, false);
             requireParentWritable(access, entity.getApplicationId());
             assertUniqueApplicationEmergencyContact(entity);
+            if (fields.isEmpty()) {
+                return applicationEmergencyContactMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return applicationEmergencyContactMapper.toDto(entity);
@@ -806,6 +812,9 @@ public class ApplicationService extends AppTransactionManager implements Initial
             assertValidApplicationGuardian(entity, false);
             requireParentWritable(access, entity.getApplicationId());
             assertUniqueApplicationGuardian(entity);
+            if (fields.isEmpty()) {
+                return dtoApplicationGuardian(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return dtoApplicationGuardian(entity);

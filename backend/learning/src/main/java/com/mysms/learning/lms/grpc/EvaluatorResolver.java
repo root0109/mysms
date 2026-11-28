@@ -5,8 +5,6 @@ import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Evaluator;
 import com.mysms.learning.lms.api.model.ExternalLink;
 import com.mysms.learning.lms.api.model.EvaluatorAvailability;
-import com.mysms.learning.lms.api.model.EvaluatorAvailabilityUpdate;
-import com.mysms.learning.lms.api.model.EvaluatorUpdate;
 import com.mysms.learning.lms.business.EvaluatorService;
 import com.mysms.lms.v1.ConnectEvaluatorCalendarRequest;
 import com.mysms.lms.v1.ConnectEvaluatorCalendarResponse;
@@ -20,7 +18,9 @@ import com.mysms.lms.v1.DeleteEvaluatorRequest;
 import com.mysms.lms.v1.DeleteEvaluatorResponse;
 import com.mysms.lms.v1.DisconnectEvaluatorCalendarRequest;
 import com.mysms.lms.v1.DisconnectEvaluatorCalendarResponse;
+import com.mysms.lms.v1.EvaluatorAvailabilityUpdate;
 import com.mysms.lms.v1.EvaluatorServiceGrpc;
+import com.mysms.lms.v1.EvaluatorUpdate;
 import com.mysms.lms.v1.GetEvaluatorAvailabilityRequest;
 import com.mysms.lms.v1.GetEvaluatorAvailabilityResponse;
 import com.mysms.lms.v1.GetEvaluatorRequest;
@@ -29,9 +29,7 @@ import com.mysms.lms.v1.ListEvaluatorAvailabilitiesRequest;
 import com.mysms.lms.v1.ListEvaluatorAvailabilitiesResponse;
 import com.mysms.lms.v1.ListEvaluatorsRequest;
 import com.mysms.lms.v1.ListEvaluatorsResponse;
-import com.mysms.lms.v1.UpdateEvaluatorAvailabilityRequest;
 import com.mysms.lms.v1.UpdateEvaluatorAvailabilityResponse;
-import com.mysms.lms.v1.UpdateEvaluatorRequest;
 import com.mysms.lms.v1.UpdateEvaluatorResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -73,10 +71,10 @@ public class EvaluatorResolver extends EvaluatorServiceGrpc.EvaluatorServiceImpl
     }
 
     @Override
-    public void updateEvaluator(UpdateEvaluatorRequest request, StreamObserver<UpdateEvaluatorResponse> out) {
-        Evaluator updated = service.updateEvaluator(bridge.id(request.getEvaluator().getId(), "id"),
-                bridge.requiredIfMatch(request.getEvaluator().getEtag()),
-                bridge.changes(request.getEvaluator(), request.getUpdateMask(), EvaluatorUpdate.class),
+    public void updateEvaluator(EvaluatorUpdate request, StreamObserver<UpdateEvaluatorResponse> out) {
+        Evaluator updated = service.updateEvaluator(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EvaluatorProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEvaluatorResponse.newBuilder(), "evaluator", updated).build());
     }
@@ -115,13 +113,12 @@ public class EvaluatorResolver extends EvaluatorServiceGrpc.EvaluatorServiceImpl
     }
 
     @Override
-    public void updateEvaluatorAvailability(UpdateEvaluatorAvailabilityRequest request,
+    public void updateEvaluatorAvailability(EvaluatorAvailabilityUpdate request,
             StreamObserver<UpdateEvaluatorAvailabilityResponse> out) {
         EvaluatorAvailability updated = service.updateEvaluatorAvailability(bridge.id(request.getEvaluatorId(), "evaluatorId"),
-                bridge.id(request.getEvaluatorAvailability().getId(), "id"),
-                bridge.requiredIfMatch(request.getEvaluatorAvailability().getEtag()),
-                bridge.changes(request.getEvaluatorAvailability(), request.getUpdateMask(),
-                EvaluatorAvailabilityUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EvaluatorAvailabilityProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateEvaluatorAvailabilityResponse.newBuilder(), "evaluator_availability", updated).build());
     }

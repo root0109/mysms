@@ -1,7 +1,6 @@
 package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.NoticeBackground;
-import com.mysms.comms.api.model.NoticeBackgroundUpdate;
 import com.mysms.comms.business.NoticeBackgroundService;
 import com.mysms.comms.v1.CreateNoticeBackgroundRequest;
 import com.mysms.comms.v1.CreateNoticeBackgroundResponse;
@@ -12,7 +11,7 @@ import com.mysms.comms.v1.GetNoticeBackgroundResponse;
 import com.mysms.comms.v1.ListNoticeBackgroundsRequest;
 import com.mysms.comms.v1.ListNoticeBackgroundsResponse;
 import com.mysms.comms.v1.NoticeBackgroundServiceGrpc;
-import com.mysms.comms.v1.UpdateNoticeBackgroundRequest;
+import com.mysms.comms.v1.NoticeBackgroundUpdate;
 import com.mysms.comms.v1.UpdateNoticeBackgroundResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -57,12 +56,12 @@ public class NoticeBackgroundResolver extends NoticeBackgroundServiceGrpc.Notice
     }
 
     @Override
-    public void updateNoticeBackground(UpdateNoticeBackgroundRequest request,
+    public void updateNoticeBackground(NoticeBackgroundUpdate request,
             StreamObserver<UpdateNoticeBackgroundResponse> out) {
         NoticeBackground updated = service.updateNoticeBackground(
-                bridge.id(request.getNoticeBackground().getId(), "id"),
-                bridge.requiredIfMatch(request.getNoticeBackground().getEtag()),
-                bridge.changes(request.getNoticeBackground(), request.getUpdateMask(), NoticeBackgroundUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NoticeBackgroundProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeBackgroundResponse.newBuilder(), "notice_background", updated).build());
     }

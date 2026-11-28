@@ -3,7 +3,6 @@ package com.mysms.platform.master.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.master.api.model.StateProvince;
-import com.mysms.platform.master.api.model.StateProvinceUpdate;
 import com.mysms.platform.master.business.StateProvinceService;
 import com.mysms.master.v1.CreateStateProvinceRequest;
 import com.mysms.master.v1.CreateStateProvinceResponse;
@@ -14,7 +13,7 @@ import com.mysms.master.v1.GetStateProvinceResponse;
 import com.mysms.master.v1.ListStateProvincesRequest;
 import com.mysms.master.v1.ListStateProvincesResponse;
 import com.mysms.master.v1.StateProvinceServiceGrpc;
-import com.mysms.master.v1.UpdateStateProvinceRequest;
+import com.mysms.master.v1.StateProvinceUpdate;
 import com.mysms.master.v1.UpdateStateProvinceResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -61,12 +60,12 @@ public class StateProvinceResolver extends StateProvinceServiceGrpc.StateProvinc
     }
 
     @Override
-    public void updateStateProvince(UpdateStateProvinceRequest request,
+    public void updateStateProvince(StateProvinceUpdate request,
             StreamObserver<UpdateStateProvinceResponse> out) {
         StateProvince updated = service.updateStateProvince(
-                bridge.id(request.getStateProvince().getId(), "id"),
-                bridge.requiredIfMatch(request.getStateProvince().getEtag()),
-                bridge.changes(request.getStateProvince(), request.getUpdateMask(), StateProvinceUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StateProvinceProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStateProvinceResponse.newBuilder(), "state_province",
                 updated).build());

@@ -272,6 +272,9 @@ public class UserAccountService extends AppTransactionManager {
             scope.requireWritable(institutionOf(entity));
             rules.beforeWrite(entity);
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -575,6 +578,9 @@ public class UserAccountService extends AppTransactionManager {
             assertValidUserDepartmentAccess(entity, false);
             scope.requireWritable(institutionOfUserDepartmentAccess(entity));
             assertUniqueUserDepartmentAccess(entity);
+            if (fields.isEmpty()) {
+                return userDepartmentAccessMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return userDepartmentAccessMapper.toDto(entity);
@@ -726,6 +732,9 @@ public class UserAccountService extends AppTransactionManager {
             assertValidUserDevice(entity, false);
             scope.requireWritable(institutionOfUserDevice(entity));
             assertUniqueUserDevice(entity);
+            if (fields.isEmpty()) {
+                return userDeviceMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return userDeviceMapper.toDto(entity);
@@ -891,6 +900,9 @@ public class UserAccountService extends AppTransactionManager {
             scope.requireWritable(institutionOfUserPermission(entity));
             userPermissionRules.beforeWrite(entity);
             assertUniqueUserPermission(entity);
+            if (fields.isEmpty()) {
+                return userPermissionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return userPermissionMapper.toDto(entity);
@@ -1049,6 +1061,9 @@ public class UserAccountService extends AppTransactionManager {
             assertValidUserPreference(entity, false);
             scope.requireWritable(institutionOfUserPreference(entity));
             assertUniqueUserPreference(entity);
+            if (fields.isEmpty()) {
+                return userPreferenceMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return userPreferenceMapper.toDto(entity);
@@ -1198,6 +1213,9 @@ public class UserAccountService extends AppTransactionManager {
             scope.requireWritable(institutionOfUserRole(entity));
             userRoleRules.beforeWrite(entity);
             assertUniqueUserRole(entity);
+            if (fields.isEmpty()) {
+                return userRoleMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return userRoleMapper.toDto(entity);

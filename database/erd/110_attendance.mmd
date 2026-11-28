@@ -53,18 +53,6 @@ erDiagram
         date attendance_date PK
         uuid leave_request_id FK "→ sis.student_leave_request (logical)"
     }
-    attendance__staff_attendance["attendance.staff_attendance"] {
-        uuid id PK
-        uuid staff_id FK "NN · → hr.staff (logical)"
-        date attendance_date PK
-        varchar(20) status "NN"
-        timestamptz check_in_at
-        timestamptz check_out_at
-        varchar(20) source "NN"
-        uuid leave_application_id FK "→ hr.leave_application (logical)"
-        uuid recorded_by_user_id FK "→ iam.user_account (logical)"
-        varchar(300) remark
-    }
     attendance__outbox_event["attendance.outbox_event"] {
         bigint id PK
         varchar(120) event_type "NN"

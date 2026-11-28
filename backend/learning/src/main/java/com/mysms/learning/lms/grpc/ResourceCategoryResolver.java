@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ResourceCategory;
-import com.mysms.learning.lms.api.model.ResourceCategoryUpdate;
 import com.mysms.learning.lms.business.ResourceCategoryService;
 import com.mysms.lms.v1.CreateResourceCategoryRequest;
 import com.mysms.lms.v1.CreateResourceCategoryResponse;
@@ -14,7 +13,7 @@ import com.mysms.lms.v1.GetResourceCategoryResponse;
 import com.mysms.lms.v1.ListResourceCategoriesRequest;
 import com.mysms.lms.v1.ListResourceCategoriesResponse;
 import com.mysms.lms.v1.ResourceCategoryServiceGrpc;
-import com.mysms.lms.v1.UpdateResourceCategoryRequest;
+import com.mysms.lms.v1.ResourceCategoryUpdate;
 import com.mysms.lms.v1.UpdateResourceCategoryResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -58,11 +57,11 @@ public class ResourceCategoryResolver extends ResourceCategoryServiceGrpc.Resour
     }
 
     @Override
-    public void updateResourceCategory(UpdateResourceCategoryRequest request,
+    public void updateResourceCategory(ResourceCategoryUpdate request,
             StreamObserver<UpdateResourceCategoryResponse> out) {
-        ResourceCategory updated = service.updateResourceCategory(bridge.id(request.getResourceCategory().getId(), "id"),
-                bridge.requiredIfMatch(request.getResourceCategory().getEtag()),
-                bridge.changes(request.getResourceCategory(), request.getUpdateMask(), ResourceCategoryUpdate.class),
+        ResourceCategory updated = service.updateResourceCategory(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ResourceCategoryProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateResourceCategoryResponse.newBuilder(), "resource_category", updated).build());
     }

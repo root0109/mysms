@@ -369,7 +369,7 @@ public class Exam {
   }
 
   /**
-   * All marks have been entered.
+   * All marks have been entered. Changed only through the exam's results steps.
    * @return resultsEntered
    */
   

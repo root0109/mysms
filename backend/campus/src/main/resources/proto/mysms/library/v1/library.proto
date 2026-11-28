@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.library.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "LibraryProto";
@@ -20,7 +20,7 @@ service MediaTypeService {
   // Create MediaType.
   rpc CreateMediaType(CreateMediaTypeRequest) returns (CreateMediaTypeResponse);
   // Update MediaType.
-  rpc UpdateMediaType(UpdateMediaTypeRequest) returns (UpdateMediaTypeResponse);
+  rpc UpdateMediaType(MediaTypeUpdate) returns (UpdateMediaTypeResponse);
   // Soft-delete MediaType.
   rpc DeleteMediaType(DeleteMediaTypeRequest) returns (DeleteMediaTypeResponse);
 }
@@ -34,7 +34,7 @@ service MediaCategoryService {
   // Create MediaCategory.
   rpc CreateMediaCategory(CreateMediaCategoryRequest) returns (CreateMediaCategoryResponse);
   // Update MediaCategory.
-  rpc UpdateMediaCategory(UpdateMediaCategoryRequest) returns (UpdateMediaCategoryResponse);
+  rpc UpdateMediaCategory(MediaCategoryUpdate) returns (UpdateMediaCategoryResponse);
   // Soft-delete MediaCategory.
   rpc DeleteMediaCategory(DeleteMediaCategoryRequest) returns (DeleteMediaCategoryResponse);
 }
@@ -48,7 +48,7 @@ service AuthorService {
   // Create Author.
   rpc CreateAuthor(CreateAuthorRequest) returns (CreateAuthorResponse);
   // Update Author.
-  rpc UpdateAuthor(UpdateAuthorRequest) returns (UpdateAuthorResponse);
+  rpc UpdateAuthor(AuthorUpdate) returns (UpdateAuthorResponse);
   // Soft-delete Author.
   rpc DeleteAuthor(DeleteAuthorRequest) returns (DeleteAuthorResponse);
 }
@@ -62,7 +62,7 @@ service PublisherService {
   // Create Publisher.
   rpc CreatePublisher(CreatePublisherRequest) returns (CreatePublisherResponse);
   // Update Publisher.
-  rpc UpdatePublisher(UpdatePublisherRequest) returns (UpdatePublisherResponse);
+  rpc UpdatePublisher(PublisherUpdate) returns (UpdatePublisherResponse);
   // Soft-delete Publisher.
   rpc DeletePublisher(DeletePublisherRequest) returns (DeletePublisherResponse);
 }
@@ -76,7 +76,7 @@ service MediaService {
   // Create Media.
   rpc CreateMedia(CreateMediaRequest) returns (CreateMediaResponse);
   // Update Media.
-  rpc UpdateMedia(UpdateMediaRequest) returns (UpdateMediaResponse);
+  rpc UpdateMedia(MediaUpdate) returns (UpdateMediaResponse);
   // Soft-delete Media.
   rpc DeleteMedia(DeleteMediaRequest) returns (DeleteMediaResponse);
   // List MediaAuthors.
@@ -86,7 +86,7 @@ service MediaService {
   // Create MediaAuthor.
   rpc CreateMediaAuthor(CreateMediaAuthorRequest) returns (CreateMediaAuthorResponse);
   // Update MediaAuthor.
-  rpc UpdateMediaAuthor(UpdateMediaAuthorRequest) returns (UpdateMediaAuthorResponse);
+  rpc UpdateMediaAuthor(MediaAuthorUpdate) returns (UpdateMediaAuthorResponse);
   // Soft-delete MediaAuthor.
   rpc DeleteMediaAuthor(DeleteMediaAuthorRequest) returns (DeleteMediaAuthorResponse);
   // List MediaPublishers.
@@ -96,7 +96,7 @@ service MediaService {
   // Create MediaPublisher.
   rpc CreateMediaPublisher(CreateMediaPublisherRequest) returns (CreateMediaPublisherResponse);
   // Update MediaPublisher.
-  rpc UpdateMediaPublisher(UpdateMediaPublisherRequest) returns (UpdateMediaPublisherResponse);
+  rpc UpdateMediaPublisher(MediaPublisherUpdate) returns (UpdateMediaPublisherResponse);
   // Soft-delete MediaPublisher.
   rpc DeleteMediaPublisher(DeleteMediaPublisherRequest) returns (DeleteMediaPublisherResponse);
   // List MediaCourses.
@@ -106,7 +106,7 @@ service MediaService {
   // Create MediaCourse.
   rpc CreateMediaCourse(CreateMediaCourseRequest) returns (CreateMediaCourseResponse);
   // Update MediaCourse.
-  rpc UpdateMediaCourse(UpdateMediaCourseRequest) returns (UpdateMediaCourseResponse);
+  rpc UpdateMediaCourse(MediaCourseUpdate) returns (UpdateMediaCourseResponse);
   // Soft-delete MediaCourse.
   rpc DeleteMediaCourse(DeleteMediaCourseRequest) returns (DeleteMediaCourseResponse);
   // List MediaSubjects.
@@ -116,7 +116,7 @@ service MediaService {
   // Create MediaSubject.
   rpc CreateMediaSubject(CreateMediaSubjectRequest) returns (CreateMediaSubjectResponse);
   // Update MediaSubject.
-  rpc UpdateMediaSubject(UpdateMediaSubjectRequest) returns (UpdateMediaSubjectResponse);
+  rpc UpdateMediaSubject(MediaSubjectUpdate) returns (UpdateMediaSubjectResponse);
   // Soft-delete MediaSubject.
   rpc DeleteMediaSubject(DeleteMediaSubjectRequest) returns (DeleteMediaSubjectResponse);
   // List MediaUnits.
@@ -126,7 +126,7 @@ service MediaService {
   // Create MediaUnit.
   rpc CreateMediaUnit(CreateMediaUnitRequest) returns (CreateMediaUnitResponse);
   // Update MediaUnit.
-  rpc UpdateMediaUnit(UpdateMediaUnitRequest) returns (UpdateMediaUnitResponse);
+  rpc UpdateMediaUnit(MediaUnitUpdate) returns (UpdateMediaUnitResponse);
   // Soft-delete MediaUnit.
   rpc DeleteMediaUnit(DeleteMediaUnitRequest) returns (DeleteMediaUnitResponse);
 }
@@ -140,7 +140,7 @@ service LibraryCardTypeService {
   // Create LibraryCardType.
   rpc CreateLibraryCardType(CreateLibraryCardTypeRequest) returns (CreateLibraryCardTypeResponse);
   // Update LibraryCardType.
-  rpc UpdateLibraryCardType(UpdateLibraryCardTypeRequest) returns (UpdateLibraryCardTypeResponse);
+  rpc UpdateLibraryCardType(LibraryCardTypeUpdate) returns (UpdateLibraryCardTypeResponse);
   // Soft-delete LibraryCardType.
   rpc DeleteLibraryCardType(DeleteLibraryCardTypeRequest) returns (DeleteLibraryCardTypeResponse);
 }
@@ -154,7 +154,7 @@ service LibraryCardService {
   // Create LibraryCard.
   rpc CreateLibraryCard(CreateLibraryCardRequest) returns (CreateLibraryCardResponse);
   // Update LibraryCard.
-  rpc UpdateLibraryCard(UpdateLibraryCardRequest) returns (UpdateLibraryCardResponse);
+  rpc UpdateLibraryCard(LibraryCardUpdate) returns (UpdateLibraryCardResponse);
   // Soft-delete LibraryCard.
   rpc DeleteLibraryCard(DeleteLibraryCardRequest) returns (DeleteLibraryCardResponse);
 }
@@ -168,7 +168,7 @@ service LoanService {
   // Create Loan.
   rpc CreateLoan(CreateLoanRequest) returns (CreateLoanResponse);
   // Update Loan.
-  rpc UpdateLoan(UpdateLoanRequest) returns (UpdateLoanResponse);
+  rpc UpdateLoan(LoanUpdate) returns (UpdateLoanResponse);
   // Soft-delete Loan.
   rpc DeleteLoan(DeleteLoanRequest) returns (DeleteLoanResponse);
   // Borrower drops the copy for return (status return_pending until checked).
@@ -190,7 +190,7 @@ service ReservationService {
   // Create Reservation.
   rpc CreateReservation(CreateReservationRequest) returns (CreateReservationResponse);
   // Update Reservation.
-  rpc UpdateReservation(UpdateReservationRequest) returns (UpdateReservationResponse);
+  rpc UpdateReservation(ReservationUpdate) returns (UpdateReservationResponse);
   // Soft-delete Reservation.
   rpc DeleteReservation(DeleteReservationRequest) returns (DeleteReservationResponse);
   // Accept.
@@ -210,7 +210,7 @@ service PurchaseRequestService {
   // Create PurchaseRequest.
   rpc CreatePurchaseRequest(CreatePurchaseRequestRequest) returns (CreatePurchaseRequestResponse);
   // Update PurchaseRequest.
-  rpc UpdatePurchaseRequest(UpdatePurchaseRequestRequest) returns (UpdatePurchaseRequestResponse);
+  rpc UpdatePurchaseRequest(PurchaseRequestUpdate) returns (UpdatePurchaseRequestResponse);
   // Soft-delete PurchaseRequest.
   rpc DeletePurchaseRequest(DeletePurchaseRequestRequest) returns (DeletePurchaseRequestResponse);
   // List PurchaseRequestCourses.
@@ -220,7 +220,7 @@ service PurchaseRequestService {
   // Create PurchaseRequestCourse.
   rpc CreatePurchaseRequestCourse(CreatePurchaseRequestCourseRequest) returns (CreatePurchaseRequestCourseResponse);
   // Update PurchaseRequestCourse.
-  rpc UpdatePurchaseRequestCourse(UpdatePurchaseRequestCourseRequest) returns (UpdatePurchaseRequestCourseResponse);
+  rpc UpdatePurchaseRequestCourse(PurchaseRequestCourseUpdate) returns (UpdatePurchaseRequestCourseResponse);
   // Soft-delete PurchaseRequestCourse.
   rpc DeletePurchaseRequestCourse(DeletePurchaseRequestCourseRequest) returns (DeletePurchaseRequestCourseResponse);
   // List PurchaseRequestSubjects.
@@ -230,7 +230,7 @@ service PurchaseRequestService {
   // Create PurchaseRequestSubject.
   rpc CreatePurchaseRequestSubject(CreatePurchaseRequestSubjectRequest) returns (CreatePurchaseRequestSubjectResponse);
   // Update PurchaseRequestSubject.
-  rpc UpdatePurchaseRequestSubject(UpdatePurchaseRequestSubjectRequest) returns (UpdatePurchaseRequestSubjectResponse);
+  rpc UpdatePurchaseRequestSubject(PurchaseRequestSubjectUpdate) returns (UpdatePurchaseRequestSubjectResponse);
   // Soft-delete PurchaseRequestSubject.
   rpc DeletePurchaseRequestSubject(DeletePurchaseRequestSubjectRequest) returns (DeletePurchaseRequestSubjectResponse);
   // Send to the librarian.
@@ -280,13 +280,23 @@ message CreateMediaTypeResponse {
   MediaType media_type = 1;
 }
 
-message UpdateMediaTypeRequest {
-  // Resource with id and etag set.
-  MediaType media_type = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateMediaType (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MediaTypeUpdate {
+  // MediaType id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Display order.
+  optional int32 sort_order = 4;
+  // Whether offered for new picks.
+  optional bool is_active = 5;
+  // Code.
+  optional string code = 6;
+  // Name.
+  optional string name = 7;
 }
 message UpdateMediaTypeResponse {
   MediaType media_type = 1;
@@ -340,13 +350,25 @@ message CreateMediaCategoryResponse {
   MediaCategory media_category = 1;
 }
 
-message UpdateMediaCategoryRequest {
-  // Resource with id and etag set.
-  MediaCategory media_category = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateMediaCategory (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MediaCategoryUpdate {
+  // MediaCategory id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Institution. [UUID]
+  optional string institution_id = 7;
+  // Category.
+  optional string name = 8;
 }
 message UpdateMediaCategoryResponse {
   MediaCategory media_category = 1;
@@ -400,13 +422,17 @@ message CreateAuthorResponse {
   Author author = 1;
 }
 
-message UpdateAuthorRequest {
-  // Resource with id and etag set.
-  Author author = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateAuthor (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AuthorUpdate {
+  // Author id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Author name.
+  optional string name = 4;
 }
 message UpdateAuthorResponse {
   Author author = 1;
@@ -460,13 +486,17 @@ message CreatePublisherResponse {
   Publisher publisher = 1;
 }
 
-message UpdatePublisherRequest {
-  // Resource with id and etag set.
-  Publisher publisher = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePublisher (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PublisherUpdate {
+  // Publisher id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Publisher name.
+  optional string name = 4;
 }
 message UpdatePublisherResponse {
   Publisher publisher = 1;
@@ -520,13 +550,37 @@ message CreateMediaResponse {
   Media media = 1;
 }
 
-message UpdateMediaRequest {
-  // Resource with id and etag set.
-  Media media = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateMedia (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MediaUpdate {
+  // Media id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year the title was catalogued / acquired. [UUID]
+  mysms.common.v1.NullableString acquired_academic_year_id = 5;
+  // Title.
+  optional string title = 6;
+  // ISBN.
+  mysms.common.v1.NullableString isbn = 7;
+  // Library accession / call code.
+  mysms.common.v1.NullableString internal_code = 8;
+  // Edition.
+  mysms.common.v1.NullableString edition = 9;
+  // Description.
+  mysms.common.v1.NullableString description = 10;
+  // Type. [UUID]
+  mysms.common.v1.NullableString media_type_id = 11;
+  // Category. [UUID]
+  mysms.common.v1.NullableString media_category_id = 12;
+  // Cover image. [UUID]
+  mysms.common.v1.NullableString cover_image_file_id = 13;
+  // Whether in circulation.
+  optional bool is_active = 14;
 }
 message UpdateMediaResponse {
   Media media = 1;
@@ -586,15 +640,21 @@ message CreateMediaAuthorResponse {
   MediaAuthor media_author = 1;
 }
 
-message UpdateMediaAuthorRequest {
+// The changes of UpdateMediaAuthor (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MediaAuthorUpdate {
   // Media id (UUID).
   string media_id = 1;
-  // Resource with id and etag set.
-  MediaAuthor media_author = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // MediaAuthor id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Author. [UUID]
+  optional string author_id = 5;
+  // Author order.
+  optional int32 sort_order = 6;
 }
 message UpdateMediaAuthorResponse {
   MediaAuthor media_author = 1;
@@ -656,15 +716,19 @@ message CreateMediaPublisherResponse {
   MediaPublisher media_publisher = 1;
 }
 
-message UpdateMediaPublisherRequest {
+// The changes of UpdateMediaPublisher (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MediaPublisherUpdate {
   // Media id (UUID).
   string media_id = 1;
-  // Resource with id and etag set.
-  MediaPublisher media_publisher = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // MediaPublisher id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Publisher. [UUID]
+  optional string publisher_id = 5;
 }
 message UpdateMediaPublisherResponse {
   MediaPublisher media_publisher = 1;
@@ -726,15 +790,19 @@ message CreateMediaCourseResponse {
   MediaCourse media_course = 1;
 }
 
-message UpdateMediaCourseRequest {
+// The changes of UpdateMediaCourse (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MediaCourseUpdate {
   // Media id (UUID).
   string media_id = 1;
-  // Resource with id and etag set.
-  MediaCourse media_course = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // MediaCourse id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Course. [UUID]
+  optional string course_id = 5;
 }
 message UpdateMediaCourseResponse {
   MediaCourse media_course = 1;
@@ -796,15 +864,19 @@ message CreateMediaSubjectResponse {
   MediaSubject media_subject = 1;
 }
 
-message UpdateMediaSubjectRequest {
+// The changes of UpdateMediaSubject (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MediaSubjectUpdate {
   // Media id (UUID).
   string media_id = 1;
-  // Resource with id and etag set.
-  MediaSubject media_subject = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // MediaSubject id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Subject. [UUID]
+  optional string subject_id = 5;
 }
 message UpdateMediaSubjectResponse {
   MediaSubject media_subject = 1;
@@ -866,15 +938,23 @@ message CreateMediaUnitResponse {
   MediaUnit media_unit = 1;
 }
 
-message UpdateMediaUnitRequest {
+// The changes of UpdateMediaUnit (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MediaUnitUpdate {
   // Media id (UUID).
   string media_id = 1;
-  // Resource with id and etag set.
-  MediaUnit media_unit = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // MediaUnit id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Copy number.
+  optional string accession_number = 5;
+  // Barcode.
+  mysms.common.v1.NullableString barcode = 6;
+  // Copy state.
+  optional MediaUnit.Status status = 7;
 }
 message UpdateMediaUnitResponse {
   MediaUnit media_unit = 1;
@@ -930,13 +1010,29 @@ message CreateLibraryCardTypeResponse {
   LibraryCardType library_card_type = 1;
 }
 
-message UpdateLibraryCardTypeRequest {
-  // Resource with id and etag set.
-  LibraryCardType library_card_type = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateLibraryCardType (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message LibraryCardTypeUpdate {
+  // LibraryCardType id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Card type.
+  optional string name = 7;
+  // Items that can be borrowed at once.
+  optional int32 max_items = 8;
+  // Loan period in days.
+  optional int32 loan_days = 9;
+  // Overdue fine per day. [Decimal string]
+  optional string fine_per_day = 10;
 }
 message UpdateLibraryCardTypeResponse {
   LibraryCardType library_card_type = 1;
@@ -990,13 +1086,37 @@ message CreateLibraryCardResponse {
   LibraryCard library_card = 1;
 }
 
-message UpdateLibraryCardRequest {
-  // Resource with id and etag set.
-  LibraryCard library_card = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateLibraryCard (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message LibraryCardUpdate {
+  // LibraryCard id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Card number.
+  optional string card_number = 5;
+  // Card type. [UUID]
+  optional string card_type_id = 6;
+  // Holder type.
+  optional LibraryCard.HolderType holder_type = 7;
+  // Card holder. [UUID]
+  optional string person_id = 8;
+  // Holder as student. [UUID]
+  mysms.common.v1.NullableString student_id = 9;
+  // Holder as staff. [UUID]
+  mysms.common.v1.NullableString staff_id = 10;
+  // Item limit overriding the card type.
+  mysms.common.v1.NullableInt32 max_items_override = 11;
+  // Issue date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string issue_date = 12;
+  // Expiry date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString expiry_date = 13;
+  // State.
+  optional LibraryCard.Status status = 14;
 }
 message UpdateLibraryCardResponse {
   LibraryCard library_card = 1;
@@ -1050,13 +1170,35 @@ message CreateLoanResponse {
   Loan loan = 1;
 }
 
-message UpdateLoanRequest {
-  // Resource with id and etag set.
-  Loan loan = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateLoan (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message LoanUpdate {
+  // Loan id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Copy issued. [UUID]
+  optional string media_unit_id = 4;
+  // Title (denormalised from the copy for reporting). [UUID]
+  optional string media_id = 5;
+  // Card used. [UUID]
+  optional string library_card_id = 6;
+  // Borrower account. [UUID]
+  mysms.common.v1.NullableString borrower_user_id = 7;
+  // Issue date (NULL while only reserved / drafted). [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString issued_on = 8;
+  // Due date (issued_on + card type loan_days when not given). [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString due_on = 9;
+  // Actual return date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString returned_on = 10;
+  // Fine charged. [Decimal string]
+  optional string fine_amount = 11;
+  // Fine invoice. [UUID]
+  mysms.common.v1.NullableString invoice_id = 12;
+  // Librarian. [UUID]
+  mysms.common.v1.NullableString issued_by_user_id = 13;
 }
 message UpdateLoanResponse {
   Loan loan = 1;
@@ -1110,13 +1252,25 @@ message CreateReservationResponse {
   Reservation reservation = 1;
 }
 
-message UpdateReservationRequest {
-  // Resource with id and etag set.
-  Reservation reservation = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateReservation (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ReservationUpdate {
+  // Reservation id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Title. [UUID]
+  optional string media_id = 4;
+  // Request reference.
+  mysms.common.v1.NullableString reference = 5;
+  // Requester. [UUID]
+  mysms.common.v1.NullableString requested_by_person_id = 6;
+  // Wanted from. [ISO-8601 date (YYYY-MM-DD)]
+  optional string date_from = 7;
+  // Wanted until. [ISO-8601 date (YYYY-MM-DD)]
+  optional string date_to = 8;
 }
 message UpdateReservationResponse {
   Reservation reservation = 1;
@@ -1170,13 +1324,31 @@ message CreatePurchaseRequestResponse {
   PurchaseRequest purchase_request = 1;
 }
 
-message UpdatePurchaseRequestRequest {
-  // Resource with id and etag set.
-  PurchaseRequest purchase_request = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePurchaseRequest (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PurchaseRequestUpdate {
+  // PurchaseRequest id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Request number.
+  mysms.common.v1.NullableString request_number = 4;
+  // Requested title.
+  optional string title = 5;
+  // Author(s).
+  optional string author_text = 6;
+  // Edition.
+  mysms.common.v1.NullableString edition = 7;
+  // Publisher.
+  mysms.common.v1.NullableString publisher_text = 8;
+  // Type. [UUID]
+  mysms.common.v1.NullableString media_type_id = 9;
+  // Requester. [UUID]
+  mysms.common.v1.NullableString requested_by_person_id = 10;
+  // Request date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString request_date = 11;
 }
 message UpdatePurchaseRequestResponse {
   PurchaseRequest purchase_request = 1;
@@ -1236,15 +1408,19 @@ message CreatePurchaseRequestCourseResponse {
   PurchaseRequestCourse purchase_request_course = 1;
 }
 
-message UpdatePurchaseRequestCourseRequest {
+// The changes of UpdatePurchaseRequestCourse (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PurchaseRequestCourseUpdate {
   // PurchaseRequest id (UUID).
   string purchase_request_id = 1;
-  // Resource with id and etag set.
-  PurchaseRequestCourse purchase_request_course = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // PurchaseRequestCourse id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Course. [UUID]
+  optional string course_id = 5;
 }
 message UpdatePurchaseRequestCourseResponse {
   PurchaseRequestCourse purchase_request_course = 1;
@@ -1306,15 +1482,19 @@ message CreatePurchaseRequestSubjectResponse {
   PurchaseRequestSubject purchase_request_subject = 1;
 }
 
-message UpdatePurchaseRequestSubjectRequest {
+// The changes of UpdatePurchaseRequestSubject (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PurchaseRequestSubjectUpdate {
   // PurchaseRequest id (UUID).
   string purchase_request_id = 1;
-  // Resource with id and etag set.
-  PurchaseRequestSubject purchase_request_subject = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // PurchaseRequestSubject id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Subject. [UUID]
+  optional string subject_id = 5;
 }
 message UpdatePurchaseRequestSubjectResponse {
   PurchaseRequestSubject purchase_request_subject = 1;

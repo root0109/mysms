@@ -3,7 +3,6 @@ package com.mysms.privacy.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.privacy.api.model.RetentionPolicy;
-import com.mysms.privacy.api.model.RetentionPolicyUpdate;
 import com.mysms.privacy.api.model.RetentionRun;
 import com.mysms.privacy.business.RetentionPolicyService;
 import com.mysms.privacy.business.RetentionRunService;
@@ -13,8 +12,8 @@ import com.mysms.privacy.v1.ListRetentionPoliciesRequest;
 import com.mysms.privacy.v1.ListRetentionPoliciesResponse;
 import com.mysms.privacy.v1.ListRetentionRunsRequest;
 import com.mysms.privacy.v1.ListRetentionRunsResponse;
+import com.mysms.privacy.v1.RetentionPolicyUpdate;
 import com.mysms.privacy.v1.RetentionServiceGrpc;
-import com.mysms.privacy.v1.UpdateRetentionPolicyRequest;
 import com.mysms.privacy.v1.UpdateRetentionPolicyResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -54,11 +53,11 @@ public class RetentionResolver extends RetentionServiceGrpc.RetentionServiceImpl
     }
 
     @Override
-    public void updateRetentionPolicy(UpdateRetentionPolicyRequest request,
+    public void updateRetentionPolicy(RetentionPolicyUpdate request,
             StreamObserver<UpdateRetentionPolicyResponse> out) {
-        RetentionPolicy updated = policies.updateRetentionPolicy(bridge.id(request.getRetentionPolicy().getId(), "id"),
-                bridge.requiredIfMatch(request.getRetentionPolicy().getEtag()),
-                bridge.changes(request.getRetentionPolicy(), request.getUpdateMask(), RetentionPolicyUpdate.class));
+        RetentionPolicy updated = policies.updateRetentionPolicy(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                RetentionPolicyProtoBridge.changes(bridge, request));
         ProtoBridge.send(out, bridge.reply(UpdateRetentionPolicyResponse.newBuilder(), RETENTION_POLICY, updated)
                 .build());
     }

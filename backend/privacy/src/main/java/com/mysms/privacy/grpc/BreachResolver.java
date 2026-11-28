@@ -4,9 +4,9 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.privacy.api.model.Breach;
 import com.mysms.privacy.api.model.BreachStepRequest;
-import com.mysms.privacy.api.model.BreachUpdate;
 import com.mysms.privacy.business.BreachService;
 import com.mysms.privacy.v1.BreachServiceGrpc;
+import com.mysms.privacy.v1.BreachUpdate;
 import com.mysms.privacy.v1.CloseBreachRequest;
 import com.mysms.privacy.v1.CloseBreachResponse;
 import com.mysms.privacy.v1.ContainBreachRequest;
@@ -23,7 +23,6 @@ import com.mysms.privacy.v1.ReportBreachRequest;
 import com.mysms.privacy.v1.ReportBreachResponse;
 import com.mysms.privacy.v1.TriageBreachRequest;
 import com.mysms.privacy.v1.TriageBreachResponse;
-import com.mysms.privacy.v1.UpdateBreachRequest;
 import com.mysms.privacy.v1.UpdateBreachResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -69,10 +68,10 @@ public class BreachResolver extends BreachServiceGrpc.BreachServiceImplBase {
     }
 
     @Override
-    public void updateBreach(UpdateBreachRequest request, StreamObserver<UpdateBreachResponse> out) {
-        Breach updated = service.updateBreach(bridge.id(request.getBreach().getId(), "id"),
-                bridge.requiredIfMatch(request.getBreach().getEtag()),
-                bridge.changes(request.getBreach(), request.getUpdateMask(), BreachUpdate.class));
+    public void updateBreach(BreachUpdate request, StreamObserver<UpdateBreachResponse> out) {
+        Breach updated = service.updateBreach(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                BreachProtoBridge.changes(bridge, request));
         ProtoBridge.send(out, bridge.reply(UpdateBreachResponse.newBuilder(), BREACH, updated).build());
     }
 

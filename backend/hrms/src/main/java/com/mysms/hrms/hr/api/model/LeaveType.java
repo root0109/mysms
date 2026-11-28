@@ -45,6 +45,9 @@ public class LeaveType {
   private String maxDaysPerYear;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Boolean isPaid;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Boolean isActive;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -217,6 +220,26 @@ public class LeaveType {
     this.maxDaysPerYear = maxDaysPerYear;
   }
 
+  public LeaveType isPaid(@Nullable Boolean isPaid) {
+    this.isPaid = isPaid;
+    return this;
+  }
+
+  /**
+   * Whether leave of this type is paid (default true); approved unpaid leave reduces the pay of its period.
+   * @return isPaid
+   */
+  
+  @JsonProperty("isPaid")
+  public @Nullable Boolean getIsPaid() {
+    return isPaid;
+  }
+
+  @JsonProperty("isPaid")
+  public void setIsPaid(@Nullable Boolean isPaid) {
+    this.isPaid = isPaid;
+  }
+
   public LeaveType isActive(@Nullable Boolean isActive) {
     this.isActive = isActive;
     return this;
@@ -353,6 +376,7 @@ public class LeaveType {
         Objects.equals(this.academicYearId, leaveType.academicYearId) &&
         Objects.equals(this.name, leaveType.name) &&
         Objects.equals(this.maxDaysPerYear, leaveType.maxDaysPerYear) &&
+        Objects.equals(this.isPaid, leaveType.isPaid) &&
         Objects.equals(this.isActive, leaveType.isActive) &&
         Objects.equals(this.createTime, leaveType.createTime) &&
         Objects.equals(this.createdBy, leaveType.createdBy) &&
@@ -363,7 +387,7 @@ public class LeaveType {
 
   @Override
   public int hashCode() {
-    return Objects.hash(code, sortOrder, id, institutionId, academicYearId, name, maxDaysPerYear, isActive, createTime, createdBy, updateTime, updatedBy, etag);
+    return Objects.hash(code, sortOrder, id, institutionId, academicYearId, name, maxDaysPerYear, isPaid, isActive, createTime, createdBy, updateTime, updatedBy, etag);
   }
 
   @Override
@@ -377,6 +401,7 @@ public class LeaveType {
     sb.append("    academicYearId: ").append(toIndentedString(academicYearId)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    maxDaysPerYear: ").append(toIndentedString(maxDaysPerYear)).append("\n");
+    sb.append("    isPaid: ").append(toIndentedString(isPaid)).append("\n");
     sb.append("    isActive: ").append(toIndentedString(isActive)).append("\n");
     sb.append("    createTime: ").append(toIndentedString(createTime)).append("\n");
     sb.append("    createdBy: ").append(toIndentedString(createdBy)).append("\n");

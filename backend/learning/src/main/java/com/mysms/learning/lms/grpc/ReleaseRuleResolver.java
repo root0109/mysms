@@ -4,10 +4,7 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ReleaseRule;
 import com.mysms.learning.lms.api.model.ReleaseRuleCondition;
-import com.mysms.learning.lms.api.model.ReleaseRuleConditionUpdate;
 import com.mysms.learning.lms.api.model.ReleaseRuleTarget;
-import com.mysms.learning.lms.api.model.ReleaseRuleTargetUpdate;
-import com.mysms.learning.lms.api.model.ReleaseRuleUpdate;
 import com.mysms.learning.lms.business.ReleaseRuleService;
 import com.mysms.lms.v1.CopyReleaseRuleRequest;
 import com.mysms.lms.v1.CopyReleaseRuleResponse;
@@ -39,12 +36,12 @@ import com.mysms.lms.v1.ListReleaseRuleTargetsRequest;
 import com.mysms.lms.v1.ListReleaseRuleTargetsResponse;
 import com.mysms.lms.v1.ListReleaseRulesRequest;
 import com.mysms.lms.v1.ListReleaseRulesResponse;
+import com.mysms.lms.v1.ReleaseRuleConditionUpdate;
 import com.mysms.lms.v1.ReleaseRuleServiceGrpc;
-import com.mysms.lms.v1.UpdateReleaseRuleConditionRequest;
+import com.mysms.lms.v1.ReleaseRuleTargetUpdate;
+import com.mysms.lms.v1.ReleaseRuleUpdate;
 import com.mysms.lms.v1.UpdateReleaseRuleConditionResponse;
-import com.mysms.lms.v1.UpdateReleaseRuleRequest;
 import com.mysms.lms.v1.UpdateReleaseRuleResponse;
-import com.mysms.lms.v1.UpdateReleaseRuleTargetRequest;
 import com.mysms.lms.v1.UpdateReleaseRuleTargetResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -86,11 +83,11 @@ public class ReleaseRuleResolver extends ReleaseRuleServiceGrpc.ReleaseRuleServi
     }
 
     @Override
-    public void updateReleaseRule(UpdateReleaseRuleRequest request, StreamObserver<UpdateReleaseRuleResponse> out) {
+    public void updateReleaseRule(ReleaseRuleUpdate request, StreamObserver<UpdateReleaseRuleResponse> out) {
         ReleaseRule updated = service.updateReleaseRule(
-                bridge.id(request.getReleaseRule().getId(), "id"),
-                bridge.requiredIfMatch(request.getReleaseRule().getEtag()),
-                bridge.changes(request.getReleaseRule(), request.getUpdateMask(), ReleaseRuleUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ReleaseRuleProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateReleaseRuleResponse.newBuilder(), "release_rule", updated).build());
     }
@@ -131,14 +128,13 @@ public class ReleaseRuleResolver extends ReleaseRuleServiceGrpc.ReleaseRuleServi
     }
 
     @Override
-    public void updateReleaseRuleCondition(UpdateReleaseRuleConditionRequest request,
+    public void updateReleaseRuleCondition(ReleaseRuleConditionUpdate request,
             StreamObserver<UpdateReleaseRuleConditionResponse> out) {
         ReleaseRuleCondition updated = service.updateReleaseRuleCondition(
                 bridge.id(request.getReleaseRuleId(), "releaseRuleId"),
-                bridge.id(request.getReleaseRuleCondition().getId(), "id"),
-                bridge.requiredIfMatch(request.getReleaseRuleCondition().getEtag()),
-                bridge.changes(request.getReleaseRuleCondition(), request.getUpdateMask(),
-                        ReleaseRuleConditionUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ReleaseRuleConditionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateReleaseRuleConditionResponse.newBuilder(), "release_rule_condition", updated).build());
     }
@@ -182,13 +178,13 @@ public class ReleaseRuleResolver extends ReleaseRuleServiceGrpc.ReleaseRuleServi
     }
 
     @Override
-    public void updateReleaseRuleTarget(UpdateReleaseRuleTargetRequest request,
+    public void updateReleaseRuleTarget(ReleaseRuleTargetUpdate request,
             StreamObserver<UpdateReleaseRuleTargetResponse> out) {
         ReleaseRuleTarget updated = service.updateReleaseRuleTarget(
                 bridge.id(request.getReleaseRuleId(), "releaseRuleId"),
-                bridge.id(request.getReleaseRuleTarget().getId(), "id"),
-                bridge.requiredIfMatch(request.getReleaseRuleTarget().getEtag()),
-                bridge.changes(request.getReleaseRuleTarget(), request.getUpdateMask(), ReleaseRuleTargetUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ReleaseRuleTargetProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateReleaseRuleTargetResponse.newBuilder(), "release_rule_target", updated).build());

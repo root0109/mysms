@@ -3,16 +3,15 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ContentViewSession;
-import com.mysms.learning.lms.api.model.ContentViewSessionUpdate;
 import com.mysms.learning.lms.business.ContentViewSessionService;
 import com.mysms.lms.v1.ContentViewSessionServiceGrpc;
+import com.mysms.lms.v1.ContentViewSessionUpdate;
 import com.mysms.lms.v1.CreateContentViewSessionRequest;
 import com.mysms.lms.v1.CreateContentViewSessionResponse;
 import com.mysms.lms.v1.GetContentViewSessionRequest;
 import com.mysms.lms.v1.GetContentViewSessionResponse;
 import com.mysms.lms.v1.ListContentViewSessionsRequest;
 import com.mysms.lms.v1.ListContentViewSessionsResponse;
-import com.mysms.lms.v1.UpdateContentViewSessionRequest;
 import com.mysms.lms.v1.UpdateContentViewSessionResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -59,13 +58,12 @@ public class ContentViewSessionResolver extends ContentViewSessionServiceGrpc.Co
     }
 
     @Override
-    public void updateContentViewSession(UpdateContentViewSessionRequest request,
+    public void updateContentViewSession(ContentViewSessionUpdate request,
             StreamObserver<UpdateContentViewSessionResponse> out) {
         ContentViewSession updated = service.updateContentViewSession(
-                bridge.id(request.getContentViewSession().getId(), "id"),
-                bridge.requiredIfMatch(request.getContentViewSession().getEtag()),
-                bridge.changes(request.getContentViewSession(), request.getUpdateMask(),
-                        ContentViewSessionUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ContentViewSessionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateContentViewSessionResponse.newBuilder(), "content_view_session", updated).build());
     }

@@ -21,7 +21,7 @@ Build tools (JDK 17, Maven, Node.js 22.12+, pnpm 10, OpenSSL): [`BUILD-AND-RUN.m
 
 ## 2. The database
 
-One PostgreSQL database, **one schema per module** (22: `master`, `platform`, `iam`, `org`, `people`, `academics`, `sis`, `hr`, `payroll`, `admission`, `attendance`, `facility`, `timetable`, `assessment`, `lms`, `finance`, `library`, `transport`, `comms`, `frontoffice`, `careers`, `privacy`). No foreign key crosses schemas, so a module moves to its own database by pointing its `MYSMS_<MODULE>_DB_*` variables elsewhere and copying its schema.
+One PostgreSQL database, **one schema per area** (23: `master`, `platform`, `iam`, `org`, `people`, `academics`, `sis`, `hr`, `payroll`, `time_attendance`, `admission`, `attendance`, `facility`, `timetable`, `assessment`, `lms`, `finance`, `library`, `transport`, `comms`, `frontoffice`, `careers`, `privacy`). No foreign key crosses modules (only hrms's sibling schemas link), so a module moves to its own database by pointing its `MYSMS_<MODULE>_DB_*` variables elsewhere and copying its schemas; the areas of one module (hrms: `hr`, `payroll`, `time_attendance`) stay on one instance.
 
 ### 2.1 Roles
 
@@ -103,8 +103,8 @@ Each module jar carries its own `application.properties` (JAVA-CODING-RULES §2.
 | `MYSMS_DB_RELAY_USER`, `MYSMS_DB_RELAY_PASSWORD` | in production | the relay role (`mysms_relay`); without it the relay runs only when the application role bypasses RLS (a local superuser), otherwise it logs an ERROR and events stay in the outbox |
 | `MYSMS_DB_REPLICA_URL` (with `_USER`, `_PASSWORD`) | no | a streaming replica that read-only transactions use (pool `<module>-replica`); writes and reads inside writes stay on the primary. User and password default to the application role's. A stale read cannot overwrite newer data: updates carry the ETag (412). Never migrated; health component `replica` |
 | `MYSMS_DB_SLOW_STATEMENT` | no | statements slower than this are logged (text with placeholders, never values); default `200ms`, `0` = off |
-| `MYSMS_<MODULE>_DB_URL`, `_DB_USER`, `_DB_PASSWORD`, `_DB_MIGRATE_USER`, `_DB_MIGRATE_PASSWORD`, `_DB_RELAY_USER`, `_DB_RELAY_PASSWORD`, `_DB_REPLICA_URL`, `_DB_REPLICA_USER`, `_DB_REPLICA_PASSWORD`, `_DB_SLOW_STATEMENT` | no | per-area override of the shared value (e.g. `MYSMS_FINANCE_DB_URL`); the areas of one module read each other's schemas (payroll reads `hr.staff`), so keep their URL and application user equal |
-| `MYSMS_<AREA>_DB_POOL_SIZE` | no | pool size per area, default 10. Every process opens one pool per area it serves (and one per replica); the monolith 22: 22 × pool size must stay below `max_connections` |
+| `MYSMS_<MODULE>_DB_URL`, `_DB_USER`, `_DB_PASSWORD`, `_DB_MIGRATE_USER`, `_DB_MIGRATE_PASSWORD`, `_DB_RELAY_USER`, `_DB_RELAY_PASSWORD`, `_DB_REPLICA_URL`, `_DB_REPLICA_USER`, `_DB_REPLICA_PASSWORD`, `_DB_SLOW_STATEMENT` | no | per-area override of the shared value (e.g. `MYSMS_FINANCE_DB_URL`); the areas of one module read each other's schemas (payroll and time_attendance read `hr.staff`; time_attendance has a foreign key into `hr`), so keep their URL and application user equal |
+| `MYSMS_<AREA>_DB_POOL_SIZE` | no | pool size per area, default 10. Every process opens one pool per area it serves (and one per replica); the monolith 23: 23 × pool size must stay below `max_connections` |
 
 **Authentication and service identity**
 
@@ -165,7 +165,7 @@ Each module jar carries its own `application.properties` (JAVA-CODING-RULES §2.
 | `MYSMS_IAM_PREVIOUS_PUBLIC_KEY` | no | retiring public key during rotation |
 | `MYSMS_IAM_ACCESS_TOKEN_TTL`, `MYSMS_IAM_REFRESH_TOKEN_TTL` | no | ISO-8601, default `PT15M` and `P30D` |
 | `MYSMS_IAM_SERVICE_TOKEN_TTL` | no | service-token lifetime, default `PT5M`, at most `PT1H` |
-| `MYSMS_IAM_SERVICECLIENTS_<MODULE>_SECRETSHA256` | for service calls | lower-case hex SHA-256 of that module's client secret (property `mysms.iam.service-clients.<module>.secret-sha256`) |
+| `MYSMS_IAM_SERVICECLIENTS_<MODULE>_SECRETSHA256` | for service calls | lower-case hex SHA-256 of that module's client secret (property `mysms.iam.service-clients.<module>.secret-sha256`); one client per area, keyed by the area code. An environment variable cannot carry an underscore inside the key, so an area such as `time_attendance` is written without it (`MYSMS_IAM_SERVICECLIENTS_TIMEATTENDANCE_SECRETSHA256`); in properties `time_attendance` and `time-attendance` work too |
 | `MYSMS_IAM_SERVICECLIENTS_<MODULE>_PERMISSIONS` | no | comma-separated permission codes the module's service tokens carry (operations of audience `internal`); default none |
 | `MYSMS_IAM_API_PERMISSION_RETIRE_AFTER` | no | an operation no module has published for this long is retired, default `P3D` |
 | `MYSMS_IAM_BOOTSTRAP_TENANT_CODE`, `_ADMIN_USERNAME`, `_ADMIN_PASSWORD` | first start only | §5.3 |
@@ -178,14 +178,14 @@ Each module jar carries its own `application.properties` (JAVA-CODING-RULES §2.
 | `MYSMS_PRIVACY_MAJORITY_JOB_INTERVAL` | no | per-tenant majority job interval (minors who came of age become adults), default `1h` |
 | `MYSMS_PRIVACY_CONSENT_EXPIRY_JOB_INTERVAL` | no | per-tenant consent-expiry job interval, default `1h` |
 | `MYSMS_PRIVACY_RIGHTS_SLA_ACCESS`, `_CORRECTION`, `_GRIEVANCE`, `_NOMINATION`, `_ERASURE`, `_EXPORT`, `_WITHDRAW_ALL` | no | response deadline from submission, ISO-8601 period, default `P30D` each (legal periods to be verified by counsel) |
-| `MYSMS_PRIVACY_ERASURE_MODULES` | no | the modules an erasure or export request sends a task to (comma-separated module codes), default the modules with a privacy task handler: `iam,comms,people,sis,hr,payroll,admission,attendance,assessment,academics,careers,finance,frontoffice,library,platform,transport` (lms has none: it cannot map a person to its rows). Add a module only once it has a handler: a listed module without one leaves its task dispatched and the request in progress (PRIVACY-AND-CONSENT-CENTRE §9.1). Retention runs are sent to these modules only |
+| `MYSMS_PRIVACY_ERASURE_MODULES` | no | the modules an erasure or export request sends a task to (comma-separated module codes), default the modules with a privacy task handler: `iam,comms,people,sis,hr,payroll,time_attendance,admission,attendance,assessment,academics,careers,finance,frontoffice,library,platform,transport` (lms has none: it cannot map a person to its rows). Add a module only once it has a handler: a listed module without one leaves its task dispatched and the request in progress (PRIVACY-AND-CONSENT-CENTRE §9.1). Retention runs are sent to these modules only |
 | `MYSMS_PRIVACY_ERASURE_FIRST_WAVE` | no | the modules an erasure reaches first, before the rest (stop messages and sign-in), default `iam,comms`; each must be in `MYSMS_PRIVACY_ERASURE_MODULES` |
 | `MYSMS_PRIVACY_ERASURE_REDISPATCH_AFTER` | no | how long a task may stay unanswered before the sweep dispatches it again, default `PT24H` |
 | `MYSMS_PRIVACY_ERASURE_RETRY_DELAY` | no | how long a failed task waits before its next attempt, doubled per attempt and at most `MYSMS_PRIVACY_ERASURE_REDISPATCH_AFTER`, default `PT5M` |
 | `MYSMS_PRIVACY_ERASURE_SWEEP_INTERVAL` | no | per-tenant interval of that sweep (core job runtime), default `15m` |
 | `MYSMS_PRIVACY_RETENTION_JOB_INTERVAL` | no | per-tenant interval of the retention run, which sends each retention policy's cutoff to the module holding the data (`privacy.retention.due`; once per UTC day per policy), default `24h` |
 
-Read by every module that uses privacy-client (people, sis, iam, hr, payroll, admission, attendance, assessment, academics, careers, comms, finance, frontoffice, library, platform, transport): consent checks and the module's privacy tasks and
+Read by every module that uses privacy-client (people, sis, iam, hr, payroll, time_attendance, admission, attendance, assessment, academics, careers, comms, finance, frontoffice, library, platform, transport): consent checks and the module's privacy tasks and
 retention runs (design PRIVACY-AND-CONSENT-CENTRE §9.1, §10):
 
 | Variable | Required | Meaning |
@@ -195,6 +195,12 @@ retention runs (design PRIVACY-AND-CONSENT-CENTRE §9.1, §10):
 | `MYSMS_PRIVACY_CLIENT_HOLDS_DEADLINE` | no | how long privacy's answer on the legal holds of a subject may take before an erasure or a retention sweep, default `2s`; without an answer nothing is erased and the task (or run) answers failed |
 | `MYSMS_PRIVACY_CLIENT_TASK_INTERVAL` | no | per-tenant interval of the module's job `<module>.privacy_tasks` (core job runtime), which runs the tasks and runs received, default `5m` |
 | `MYSMS_PRIVACY_GRPC_ADDRESS` | no | the privacy service (§4.1 `MYSMS_<MODULE>_GRPC_ADDRESS`) |
+
+### 4.2b hrms (and the monolith)
+
+| Variable | Required | Meaning |
+|---|---|---|
+| `MYSMS_HR_LEAVE_WEEKEND_DAYS` | no | the weekend of every institution, as leave, pay and staff attendance count working days: day names, comma-separated, default `SATURDAY,SUNDAY`; blank = a seven-day week. Holidays come from org's holiday events (hr's copy, §5.7) |
 
 ### 4.3 Web apps (build time)
 
@@ -243,7 +249,7 @@ An unconfigured provider never breaks a service: the operations that need it ans
 
 ### 5.2 Run as one monolith (recommended start)
 
-All 10 modules (22 areas) in one process, each area with its own pool and Flyway history; gRPC between areas stays in-process.
+All 10 modules (23 areas) in one process, each area with its own pool and Flyway history; gRPC between areas stays in-process.
 
 ```bash
 export MYSMS_DB_URL=jdbc:postgresql://db:5432/mysms
@@ -303,7 +309,7 @@ The gateway routes by the first path segment after `/v1/` (the area) to the modu
 
 ### 5.6 Partition maintenance
 
-Monthly partitions: `attendance.attendance_record`, `attendance.staff_attendance`, `comms.outbound_message`, `comms.in_app_notification`, `lms.content_view_session`, `lms.access_log`, `platform.audit_log`, `privacy.consent_evidence`. Each service creates the current month and the next `MYSMS_PARTITIONS_MONTHS_AHEAD` at startup and every `MYSMS_PARTITIONS_INTERVAL`, as the schema owner. It waits at most 5 s for a table lock and retries at its next run.
+Monthly partitions: `attendance.attendance_record`, `time_attendance.staff_attendance`, `comms.outbound_message`, `comms.in_app_notification`, `lms.content_view_session`, `lms.access_log`, `platform.audit_log`, `privacy.consent_evidence`. Each service creates the current month and the next `MYSMS_PARTITIONS_MONTHS_AHEAD` at startup and every `MYSMS_PARTITIONS_INTERVAL`, as the schema owner. It waits at most 5 s for a table lock and retries at its next run.
 
 A row whose month has no partition lands in `…_default` and the job logs `partition … (DEFAULT) holds rows` at ERROR: alert on it, move those rows out, create the month, move them back (§11). Old months are dropped only with `MYSMS_PARTITIONS_RETENTION_MONTHS` set (12 or more); back up first. Lists over these tables must name a date range of at most 366 days.
 
@@ -327,14 +333,14 @@ Services declare what they need at startup:
 
 A failed handling is returned after 1 s, 2 s, 4 s … up to 60 s. Change `delivery-limit` or dead-letter settings of an existing queue with a RabbitMQ policy, or drain, delete and let the service declare it again; a service started with other arguments stops with `its queue … exists with other arguments`.
 
-**One broker user per service.** RabbitMQ verifies each message's AMQP `user-id`. An event names its source *area* (`payroll.payslip.issued`); a consumer accepts it only from the user of the module serving that area (`mysms-hrms`; the area → module table is `MessagingModules` in `backend/messaging`), and topic permissions let each user publish only its areas' event types and `audit.recorded`. Each area keeps its own queues (`mysms.<area>.events`, `mysms.<area>.dead`). For each module (`hrms` below, areas `hr` and `payroll`), vhost `mysms`:
+**One broker user per service.** RabbitMQ verifies each message's AMQP `user-id`. An event names its source *area* (`payroll.payslip.issued`); a consumer accepts it only from the user of the module serving that area (`mysms-hrms`; the area → module table is `MessagingModules` in `backend/messaging`), and topic permissions let each user publish only its areas' event types and `audit.recorded`. Each area keeps its own queues (`mysms.<area>.events`, `mysms.<area>.dead`). For each module (`hrms` below, areas `hr`, `payroll` and `time_attendance`), vhost `mysms`:
 
 ```bash
 rabbitmqctl add_vhost mysms
 rabbitmqctl add_user mysms-hrms '<hrms-rabbit-password>'
-P='^mysms\.(events(\.dead|\.unrouted)?|(hr|payroll)\.(events|dead))$'
+P='^mysms\.(events(\.dead|\.unrouted)?|(hr|payroll|time_attendance)\.(events|dead))$'
 rabbitmqctl set_permissions -p mysms mysms-hrms "$P" "$P" "$P"
-rabbitmqctl set_topic_permissions -p mysms mysms-hrms mysms.events '^((hr|payroll)\..+|audit\.recorded)$' '.*'
+rabbitmqctl set_topic_permissions -p mysms mysms-hrms mysms.events '^((hr|payroll|time_attendance)\..+|audit\.recorded)$' '.*'
 # hrms service: MYSMS_RABBITMQ_URI='amqps://mysms-hrms:<hrms-rabbit-password>@broker:5671/mysms'
 ```
 
@@ -344,7 +350,7 @@ rabbitmqctl set_topic_permissions -p mysms mysms-hrms mysms.events '^((hr|payrol
 | `identity` | `iam`, `people` |
 | `privacy` | `privacy` |
 | `comms` | `comms` |
-| `hrms` | `hr`, `payroll` |
+| `hrms` | `hr`, `payroll`, `time_attendance` |
 | `students` | `sis`, `admission`, `careers` |
 | `academics` | `academics`, `timetable`, `attendance`, `assessment` |
 | `finance` | `finance` |
@@ -363,7 +369,9 @@ java -cp academics-0.1.0-SNAPSHOT-exec.jar -Dloader.main=com.mysms.messaging.rab
   org.springframework.boot.loader.launch.PropertiesLauncher replay-unrouted
 ```
 
-`replay-dead <area>` returns a consuming area's parked events to its queue (one call per area of a multi-area module) (the failure reason is in its `inbox_event.processing_error` and log); `replay-unrouted` publishes waiting events again. A local broker: `docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4.1-management-alpine`, then one user with `'.*'` permissions and `amqp://` in `MYSMS_RABBITMQ_URI` (`amqps://` in production).
+`replay-dead <area>` returns a consuming area's parked events to its queue (one call per area of a multi-area module) (the failure reason is in its `inbox_event.processing_error` and log); `replay-unrouted` publishes waiting events again.
+
+Copies kept from events start empty on an install that had the source rows before the copy existed. **hrms's holiday copy** (`hr.holiday_record`, from `org.holiday.*`, release with BE-6): org's earlier holiday events carry only the id and change nothing in it, so on such an install save each existing holiday once: `PATCH /v1/org/holidays/{id}` with `If-Match` and one field re-sent with its current value (for example `{"title":"<its current title>"}`) bumps the row version and publishes `org.holiday.updated` with the row (an empty `{}` changes nothing and publishes nothing). Until then leave and pay count those days as working days, and leave approved meanwhile keeps the days it counted (`counted_days`). A local broker: `docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4.1-management-alpine`, then one user with `'.*'` permissions and `amqp://` in `MYSMS_RABBITMQ_URI` (`amqps://` in production).
 
 #### Google Cloud Pub/Sub
 
@@ -429,6 +437,10 @@ Rotation: set the new secret on the module and the new hash at iam, restart both
 Every module publishes its API-permission catalogue (its operation table) to iam as `<module>.api_permissions.published` at startup and every `MYSMS_CATALOGUE_INTERVAL`. iam keeps it in `iam.api_permission` (`iam.ListApiPermissions`), adds new tenant-user permission codes, and retires (never deletes) an operation no module has published for `MYSMS_IAM_API_PERMISSION_RETIRE_AFTER`. On Pub/Sub keep iam's source areas (`mysms.events.google-pubsub.source-modules`) at the default (every area).
 
 Each module's edge decides every call itself. A person's token names role grants (`rgr`), direct grants and denies and the tenant's authorisation version (`azv`); the filter resolves permissions through a per-process cache of each role's codes, filled from iam's `IamAuthzService.GetRolePermissions` (in iam and the monolith, directly). A cached role older than the token's `azv` is fetched again; other changes show within `MYSMS_ROLE_CACHE_TTL`. When iam cannot answer what the cache lacks the call is refused with 503 `UNAVAILABLE`, never admitted: **run iam with at least two replicas and a rolling update.**
+
+### 5.11 Upgrade notes
+
+- **Sibling areas call each other in process (2026-11-27).** Admission's enrolment steps no longer reach sis over gRPC, so a step key kept by the earlier build no longer matches: an enrolment retry that spans the upgrade may answer 422 `IDEMPOTENCY_KEY_REUSED` for up to 24 hours (the ledger's retention). The same retry runs normally once that window has passed; to avoid it, upgrade when no enrolment is in flight.
 
 ## 6. Production checklist
 
@@ -503,7 +515,7 @@ Suites, gates and commands: [`BUILD-AND-RUN.md`](BUILD-AND-RUN.md) §3.
 | `mysms.secrets.keys (MYSMS_SECRETS_KEYS) is not configured` | Set the field-encryption key (§3a). |
 | `permission denied for schema …` at startup | `mysms_migrate` must own the database (or have `CREATE` on it). |
 | `permission denied for table flyway_schema_history` | `MYSMS_DB_MIGRATE_USER` / `_PASSWORD` missing: Flyway ran as the application role. |
-| `FATAL: sorry, too many clients already` | The monolith opens 22 pools: lower `MYSMS_<MODULE>_DB_POOL_SIZE` or raise `max_connections`. |
+| `FATAL: sorry, too many clients already` | The monolith opens 23 pools: lower `MYSMS_<MODULE>_DB_POOL_SIZE` or raise `max_connections`. |
 | `partition … (DEFAULT) holds rows` / `partition … could not be created` | Move the rows out of `…_default`, `CREATE TABLE <schema>.<table>_YYYY_MM PARTITION OF <schema>.<table> FOR VALUES FROM ('YYYY-MM-01') TO (…)`, move them back through the parent (§5.6). |
 | A list answers 400 `INVALID_FILTER` "this list needs a range on …" | The table is partitioned: filter a range of at most 366 days. |
 | `mysms.events.rabbitmq.uri (MYSMS_RABBITMQ_URI) is required` | Set the broker URI, or `MYSMS_EVENTS_BUS=in-process` for a single process. |
@@ -527,90 +539,3 @@ Suites, gates and commands: [`BUILD-AND-RUN.md`](BUILD-AND-RUN.md) §3.
 | 409 `REQUEST_IN_PROGRESS` | The first request with that key is still running; a lock older than two minutes is taken over by the retry. |
 | 500 with `unreadable secret envelope` or `does not open for this tenant` in the log | The key that wrote the value is no longer in `MYSMS_SECRETS_KEYS`; put it back. |
 | `mfaRequired: true` and no tokens | Expected for accounts with an authenticator app: `POST /v1/iam/mfa:complete` with the `mfaToken` within five minutes. |
-
-## 12. Pilot demo data
-
-The `demo-seed` module (`backend/demo-seed`) fills one **temporary demo tenant** with a coherent, invented Indian school
-for pilots and demonstrations, and removes it again. It is a plain Java program that drives the **public REST API** of a
-running MySMS (monolith or services), so every row passes validation, permissions, row-level security, events and audit
-like any user's; it never writes SQL. It is not part of the monolith or of any service.
-
-**What it makes** (in this order: org → academics → hr → sis → iam → teaching → timetable → attendance):
-
-- *Sunrise Valley Public School* (`SVPS`), the current academic year (1 April – 31 March) with two terms, five departments;
-- grades 1–10 with sections A and B (20 class sections), eight subjects and each class's subjects;
-- the principal, 22 teachers (20 of them class teachers), a school administrator, an office assistant, an accountant and a
-  librarian, with designations and people records;
-- 15 students per class (300; `-Dmysms.demo.studentsPerClass`), each with a guardian of the same family, enrolled with a
-  roll number;
-- the demo roles and the eight personas below;
-- teaching assignments for every class subject; six periods a day and the confirmed sessions of every class, Monday to
-  Saturday, for this week and the past three weeks (`-Dmysms.demo.pastWeeks`);
-- a register per class and the first-period roll call of every past school day, with a few students absent or late.
-
-Every name is drawn at random (fixed seed `-Dmysms.demo.seed`, default `20261118`) from common given and family names, so
-no real person is described, and every mail address is on the reserved domain `sunrisevalley.example`. The same seed and
-day give the same school. Not yet seeded: assessment, finance, library, transport, admission, front office, facility,
-payroll, comms, LMS and careers (ROADMAP.md).
-
-**1. Make the tenant.** In this release only iam's installation bootstrap (§5.3) creates a tenant together with its first
-administrator, and iam issues no platform-staff tokens, so `platform.CreateTenant` cannot be used for it. Start MySMS once
-with
-
-```bash
-export MYSMS_IAM_BOOTSTRAP_TENANT_CODE=demo-20261118          # must start with demo-
-export MYSMS_IAM_BOOTSTRAP_ADMIN_USERNAME=admin
-export MYSMS_IAM_BOOTSTRAP_ADMIN_PASSWORD='<at least 12 characters>'
-```
-
-A tenant that already exists keeps its data; another installation's tenants are not touched.
-
-**2. Seed it.** Credentials come only from environment variables (never the command line, never logged):
-
-```bash
-cd backend
-export MYSMS_DEMO_ADMIN_USERNAME=admin MYSMS_DEMO_ADMIN_PASSWORD='<the bootstrap password>'
-export MYSMS_DEMO_PERSONA_PASSWORD='<at least 12 characters, for every demo sign-in>'
-mvn -pl demo-seed exec:java -Dmysms.demo.baseUrl=https://sms.example.org -Dmysms.demo.action=seed \
-    -Dmysms.demo.tenantCode=demo-20261118
-```
-
-`baseUrl` is the origin that serves `/v1` (the API is called at `<baseUrl>/v1/…`). The tenant code defaults to
-`demo-<today>`. The run writes its manifest to `demo-manifests/<tenant code>.json` (`-Dmysms.demo.manifestDir`): the
-tenant id, the rows per module, any operation skipped because this release answers it 501, and the persona usernames —
-never a password. **Running it again is safe**: every row is found by its natural key (codes, admission and employee
-numbers, mail addresses, dates) and only what is missing is created; demo roles are brought back to exactly their
-permission set.
-
-**3. Sign in as a persona** — tenant code as above, password `MYSMS_DEMO_PERSONA_PASSWORD`:
-
-| Persona | Username | Holds |
-|---|---|---|
-| School administrator | `schooladmin` | iam's `administrator` role at the school only |
-| Principal | `principal` | `demo_principal`: runs academics, students, attendance, assessment, timetable, admission, communication, front office, staff, LMS and facilities; reads finance, library, transport and payroll |
-| Teacher | `teacher` | `demo_teacher` (a secondary subject teacher without a class) |
-| Class teacher | `classteacher` | `demo_teacher` and `demo_class_teacher` for class 10-A |
-| Accountant | `accountant` | `demo_accountant`: finance and payroll |
-| Librarian | `librarian` | `demo_librarian`: the library |
-| Student | `student` | `student`, the first student of 10-A (also the role sis grants every student portal account) |
-| Guardian | `parent` | `guardian`, that student's guardian |
-
-The staff, student and guardian records are linked to these accounts through their own portal-account operations, so
-"my timetable", "my children" and the student summary show the persona's own data.
-
-**4. Remove it** with a platform operator's access token (audience `mysms-platform-admin`, MFA; permissions
-`platform.tenant.read` and `platform.tenant.delete`):
-
-```bash
-export MYSMS_DEMO_PLATFORM_TOKEN='<token>'
-mvn -pl demo-seed exec:java -Dmysms.demo.baseUrl=https://sms.example.org -Dmysms.demo.action=remove \
-    -Dmysms.demo.tenantCode=demo-20261118
-```
-
-`remove` reads the manifest and deletes exactly the tenant it names (`platform.DeleteTenant`), and only when the platform
-still knows that tenant under that code; iam then closes it, so nobody can sign in to it any more. The rows stay in the
-modules' schemas, invisible to every other tenant. iam does not issue platform-staff tokens yet (ROADMAP.md), so outside
-the component test, which signs one with its own test key, there is no such token to give `remove` until it does.
-
-**Safety.** `seed` and `remove` refuse any tenant code that does not start with `demo-`; `remove` refuses without a
-manifest. Run it against a pilot installation, never against a school's live tenant code.

@@ -4,7 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.library.api.model.Invoice;
 import com.mysms.campus.library.api.model.Loan;
-import com.mysms.campus.library.api.model.LoanUpdate;
 import com.mysms.campus.library.business.LoanService;
 import com.mysms.library.v1.CreateLoanRequest;
 import com.mysms.library.v1.CreateLoanResponse;
@@ -17,13 +16,13 @@ import com.mysms.library.v1.InvoiceLoanFineResponse;
 import com.mysms.library.v1.ListLoansRequest;
 import com.mysms.library.v1.ListLoansResponse;
 import com.mysms.library.v1.LoanServiceGrpc;
+import com.mysms.library.v1.LoanUpdate;
 import com.mysms.library.v1.MarkLoanLostRequest;
 import com.mysms.library.v1.MarkLoanLostResponse;
 import com.mysms.library.v1.RequestLoanReturnRequest;
 import com.mysms.library.v1.RequestLoanReturnResponse;
 import com.mysms.library.v1.ReturnLoanRequest;
 import com.mysms.library.v1.ReturnLoanResponse;
-import com.mysms.library.v1.UpdateLoanRequest;
 import com.mysms.library.v1.UpdateLoanResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -66,11 +65,11 @@ public class LoanResolver extends LoanServiceGrpc.LoanServiceImplBase {
     }
 
     @Override
-    public void updateLoan(UpdateLoanRequest request, StreamObserver<UpdateLoanResponse> out) {
+    public void updateLoan(LoanUpdate request, StreamObserver<UpdateLoanResponse> out) {
         Loan updated = service.updateLoan(
-                bridge.id(request.getLoan().getId(), "id"),
-                bridge.requiredIfMatch(request.getLoan().getEtag()),
-                bridge.changes(request.getLoan(), request.getUpdateMask(), LoanUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LoanProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLoanResponse.newBuilder(), "loan", updated).build());
     }
 

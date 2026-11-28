@@ -4,10 +4,10 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.finance.api.model.Coupon;
 import com.mysms.finance.api.model.CouponScope;
-import com.mysms.finance.api.model.CouponScopeUpdate;
-import com.mysms.finance.api.model.CouponUpdate;
 import com.mysms.finance.business.CouponService;
+import com.mysms.finance.v1.CouponScopeUpdate;
 import com.mysms.finance.v1.CouponServiceGrpc;
+import com.mysms.finance.v1.CouponUpdate;
 import com.mysms.finance.v1.CreateCouponRequest;
 import com.mysms.finance.v1.CreateCouponResponse;
 import com.mysms.finance.v1.CreateCouponScopeRequest;
@@ -24,9 +24,7 @@ import com.mysms.finance.v1.ListCouponScopesRequest;
 import com.mysms.finance.v1.ListCouponScopesResponse;
 import com.mysms.finance.v1.ListCouponsRequest;
 import com.mysms.finance.v1.ListCouponsResponse;
-import com.mysms.finance.v1.UpdateCouponRequest;
 import com.mysms.finance.v1.UpdateCouponResponse;
-import com.mysms.finance.v1.UpdateCouponScopeRequest;
 import com.mysms.finance.v1.UpdateCouponScopeResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -68,11 +66,11 @@ public class CouponResolver extends CouponServiceGrpc.CouponServiceImplBase {
     }
 
     @Override
-    public void updateCoupon(UpdateCouponRequest request, StreamObserver<UpdateCouponResponse> out) {
+    public void updateCoupon(CouponUpdate request, StreamObserver<UpdateCouponResponse> out) {
         Coupon updated = service.updateCoupon(
-                bridge.id(request.getCoupon().getId(), "id"),
-                bridge.requiredIfMatch(request.getCoupon().getEtag()),
-                bridge.changes(request.getCoupon(), request.getUpdateMask(), CouponUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CouponProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCouponResponse.newBuilder(), "coupon", updated).build());
     }
 
@@ -105,12 +103,12 @@ public class CouponResolver extends CouponServiceGrpc.CouponServiceImplBase {
     }
 
     @Override
-    public void updateCouponScope(UpdateCouponScopeRequest request, StreamObserver<UpdateCouponScopeResponse> out) {
+    public void updateCouponScope(CouponScopeUpdate request, StreamObserver<UpdateCouponScopeResponse> out) {
         CouponScope updated = service.updateCouponScope(
                 bridge.id(request.getCouponId(), "couponId"),
-                bridge.id(request.getCouponScope().getId(), "id"),
-                bridge.requiredIfMatch(request.getCouponScope().getEtag()),
-                bridge.changes(request.getCouponScope(), request.getUpdateMask(), CouponScopeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CouponScopeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCouponScopeResponse.newBuilder(), "coupon_scope", updated).build());
     }

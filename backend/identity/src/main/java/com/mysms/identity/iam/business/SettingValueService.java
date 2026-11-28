@@ -144,6 +144,9 @@ public class SettingValueService extends AppTransactionManager {
             patch.apply("isLocked", changes.getIsLocked(), v -> entity.setLocked(Boolean.TRUE.equals(v)));
             List<String> fields = patch.applied();
             assertValid(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (!validateOnly) {
                 if (repository.update(entity, expected) == 0) {

@@ -186,6 +186,9 @@ public class LmsAssignmentSubmissionService extends AppTransactionManager {
                 throw new ValidationFailedException(List.of(new FieldError("groupId",
                         "the caller is not an active member of the group", "NOT_A_MEMBER")));
             }
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);

@@ -155,6 +155,9 @@ public class AnnotationService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -338,6 +341,9 @@ public class AnnotationService extends AppTransactionManager {
             assertValidAnnotationShare(entity, false);
             scope.requireWritable(institutionOfAnnotationShare(entity));
             assertUniqueAnnotationShare(entity);
+            if (fields.isEmpty()) {
+                return annotationShareMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return annotationShareMapper.toDto(entity);

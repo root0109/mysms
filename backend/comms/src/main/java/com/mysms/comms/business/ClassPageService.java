@@ -177,6 +177,9 @@ public class ClassPageService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -388,6 +391,9 @@ public class ClassPageService extends AppTransactionManager {
             assertValidClassPageAttachment(entity, false);
             scope.requireWritable(institutionOfClassPageAttachment(entity));
             assertUniqueClassPageAttachment(entity);
+            if (fields.isEmpty()) {
+                return classPageAttachmentMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return classPageAttachmentMapper.toDto(entity);
@@ -542,6 +548,9 @@ public class ClassPageService extends AppTransactionManager {
             assertValidClassPageMember(entity, false);
             scope.requireWritable(institutionOfClassPageMember(entity));
             assertUniqueClassPageMember(entity);
+            if (fields.isEmpty()) {
+                return classPageMemberMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return classPageMemberMapper.toDto(entity);

@@ -4,10 +4,10 @@ syntax = "proto3";
 package mysms.iam.v1;
 
 import "google/protobuf/empty.proto";
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 import "mysms/org/v1/org.proto";
 import "mysms/people/v1/people.proto";
 
@@ -42,7 +42,7 @@ service UserAccountService {
   // Create UserAccount.
   rpc CreateUserAccount(CreateUserAccountRequest) returns (CreateUserAccountResponse);
   // Update UserAccount.
-  rpc UpdateUserAccount(UpdateUserAccountRequest) returns (UpdateUserAccountResponse);
+  rpc UpdateUserAccount(UserAccountUpdate) returns (UpdateUserAccountResponse);
   // Soft-delete UserAccount.
   rpc DeleteUserAccount(DeleteUserAccountRequest) returns (DeleteUserAccountResponse);
   // List UserRoles.
@@ -52,7 +52,7 @@ service UserAccountService {
   // Create UserRole.
   rpc CreateUserRole(CreateUserRoleRequest) returns (CreateUserRoleResponse);
   // Update UserRole.
-  rpc UpdateUserRole(UpdateUserRoleRequest) returns (UpdateUserRoleResponse);
+  rpc UpdateUserRole(UserRoleUpdate) returns (UpdateUserRoleResponse);
   // Soft-delete UserRole.
   rpc DeleteUserRole(DeleteUserRoleRequest) returns (DeleteUserRoleResponse);
   // List UserPermissions.
@@ -62,7 +62,7 @@ service UserAccountService {
   // Create UserPermission.
   rpc CreateUserPermission(CreateUserPermissionRequest) returns (CreateUserPermissionResponse);
   // Update UserPermission.
-  rpc UpdateUserPermission(UpdateUserPermissionRequest) returns (UpdateUserPermissionResponse);
+  rpc UpdateUserPermission(UserPermissionUpdate) returns (UpdateUserPermissionResponse);
   // Soft-delete UserPermission.
   rpc DeleteUserPermission(DeleteUserPermissionRequest) returns (DeleteUserPermissionResponse);
   // List UserDepartmentAccesses.
@@ -72,7 +72,7 @@ service UserAccountService {
   // Create UserDepartmentAccess.
   rpc CreateUserDepartmentAccess(CreateUserDepartmentAccessRequest) returns (CreateUserDepartmentAccessResponse);
   // Update UserDepartmentAccess.
-  rpc UpdateUserDepartmentAccess(UpdateUserDepartmentAccessRequest) returns (UpdateUserDepartmentAccessResponse);
+  rpc UpdateUserDepartmentAccess(UserDepartmentAccessUpdate) returns (UpdateUserDepartmentAccessResponse);
   // Soft-delete UserDepartmentAccess.
   rpc DeleteUserDepartmentAccess(DeleteUserDepartmentAccessRequest) returns (DeleteUserDepartmentAccessResponse);
   // List AuthTokens.
@@ -86,7 +86,7 @@ service UserAccountService {
   // Create UserDevice.
   rpc CreateUserDevice(CreateUserDeviceRequest) returns (CreateUserDeviceResponse);
   // Update UserDevice.
-  rpc UpdateUserDevice(UpdateUserDeviceRequest) returns (UpdateUserDeviceResponse);
+  rpc UpdateUserDevice(UserDeviceUpdate) returns (UpdateUserDeviceResponse);
   // Soft-delete UserDevice.
   rpc DeleteUserDevice(DeleteUserDeviceRequest) returns (DeleteUserDeviceResponse);
   // List UserPreferences.
@@ -96,7 +96,7 @@ service UserAccountService {
   // Create UserPreference.
   rpc CreateUserPreference(CreateUserPreferenceRequest) returns (CreateUserPreferenceResponse);
   // Update UserPreference.
-  rpc UpdateUserPreference(UpdateUserPreferenceRequest) returns (UpdateUserPreferenceResponse);
+  rpc UpdateUserPreference(UserPreferenceUpdate) returns (UpdateUserPreferenceResponse);
   // Soft-delete UserPreference.
   rpc DeleteUserPreference(DeleteUserPreferenceRequest) returns (DeleteUserPreferenceResponse);
   // List UserSessions.
@@ -166,7 +166,7 @@ service RoleService {
   // Create Role.
   rpc CreateRole(CreateRoleRequest) returns (CreateRoleResponse);
   // Update Role.
-  rpc UpdateRole(UpdateRoleRequest) returns (UpdateRoleResponse);
+  rpc UpdateRole(RoleUpdate) returns (UpdateRoleResponse);
   // Soft-delete Role.
   rpc DeleteRole(DeleteRoleRequest) returns (DeleteRoleResponse);
   // List RolePermissions.
@@ -176,7 +176,7 @@ service RoleService {
   // Create RolePermission.
   rpc CreateRolePermission(CreateRolePermissionRequest) returns (CreateRolePermissionResponse);
   // Update RolePermission.
-  rpc UpdateRolePermission(UpdateRolePermissionRequest) returns (UpdateRolePermissionResponse);
+  rpc UpdateRolePermission(RolePermissionUpdate) returns (UpdateRolePermissionResponse);
   // Soft-delete RolePermission.
   rpc DeleteRolePermission(DeleteRolePermissionRequest) returns (DeleteRolePermissionResponse);
 }
@@ -244,13 +244,39 @@ message CreateUserAccountResponse {
   UserAccount user_account = 1;
 }
 
-message UpdateUserAccountRequest {
-  // Resource with id and etag set.
-  UserAccount user_account = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateUserAccount (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message UserAccountUpdate {
+  // UserAccount id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Default persona hint used for routing after login. Never used for authorisation.
+  mysms.common.v1.NullableString user_type = 4;
+  // Person this account belongs to (NULL for service accounts). [UUID]
+  mysms.common.v1.NullableString person_id = 5;
+  // Login name, unique per tenant ignoring case (optional when the user logs in by e-mail or mobile).
+  mysms.common.v1.NullableString username = 6;
+  // Login / notification e-mail, unique per tenant ignoring case.
+  mysms.common.v1.NullableString email = 7;
+  // Login / notification mobile number.
+  mysms.common.v1.NullableString mobile_no = 8;
+  // Account that created / referred this account. [UUID]
+  mysms.common.v1.NullableString referred_by_user_id = 9;
+  // Preferred UI locale.
+  mysms.common.v1.NullableString locale = 10;
+  // Preferred time zone.
+  mysms.common.v1.NullableString timezone = 11;
+  // Date the user joined the institution. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString joined_on = 12;
+  // External system reference (SIS / HR integration key).
+  mysms.common.v1.NullableString external_ref = 13;
+  // Signature appended to discussion posts.
+  mysms.common.v1.NullableString signature = 14;
+  // Append the signature by default.
+  optional bool use_signature = 15;
 }
 message UpdateUserAccountResponse {
   UserAccount user_account = 1;
@@ -304,13 +330,29 @@ message CreateRoleResponse {
   Role role = 1;
 }
 
-message UpdateRoleRequest {
-  // Resource with id and etag set.
-  Role role = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateRole (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message RoleUpdate {
+  // Role id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Role code, e.g. principal, class_teacher, lms_course_creator, lms_evaluator.
+  optional string code = 4;
+  // Display name.
+  mysms.common.v1.NullableString display_name = 5;
+  // Purpose of the role.
+  mysms.common.v1.NullableString description = 6;
+  // Platform-managed role that tenants cannot edit.
+  optional bool is_system = 7;
+  // Role can be granted.
+  optional bool is_active = 8;
+  // Rank used to decide which roles a user may grant or manage (lower = more authority).
+  mysms.common.v1.NullableInt32 authority_level = 9;
+  // Parent role (inherits its permissions). [UUID]
+  mysms.common.v1.NullableString parent_role_id = 10;
 }
 message UpdateRoleResponse {
   Role role = 1;
@@ -410,15 +452,19 @@ message CreateRolePermissionResponse {
   RolePermission role_permission = 1;
 }
 
-message UpdateRolePermissionRequest {
+// The changes of UpdateRolePermission (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message RolePermissionUpdate {
   // Role id (UUID).
   string role_id = 1;
-  // Resource with id and etag set.
-  RolePermission role_permission = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // RolePermission id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Permission. [UUID]
+  optional string permission_id = 5;
 }
 message UpdateRolePermissionResponse {
   RolePermission role_permission = 1;
@@ -480,15 +526,29 @@ message CreateUserRoleResponse {
   UserRole user_role = 1;
 }
 
-message UpdateUserRoleRequest {
+// The changes of UpdateUserRole (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message UserRoleUpdate {
   // UserAccount id (UUID).
   string user_account_id = 1;
-  // Resource with id and etag set.
-  UserRole user_role = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // UserRole id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Role granted. [UUID]
+  optional string role_id = 5;
+  // Scope kind the grant is limited to.
+  optional UserRole.ScopeType scope_type = 6;
+  // Polymorphic scope record id (NULL when scope_type = tenant). [UUID]
+  mysms.common.v1.NullableString scope_id = 7;
+  // Grant start. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString valid_from = 8;
+  // Grant end. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString valid_to = 9;
+  // Grant currently in force (can be suspended without deleting).
+  optional bool is_active = 10;
 }
 message UpdateUserRoleResponse {
   UserRole user_role = 1;
@@ -550,15 +610,21 @@ message CreateUserPermissionResponse {
   UserPermission user_permission = 1;
 }
 
-message UpdateUserPermissionRequest {
+// The changes of UpdateUserPermission (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message UserPermissionUpdate {
   // UserAccount id (UUID).
   string user_account_id = 1;
-  // Resource with id and etag set.
-  UserPermission user_permission = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // UserPermission id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Permission. [UUID]
+  optional string permission_id = 5;
+  // Whether the permission is added or removed.
+  optional UserPermission.Effect effect = 6;
 }
 message UpdateUserPermissionResponse {
   UserPermission user_permission = 1;
@@ -620,15 +686,21 @@ message CreateUserDepartmentAccessResponse {
   UserDepartmentAccess user_department_access = 1;
 }
 
-message UpdateUserDepartmentAccessRequest {
+// The changes of UpdateUserDepartmentAccess (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message UserDepartmentAccessUpdate {
   // UserAccount id (UUID).
   string user_account_id = 1;
-  // Resource with id and etag set.
-  UserDepartmentAccess user_department_access = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // UserDepartmentAccess id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Department. [UUID]
+  optional string department_id = 5;
+  // Primary department of the account.
+  optional bool is_primary = 6;
 }
 message UpdateUserDepartmentAccessResponse {
   UserDepartmentAccess user_department_access = 1;
@@ -723,15 +795,27 @@ message CreateUserDeviceResponse {
   UserDevice user_device = 1;
 }
 
-message UpdateUserDeviceRequest {
+// The changes of UpdateUserDevice (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message UserDeviceUpdate {
   // UserAccount id (UUID).
   string user_account_id = 1;
-  // Resource with id and etag set.
-  UserDevice user_device = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // UserDevice id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Device / installation identifier.
+  optional string device_identifier = 5;
+  // Client platform.
+  optional UserDevice.Platform platform = 6;
+  // Push-notification token (FCM/APNs/Web Push). Input only; never returned.
+  mysms.common.v1.NullableString push_token = 7;
+  // Last activity from this device.
+  mysms.common.v1.NullableTimestamp last_seen_at = 8;
+  // Whether pushes are sent to this device.
+  optional bool is_active = 9;
 }
 message UpdateUserDeviceResponse {
   UserDevice user_device = 1;
@@ -793,15 +877,21 @@ message CreateUserPreferenceResponse {
   UserPreference user_preference = 1;
 }
 
-message UpdateUserPreferenceRequest {
+// The changes of UpdateUserPreference (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message UserPreferenceUpdate {
   // UserAccount id (UUID).
   string user_account_id = 1;
-  // Resource with id and etag set.
-  UserPreference user_preference = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // UserPreference id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Preference key.
+  optional string pref_key = 5;
+  // Preference value.
+  mysms.common.v1.NullableString pref_value = 6;
 }
 message UpdateUserPreferenceResponse {
   UserPreference user_preference = 1;
@@ -1939,13 +2029,19 @@ message CreateSettingValueResponse {
   SettingValue setting_value = 1;
 }
 
-message UpdateSettingValueRequest {
-  // Resource with id and etag set.
-  SettingValue setting_value = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateSettingValue (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SettingValueUpdate {
+  // SettingValue id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // The value, as text in the setting's type.
+  optional string value = 4;
+  // Narrower scopes (and users) cannot override it.
+  optional bool is_locked = 5;
 }
 message UpdateSettingValueResponse {
   SettingValue setting_value = 1;
@@ -1969,7 +2065,7 @@ service SettingValueService {
   // Create SettingValue.
   rpc CreateSettingValue(CreateSettingValueRequest) returns (CreateSettingValueResponse);
   // Update SettingValue.
-  rpc UpdateSettingValue(UpdateSettingValueRequest) returns (UpdateSettingValueResponse);
+  rpc UpdateSettingValue(SettingValueUpdate) returns (UpdateSettingValueResponse);
   // Soft-delete SettingValue.
   rpc DeleteSettingValue(DeleteSettingValueRequest) returns (DeleteSettingValueResponse);
 }

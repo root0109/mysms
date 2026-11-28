@@ -3,7 +3,6 @@ package com.mysms.hrms.payroll.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.payroll.api.model.PayComponent;
-import com.mysms.hrms.payroll.api.model.PayComponentUpdate;
 import com.mysms.hrms.payroll.business.PayComponentService;
 import com.mysms.payroll.v1.CreatePayComponentRequest;
 import com.mysms.payroll.v1.CreatePayComponentResponse;
@@ -14,7 +13,7 @@ import com.mysms.payroll.v1.GetPayComponentResponse;
 import com.mysms.payroll.v1.ListPayComponentsRequest;
 import com.mysms.payroll.v1.ListPayComponentsResponse;
 import com.mysms.payroll.v1.PayComponentServiceGrpc;
-import com.mysms.payroll.v1.UpdatePayComponentRequest;
+import com.mysms.payroll.v1.PayComponentUpdate;
 import com.mysms.payroll.v1.UpdatePayComponentResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -58,12 +57,12 @@ public class PayComponentResolver extends PayComponentServiceGrpc.PayComponentSe
     }
 
     @Override
-    public void updatePayComponent(UpdatePayComponentRequest request,
+    public void updatePayComponent(PayComponentUpdate request,
             StreamObserver<UpdatePayComponentResponse> out) {
         PayComponent updated = payComponentService.updatePayComponent(
-                bridge.id(request.getPayComponent().getId(), "id"),
-                bridge.requiredIfMatch(request.getPayComponent().getEtag()),
-                bridge.changes(request.getPayComponent(), request.getUpdateMask(), PayComponentUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PayComponentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePayComponentResponse.newBuilder(),
                 "pay_component", updated).build());

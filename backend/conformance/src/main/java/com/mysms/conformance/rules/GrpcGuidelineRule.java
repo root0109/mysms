@@ -50,15 +50,16 @@ public final class GrpcGuidelineRule implements ConformanceRule {
 
     private static final String PROTO_ROOT = "src/main/resources/proto";
     private static final Pattern COMMENT = Pattern.compile("//[^\\n]*");
-    private static final Pattern IMPORT = Pattern.compile("(?m)^import \"mysms/([a-z]+)/v1/[a-z_]+\\.proto\";");
-    private static final Pattern PACKAGE = Pattern.compile("(?m)^package mysms\\.([a-z]+)\\.v1;");
+    private static final Pattern IMPORT = Pattern.compile("(?m)^import \"mysms/([a-z_]+)/v1/[a-z_]+\\.proto\";");
+    private static final Pattern PACKAGE = Pattern.compile("(?m)^package mysms\\.([a-z_]+)\\.v1;");
     private static final Pattern RPC = Pattern.compile("\\brpc (\\w+)\\(");
     private static final Pattern MESSAGE = Pattern.compile("^message (\\w+) \\{");
+    private static final Pattern ONEOF = Pattern.compile("^\\s*oneof \\w+ \\{");
     private static final Pattern FIELD =
             Pattern.compile("^\\s*(?:optional |repeated )?[\\w.<>, ]+?\\s+(\\w+)\\s*=\\s*(\\d+)\\s*[;\\[]");
-    private static final Pattern ROW = Pattern.compile("(?m)^\\| `([a-z]+)` \\| (.*) \\|$");
-    private static final Pattern CELL = Pattern.compile("`([a-z]+)`");
-    private static final Pattern STUB_IMPORT = Pattern.compile("(?m)^import com\\.mysms\\.([a-z]+)\\.v1\\.\\w+Grpc;");
+    private static final Pattern ROW = Pattern.compile("(?m)^\\| `([a-z_]+)` \\| (.*) \\|$");
+    private static final Pattern CELL = Pattern.compile("`([a-z_]+)`");
+    private static final Pattern STUB_IMPORT = Pattern.compile("(?m)^import com\\.mysms\\.([a-z_]+)\\.v1\\.\\w+Grpc;");
     private static final Pattern SERVER_IMPL = Pattern.compile("extends \\w+Grpc\\.\\w+ImplBase\\b");
     private static final Pattern REST_CLIENT = Pattern.compile("(?m)^import (?:static )?org\\.springframework\\.web\\."
             + "(?:client\\.RestClient|client\\.RestTemplate|reactive\\.function\\.client|service\\.)");
@@ -191,23 +192,32 @@ public final class GrpcGuidelineRule implements ConformanceRule {
         }
     }
 
-    /** The top-level messages of a proto and their fields (name → number); nested enums are not fields. */
+    /**
+     * The top-level messages of a proto and their fields (name → number), the members of their {@code oneof}s
+     * included; nested enums and messages are not fields.
+     */
     public static Map<String, Map<String, Integer>> messages(String proto) {
         Map<String, Map<String, Integer>> messages = new LinkedHashMap<>();
         int depth = 0;
+        boolean oneof = false;
         Map<String, Integer> current = null;
         for (String line : COMMENT.matcher(proto).replaceAll("").split("\n")) {
             Matcher message = MESSAGE.matcher(line);
             if (depth == 0 && message.find()) {
                 current = new TreeMap<>();
                 messages.put(message.group(1), current);
-            } else if (depth == 1 && current != null) {
+            } else if (depth == 1 && current != null && ONEOF.matcher(line).find()) {
+                oneof = true;
+            } else if ((depth == 1 || (depth == 2 && oneof)) && current != null) {
                 Matcher field = FIELD.matcher(line);
                 if (field.find() && !line.trim().startsWith("reserved") && !line.trim().startsWith("option ")) {
                     current.put(field.group(1), Integer.parseInt(field.group(2)));
                 }
             }
             depth += count(line, '{') - count(line, '}');
+            if (depth < 2) {
+                oneof = false;
+            }
             if (depth == 0) {
                 current = null;
             }
@@ -283,8 +293,7 @@ public final class GrpcGuidelineRule implements ConformanceRule {
     // ---------------------------------------------------------------- G8 OpenAPI component test
 
     private static void openApiTest(SourceTree tree, SourceTree.Area area, List<Violation> found) {
-        String name = Character.toUpperCase(area.name().charAt(0)) + area.name().substring(1)
-                + "OpenApiComponentTest.java";
+        String name = area.typeName() + "OpenApiComponentTest.java";
         Path test = tree.java(area, "component-test").stream()
                 .filter(file -> SourceTree.fileName(file).equals(name)).findFirst().orElse(null);
         if (test == null) {

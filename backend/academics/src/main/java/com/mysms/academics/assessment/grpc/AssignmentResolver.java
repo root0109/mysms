@@ -2,30 +2,25 @@ package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.Assignment;
 import com.mysms.academics.assessment.api.model.AssignmentAllocation;
-import com.mysms.academics.assessment.api.model.AssignmentAllocationUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentApproval;
-import com.mysms.academics.assessment.api.model.AssignmentApprovalUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentSubject;
-import com.mysms.academics.assessment.api.model.AssignmentSubjectUpdate;
-import com.mysms.academics.assessment.api.model.AssignmentUpdate;
 import com.mysms.academics.assessment.business.AssignmentService;
 import com.mysms.assessment.v1.ApproveAssignmentRequest;
 import com.mysms.assessment.v1.ApproveAssignmentResponse;
+import com.mysms.assessment.v1.AssignmentAllocationUpdate;
 import com.mysms.assessment.v1.AssignmentServiceGrpc;
+import com.mysms.assessment.v1.AssignmentSubjectUpdate;
+import com.mysms.assessment.v1.AssignmentUpdate;
 import com.mysms.assessment.v1.CancelAssignmentRequest;
 import com.mysms.assessment.v1.CancelAssignmentResponse;
 import com.mysms.assessment.v1.CreateAssignmentAllocationRequest;
 import com.mysms.assessment.v1.CreateAssignmentAllocationResponse;
-import com.mysms.assessment.v1.CreateAssignmentApprovalRequest;
-import com.mysms.assessment.v1.CreateAssignmentApprovalResponse;
 import com.mysms.assessment.v1.CreateAssignmentRequest;
 import com.mysms.assessment.v1.CreateAssignmentResponse;
 import com.mysms.assessment.v1.CreateAssignmentSubjectRequest;
 import com.mysms.assessment.v1.CreateAssignmentSubjectResponse;
 import com.mysms.assessment.v1.DeleteAssignmentAllocationRequest;
 import com.mysms.assessment.v1.DeleteAssignmentAllocationResponse;
-import com.mysms.assessment.v1.DeleteAssignmentApprovalRequest;
-import com.mysms.assessment.v1.DeleteAssignmentApprovalResponse;
 import com.mysms.assessment.v1.DeleteAssignmentRequest;
 import com.mysms.assessment.v1.DeleteAssignmentResponse;
 import com.mysms.assessment.v1.DeleteAssignmentSubjectRequest;
@@ -52,15 +47,12 @@ import com.mysms.assessment.v1.PublishAssignmentRequest;
 import com.mysms.assessment.v1.PublishAssignmentResponse;
 import com.mysms.assessment.v1.RejectAssignmentRequest;
 import com.mysms.assessment.v1.RejectAssignmentResponse;
+import com.mysms.assessment.v1.RequestAssignmentApprovalRequest;
+import com.mysms.assessment.v1.RequestAssignmentApprovalResponse;
 import com.mysms.assessment.v1.ResetAssignmentRequest;
 import com.mysms.assessment.v1.ResetAssignmentResponse;
-import com.mysms.assessment.v1.UpdateAssignmentAllocationRequest;
 import com.mysms.assessment.v1.UpdateAssignmentAllocationResponse;
-import com.mysms.assessment.v1.UpdateAssignmentApprovalRequest;
-import com.mysms.assessment.v1.UpdateAssignmentApprovalResponse;
-import com.mysms.assessment.v1.UpdateAssignmentRequest;
 import com.mysms.assessment.v1.UpdateAssignmentResponse;
-import com.mysms.assessment.v1.UpdateAssignmentSubjectRequest;
 import com.mysms.assessment.v1.UpdateAssignmentSubjectResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -104,11 +96,11 @@ public class AssignmentResolver extends AssignmentServiceGrpc.AssignmentServiceI
     }
 
     @Override
-    public void updateAssignment(UpdateAssignmentRequest request, StreamObserver<UpdateAssignmentResponse> out) {
+    public void updateAssignment(AssignmentUpdate request, StreamObserver<UpdateAssignmentResponse> out) {
         Assignment updated = assignmentService.updateAssignment(
-                bridge.id(request.getAssignment().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssignment().getEtag()),
-                bridge.changes(request.getAssignment(), request.getUpdateMask(), AssignmentUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AssignmentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAssignmentResponse.newBuilder(), "assignment", updated).build());
     }
@@ -150,14 +142,13 @@ public class AssignmentResolver extends AssignmentServiceGrpc.AssignmentServiceI
     }
 
     @Override
-    public void updateAssignmentSubject(UpdateAssignmentSubjectRequest request,
+    public void updateAssignmentSubject(AssignmentSubjectUpdate request,
             StreamObserver<UpdateAssignmentSubjectResponse> out) {
         AssignmentSubject updated = assignmentService.updateAssignmentSubject(
                 bridge.id(request.getAssignmentId(), "assignmentId"),
-                bridge.id(request.getAssignmentSubject().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssignmentSubject().getEtag()),
-                bridge.changes(request.getAssignmentSubject(), request.getUpdateMask(),
-                        AssignmentSubjectUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AssignmentSubjectProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAssignmentSubjectResponse.newBuilder(),
                 "assignment_subject", updated).build());
     }
@@ -202,14 +193,13 @@ public class AssignmentResolver extends AssignmentServiceGrpc.AssignmentServiceI
     }
 
     @Override
-    public void updateAssignmentAllocation(UpdateAssignmentAllocationRequest request,
+    public void updateAssignmentAllocation(AssignmentAllocationUpdate request,
             StreamObserver<UpdateAssignmentAllocationResponse> out) {
         AssignmentAllocation updated = assignmentService.updateAssignmentAllocation(
                 bridge.id(request.getAssignmentId(), "assignmentId"),
-                bridge.id(request.getAssignmentAllocation().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssignmentAllocation().getEtag()),
-                bridge.changes(request.getAssignmentAllocation(), request.getUpdateMask(),
-                        AssignmentAllocationUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AssignmentAllocationProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAssignmentAllocationResponse.newBuilder(),
                 "assignment_allocation", updated).build());
     }
@@ -243,38 +233,6 @@ public class AssignmentResolver extends AssignmentServiceGrpc.AssignmentServiceI
     }
 
     @Override
-    public void createAssignmentApproval(CreateAssignmentApprovalRequest request,
-            StreamObserver<CreateAssignmentApprovalResponse> out) {
-        AssignmentApproval created = assignmentService.createAssignmentApproval(
-                bridge.id(request.getAssignmentId(), "assignmentId"),
-                bridge.body(request.getAssignmentApproval(), AssignmentApproval.class), request.getValidateOnly());
-        ProtoBridge.send(out, bridge.reply(CreateAssignmentApprovalResponse.newBuilder(),
-                "assignment_approval", created).build());
-    }
-
-    @Override
-    public void updateAssignmentApproval(UpdateAssignmentApprovalRequest request,
-            StreamObserver<UpdateAssignmentApprovalResponse> out) {
-        AssignmentApproval updated = assignmentService.updateAssignmentApproval(
-                bridge.id(request.getAssignmentId(), "assignmentId"),
-                bridge.id(request.getAssignmentApproval().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssignmentApproval().getEtag()),
-                bridge.changes(request.getAssignmentApproval(), request.getUpdateMask(),
-                        AssignmentApprovalUpdate.class), request.getValidateOnly());
-        ProtoBridge.send(out, bridge.reply(UpdateAssignmentApprovalResponse.newBuilder(),
-                "assignment_approval", updated).build());
-    }
-
-    @Override
-    public void deleteAssignmentApproval(DeleteAssignmentApprovalRequest request,
-            StreamObserver<DeleteAssignmentApprovalResponse> out) {
-        assignmentService.deleteAssignmentApproval(
-                bridge.id(request.getAssignmentId(), "assignmentId"), bridge.id(request.getId(), "id"),
-                bridge.requiredIfMatch(request.getEtag()));
-        ProtoBridge.send(out, DeleteAssignmentApprovalResponse.getDefaultInstance());
-    }
-
-    @Override
     public void publishAssignment(PublishAssignmentRequest request, StreamObserver<PublishAssignmentResponse> out) {
         Assignment changed = assignmentService.publishAssignment(
                 bridge.id(request.getAssignmentId(), "assignmentId"),
@@ -302,6 +260,18 @@ public class AssignmentResolver extends AssignmentServiceGrpc.AssignmentServiceI
                         com.mysms.academics.assessment.api.model.RejectAssignmentRequest.class,
                         "assignment_id", "request_id"));
         ProtoBridge.send(out, bridge.reply(RejectAssignmentResponse.newBuilder(), "assignment", changed).build());
+    }
+
+    @Override
+    public void requestAssignmentApproval(RequestAssignmentApprovalRequest request,
+            StreamObserver<RequestAssignmentApprovalResponse> out) {
+        Assignment unchanged = assignmentService.requestAssignmentApproval(
+                bridge.id(request.getAssignmentId(), "assignmentId"),
+                bridge.body(request,
+                        com.mysms.academics.assessment.api.model.RequestAssignmentApprovalRequest.class,
+                        "assignment_id", "request_id"));
+        ProtoBridge.send(out,
+                bridge.reply(RequestAssignmentApprovalResponse.newBuilder(), "assignment", unchanged).build());
     }
 
     @Override

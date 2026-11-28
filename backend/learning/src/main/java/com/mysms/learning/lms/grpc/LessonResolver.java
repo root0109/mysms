@@ -2,14 +2,11 @@ package com.mysms.learning.lms.grpc;
 
 import com.mysms.learning.lms.api.model.LessonProgress;
 import com.mysms.learning.lms.api.model.LessonContent;
-import com.mysms.learning.lms.api.model.LessonNoteUpdate;
 import com.mysms.learning.lms.api.model.LessonNote;
-import com.mysms.learning.lms.api.model.LessonUpdate;
 import com.mysms.learning.lms.api.model.Lesson;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.LessonActivity;
-import com.mysms.learning.lms.api.model.LessonActivityUpdate;
 import com.mysms.learning.lms.api.model.VideoWatch;
 import com.mysms.learning.lms.business.LessonService;
 import com.mysms.lms.v1.CreateLessonActivityRequest;
@@ -34,7 +31,10 @@ import com.mysms.lms.v1.GetLessonRequest;
 import com.mysms.lms.v1.GetLessonResponse;
 import com.mysms.lms.v1.GetVideoWatchRequest;
 import com.mysms.lms.v1.GetVideoWatchResponse;
+import com.mysms.lms.v1.LessonActivityUpdate;
+import com.mysms.lms.v1.LessonNoteUpdate;
 import com.mysms.lms.v1.LessonServiceGrpc;
+import com.mysms.lms.v1.LessonUpdate;
 import com.mysms.lms.v1.ListLessonActivitiesRequest;
 import com.mysms.lms.v1.ListLessonActivitiesResponse;
 import com.mysms.lms.v1.ListLessonNotesRequest;
@@ -49,11 +49,8 @@ import com.mysms.lms.v1.MoveLessonRequest;
 import com.mysms.lms.v1.MoveLessonResponse;
 import com.mysms.lms.v1.TrackVideoWatchRequest;
 import com.mysms.lms.v1.TrackVideoWatchResponse;
-import com.mysms.lms.v1.UpdateLessonActivityRequest;
 import com.mysms.lms.v1.UpdateLessonActivityResponse;
-import com.mysms.lms.v1.UpdateLessonNoteRequest;
 import com.mysms.lms.v1.UpdateLessonNoteResponse;
-import com.mysms.lms.v1.UpdateLessonRequest;
 import com.mysms.lms.v1.UpdateLessonResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -94,10 +91,10 @@ public class LessonResolver extends LessonServiceGrpc.LessonServiceImplBase {
     }
 
     @Override
-    public void updateLesson(UpdateLessonRequest request, StreamObserver<UpdateLessonResponse> out) {
-        Lesson updated = service.updateLesson(bridge.id(request.getLesson().getId(), "id"),
-                bridge.requiredIfMatch(request.getLesson().getEtag()),
-                bridge.changes(request.getLesson(), request.getUpdateMask(), LessonUpdate.class), request.getValidateOnly());
+    public void updateLesson(LessonUpdate request, StreamObserver<UpdateLessonResponse> out) {
+        Lesson updated = service.updateLesson(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LessonProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLessonResponse.newBuilder(), "lesson", updated).build());
     }
 
@@ -130,11 +127,11 @@ public class LessonResolver extends LessonServiceGrpc.LessonServiceImplBase {
     }
 
     @Override
-    public void updateLessonActivity(UpdateLessonActivityRequest request, StreamObserver<UpdateLessonActivityResponse> out) {
+    public void updateLessonActivity(LessonActivityUpdate request, StreamObserver<UpdateLessonActivityResponse> out) {
         LessonActivity updated = service.updateLessonActivity(bridge.id(request.getLessonId(), "lessonId"),
-                bridge.id(request.getLessonActivity().getId(), "id"),
-                bridge.requiredIfMatch(request.getLessonActivity().getEtag()),
-                bridge.changes(request.getLessonActivity(), request.getUpdateMask(), LessonActivityUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LessonActivityProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLessonActivityResponse.newBuilder(), "lesson_activity", updated).build());
     }
@@ -169,10 +166,10 @@ public class LessonResolver extends LessonServiceGrpc.LessonServiceImplBase {
     }
 
     @Override
-    public void updateLessonNote(UpdateLessonNoteRequest request, StreamObserver<UpdateLessonNoteResponse> out) {
+    public void updateLessonNote(LessonNoteUpdate request, StreamObserver<UpdateLessonNoteResponse> out) {
         LessonNote updated = service.updateLessonNote(bridge.id(request.getLessonId(), "lessonId"),
-                bridge.id(request.getLessonNote().getId(), "id"), bridge.requiredIfMatch(request.getLessonNote().getEtag()),
-                bridge.changes(request.getLessonNote(), request.getUpdateMask(), LessonNoteUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                LessonNoteProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLessonNoteResponse.newBuilder(), "lesson_note", updated).build());
     }

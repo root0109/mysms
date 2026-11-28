@@ -2,14 +2,19 @@ package com.mysms.academics.attendance.business;
 
 import com.mysms.academics.attendance.integration.OrgGrpcClient;
 import com.mysms.academics.attendance.integration.SisGrpcClient;
-import com.mysms.academics.attendance.integration.TimetableGrpcClient;
+import com.mysms.academics.timetable.api.model.Session;
+import com.mysms.academics.timetable.api.model.SessionStudent;
+import com.mysms.academics.timetable.business.SessionService;
+import com.mysms.authclient.SiblingAccess;
 import com.mysms.common.v1.PageableRequest;
+import com.mysms.core.error.ApiException;
 import com.mysms.core.error.FieldError;
 import com.mysms.core.error.InvalidStateException;
 import com.mysms.core.error.PermissionDeniedException;
 import com.mysms.core.error.UnavailableException;
 import com.mysms.core.error.ValidationFailedException;
 import com.mysms.core.grpc.IntegrationGrpcClientException;
+import com.mysms.core.paging.Page;
 import com.mysms.org.v1.GetInstitutionRequest;
 import com.mysms.sis.v1.ListClassRosterRequest;
 import com.mysms.sis.v1.ListClassRosterResponse;
@@ -17,13 +22,7 @@ import com.mysms.sis.v1.ListStudentsRequest;
 import com.mysms.sis.v1.ListStudentsResponse;
 import com.mysms.sis.v1.Student;
 import com.mysms.sis.v1.StudentEnrollment;
-import com.mysms.timetable.v1.GetSessionRequest;
-import com.mysms.timetable.v1.ListSessionStudentsRequest;
-import com.mysms.timetable.v1.ListSessionStudentsResponse;
-import com.mysms.timetable.v1.Session;
-import com.mysms.timetable.v1.SessionStudent;
 import java.time.DateTimeException;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -42,10 +41,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 /**
- * Adapter over the timetable, sis and org gRPC clients: the session, its expected students (its own list, else the
- * class roster from sis), the institution's time zone that decides the attendance date, and whether a student id names
- * a student of an institution. Every call carries the caller's own identity, so the caller sees exactly what they may
- * read in those modules.
+ * Adapter over the sibling timetable area (in process) and the sis and org gRPC clients: the session, its expected
+ * students (its own list, else the class roster from sis), the institution's time zone that decides the attendance
+ * date, and whether a student id names a student of an institution. Every read runs as the caller — timetable's with
+ * the caller's own permission and scope, the others with the caller's token — so the caller sees exactly what they may
+ * read there.
  */
 @Component
 public class SessionLookup {
@@ -72,12 +72,17 @@ public class SessionLookup {
         }
     }
 
-    private final TimetableGrpcClient timetable;
+    static final String PERMISSION_SESSION_READ = "timetable.session.read";
+    static final String PERMISSION_SESSION_STUDENT_READ = "timetable.session_student.read";
+
+    private final SessionService timetable;
+    private final SiblingAccess sibling;
     private final SisGrpcClient sis;
     private final OrgGrpcClient org;
 
-    public SessionLookup(TimetableGrpcClient timetable, SisGrpcClient sis, OrgGrpcClient org) {
+    public SessionLookup(SessionService timetable, SiblingAccess sibling, SisGrpcClient sis, OrgGrpcClient org) {
         this.timetable = timetable;
+        this.sibling = sibling;
         this.sis = sis;
         this.org = org;
     }
@@ -85,35 +90,29 @@ public class SessionLookup {
     /**
      * Reads the session and its expected students. An unknown or invisible session is a validation failure of the
      * request's field (422); a cancelled one cannot have attendance taken (409); a caller without the read
-     * permissions in the other modules is refused (403); an unreachable or failing service is 503.
+     * permissions in timetable or the other modules is refused (403); an unreachable or failing service is 503.
      */
     public SessionPlan plan(UUID sessionId) {
-        Session session = call("timetable", "timetable.session.read", () -> timetable.getSession(GetSessionRequest
-                .newBuilder().setId(sessionId.toString()).build()).getSession())
+        Session session = fromTimetable(PERMISSION_SESSION_READ, () -> timetable.getSession(sessionId))
                 .orElseThrow(() -> new ValidationFailedException(List.of(
                         new FieldError("timetableSessionId", "timetable session does not exist", "NOT_FOUND"))));
-        if (session.getInstitutionId().isEmpty() || !session.hasStartAt()) {
-            LOG.warn("the timetable service answered a session without its institution or start");
-            throw new UnavailableException("The timetable service could not answer.");
-        }
-        if (session.getStatus() == Session.Status.STATUS_CANCELLED) {
+        if (session.getStatus() == Session.StatusEnum.CANCELLED) {
             throw new InvalidStateException("The timetable session is cancelled.");
         }
-        UUID institutionId = UUID.fromString(session.getInstitutionId());
+        UUID institutionId = session.getInstitutionId();
         ZoneId zone = call("org", "org.institution.read", () -> org.getInstitution(GetInstitutionRequest.newBuilder()
-                .setId(session.getInstitutionId()).build()).getInstitution())
+                .setId(institutionId.toString()).build()).getInstitution())
                 .map(institution -> zoneOf(institution.getTimezone()))
                 .orElseThrow(() -> new PermissionDeniedException(
                         "The session's institution is outside the caller's scope."));
-        LocalDate date = Instant.ofEpochSecond(session.getStartAt().getSeconds(), session.getStartAt().getNanos())
-                .atZone(zone).toLocalDate();
-        UUID classSectionId = id(session.getClassSectionId());
+        LocalDate date = session.getStartAt().atZoneSameInstant(zone).toLocalDate();
+        UUID classSectionId = session.getClassSectionId();
         List<UUID> students = sessionStudents(sessionId);
         if (students.isEmpty() && classSectionId != null) {
             students = classRoster(classSectionId, date);
         }
-        return new SessionPlan(sessionId, institutionId, date, classSectionId, id(session.getCourseId()),
-                id(session.getBatchId()), id(session.getSubjectId()), id(session.getStaffId()), students);
+        return new SessionPlan(sessionId, institutionId, date, classSectionId, session.getCourseId(),
+                session.getBatchId(), session.getSubjectId(), session.getStaffId(), students);
     }
 
     /**
@@ -157,18 +156,18 @@ public class SessionLookup {
         Set<UUID> students = new LinkedHashSet<>();
         String cursor = null;
         for (int page = 1; page <= MAX_PAGES; page++) {
-            PageableRequest pageable = page(page, cursor);
-            ListSessionStudentsResponse list = call("timetable", "timetable.session_student.read",
-                    () -> timetable.listSessionStudents(ListSessionStudentsRequest.newBuilder()
-                            .setSessionId(sessionId.toString()).setPageable(pageable).build()))
+            int number = page;
+            String after = cursor;
+            Page<SessionStudent> list = fromTimetable(PERMISSION_SESSION_STUDENT_READ,
+                    () -> timetable.listSessionStudents(sessionId, number, PAGE_SIZE, after, null, null))
                     .orElseThrow(() -> new UnavailableException("The timetable service did not list the session."));
-            for (SessionStudent student : list.getItemsList()) {
-                students.add(UUID.fromString(student.getStudentId()));
+            for (SessionStudent student : list.items()) {
+                students.add(student.getStudentId());
             }
-            cursor = list.getPagination().getNextCursor();
-            if (cursor.isEmpty()) {
+            if (!list.hasNext()) {
                 return new ArrayList<>(students);
             }
+            cursor = list.nextCursor();
         }
         throw new InvalidStateException("The session lists more students than attendance can pre-fill.");
     }
@@ -207,9 +206,32 @@ public class SessionLookup {
         return page.build();
     }
 
-    /** An optional id of a proto message: empty is "not set". */
-    private static UUID id(String value) {
-        return value.isEmpty() ? null : UUID.fromString(value);
+    /**
+     * One read in the sibling timetable area, in process, answered as the gRPC hop answered it: the caller needs the
+     * operation's permission (the edge's check), and timetable's service then applies the caller's scope. A missing row
+     * is empty; a refusal for the permission or the scope is this operation's 403 naming the permission; any other
+     * refusal is 503 — timetable's status and message never reach the client.
+     */
+    private <T> Optional<T> fromTimetable(String permission, Supplier<T> read) {
+        if (!sibling.permits(permission)) {
+            throw needs(permission);
+        }
+        try {
+            return Optional.of(read.get());
+        } catch (ApiException e) {
+            if (e.status().value() == HttpStatus.NOT_FOUND.value()) {
+                return Optional.empty();
+            }
+            if (e.status().value() == HttpStatus.FORBIDDEN.value()) {
+                throw needs(permission);
+            }
+            LOG.warn("the timetable service answered {} ({}) to the session lookup", e.status().value(), e.code());
+            throw new UnavailableException("The timetable service could not answer.");
+        }
+    }
+
+    private static PermissionDeniedException needs(String permission) {
+        return new PermissionDeniedException("Taking attendance for a session also needs " + permission + ".");
     }
 
     /** An institution without a (valid) time zone keeps its sessions' dates in UTC; an invalid one is logged. */
@@ -238,7 +260,7 @@ public class SessionLookup {
                 return Optional.empty();
             }
             if (e.httpStatus() == HttpStatus.FORBIDDEN.value()) {
-                throw new PermissionDeniedException("Taking attendance for a session also needs " + permission + ".");
+                throw needs(permission);
             }
             LOG.warn("the {} service answered {} ({}) to the session lookup", service, e.httpStatus(), e.statusCode());
             throw new UnavailableException("The " + service + " service could not answer.");

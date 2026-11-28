@@ -2,8 +2,6 @@ package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.LessonPlan;
 import com.mysms.academics.api.model.LessonPlanApproval;
-import com.mysms.academics.api.model.LessonPlanApprovalUpdate;
-import com.mysms.academics.api.model.LessonPlanUpdate;
 import com.mysms.academics.business.LessonPlanService;
 import com.mysms.academics.v1.ApproveLessonPlanRequest;
 import com.mysms.academics.v1.ApproveLessonPlanResponse;
@@ -21,7 +19,9 @@ import com.mysms.academics.v1.GetLessonPlanApprovalRequest;
 import com.mysms.academics.v1.GetLessonPlanApprovalResponse;
 import com.mysms.academics.v1.GetLessonPlanRequest;
 import com.mysms.academics.v1.GetLessonPlanResponse;
+import com.mysms.academics.v1.LessonPlanApprovalUpdate;
 import com.mysms.academics.v1.LessonPlanServiceGrpc;
+import com.mysms.academics.v1.LessonPlanUpdate;
 import com.mysms.academics.v1.ListLessonPlanApprovalsRequest;
 import com.mysms.academics.v1.ListLessonPlanApprovalsResponse;
 import com.mysms.academics.v1.ListLessonPlansRequest;
@@ -32,9 +32,7 @@ import com.mysms.academics.v1.RejectLessonPlanRequest;
 import com.mysms.academics.v1.RejectLessonPlanResponse;
 import com.mysms.academics.v1.SubmitLessonPlanRequest;
 import com.mysms.academics.v1.SubmitLessonPlanResponse;
-import com.mysms.academics.v1.UpdateLessonPlanApprovalRequest;
 import com.mysms.academics.v1.UpdateLessonPlanApprovalResponse;
-import com.mysms.academics.v1.UpdateLessonPlanRequest;
 import com.mysms.academics.v1.UpdateLessonPlanResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -78,10 +76,10 @@ public class LessonPlanResolver extends LessonPlanServiceGrpc.LessonPlanServiceI
     }
 
     @Override
-    public void updateLessonPlan(UpdateLessonPlanRequest request, StreamObserver<UpdateLessonPlanResponse> out) {
-        LessonPlan updated = service.updateLessonPlan(bridge.id(request.getLessonPlan().getId(), "id"),
-                bridge.requiredIfMatch(request.getLessonPlan().getEtag()),
-                bridge.changes(request.getLessonPlan(), request.getUpdateMask(), LessonPlanUpdate.class),
+    public void updateLessonPlan(LessonPlanUpdate request, StreamObserver<UpdateLessonPlanResponse> out) {
+        LessonPlan updated = service.updateLessonPlan(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LessonPlanProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLessonPlanResponse.newBuilder(), "lesson_plan", updated).build());
     }
@@ -118,12 +116,12 @@ public class LessonPlanResolver extends LessonPlanServiceGrpc.LessonPlanServiceI
     }
 
     @Override
-    public void updateLessonPlanApproval(UpdateLessonPlanApprovalRequest request,
+    public void updateLessonPlanApproval(LessonPlanApprovalUpdate request,
             StreamObserver<UpdateLessonPlanApprovalResponse> out) {
         LessonPlanApproval updated = service.updateLessonPlanApproval(bridge.id(request.getLessonPlanId(), "lessonPlanId"),
-                bridge.id(request.getLessonPlanApproval().getId(), "id"),
-                bridge.requiredIfMatch(request.getLessonPlanApproval().getEtag()),
-                bridge.changes(request.getLessonPlanApproval(), request.getUpdateMask(), LessonPlanApprovalUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LessonPlanApprovalProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateLessonPlanApprovalResponse.newBuilder(), "lesson_plan_approval", updated).build());

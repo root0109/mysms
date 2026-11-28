@@ -132,19 +132,22 @@ export function useAssignmentApprovals(assignmentId: string | null) {
   });
 }
 
-/** Creates a pending approval record for an assignment draft. */
-export function useCreateAssignmentApproval() {
+/**
+ * Sends an assignment draft for review: the server records a pending approval in the caller's name (409 while one
+ * already waits). Approvals are written only by this step, approve and reject.
+ */
+export function useRequestAssignmentApproval() {
   const { api } = useRuntime();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (assignmentId: string) =>
+    mutationFn: ({ assignmentId, etag }: { assignmentId: string; etag: string }) =>
       call(
-        api.get(AssignmentApi).createAssignmentApproval({
+        api.get(AssignmentApi).requestAssignmentApproval({
           assignmentId,
-          assignmentApproval: { decision: 'pending' },
+          requestAssignmentApprovalRequest: { etag },
         }),
       ),
-    onSettled: (_result, _error, assignmentId) => {
+    onSettled: (_result, _error, { assignmentId }) => {
       staleRecords(qc, 'assessment.AssignmentApproval');
       staleAssessment(qc, 'Assignment', assignmentId);
       return qc.invalidateQueries({ queryKey: ASSIGNMENT_APPROVALS(assignmentId) });

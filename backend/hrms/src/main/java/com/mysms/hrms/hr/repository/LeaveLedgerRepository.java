@@ -19,20 +19,26 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * The statements of the leave ledger (hr.ApproveLeave, hr.GetStaffLeaveBalance): how many days an application
- * takes, the balance it is counted against, and a staff member's position per leave type. Every statement names the
+ * The statements of the leave ledger (hr.ApproveLeave, hr.GetStaffLeaveBalance): how many working days an
+ * application takes, the balance it is counted against, and a staff member's position per leave type. Every statement names the
  * tenant; row-level security is the backstop.
  */
 @Repository
 public class LeaveLedgerRepository {
 
     /**
-     * The days the application aliased {@code a} takes: calendar days from start to end, both counted, halved for a
-     * half day. Days are UTC days, exact for the clients' convention of sending UTC midnights; weekends and holidays
-     * count, as hr has no calendar of them.
+     * The days the application aliased {@code a} takes: its working days from start to end, both counted
+     * ({@link WorkingDays}: no weekend day, no holiday of its institution or of the whole tenant), halved for a half
+     * day, so a half day on a non-working day takes nothing. Days are UTC days, exact for the clients' convention of
+     * sending UTC midnights. Every statement that uses it binds {@link WorkingDays#PARAMETER}.
      */
-    private static final String LEAVE_DAYS = """
-            ((((a.to_at AT TIME ZONE 'UTC')::date - (a.from_at AT TIME ZONE 'UTC')::date) + 1)
+    private static final String LEAVE_DAYS = "((" + """
+            SELECT count(*)
+              FROM (SELECT g.day::date AS day, a.institution_id
+                      FROM generate_series(date_trunc('day', a.from_at AT TIME ZONE 'UTC'),
+                                           date_trunc('day', a.to_at AT TIME ZONE 'UTC'), interval '1 day') AS g(day)) wd
+             WHERE
+            """ + WorkingDays.IS_WORKING_DAY + ")" + """
              * CASE WHEN a.day_part = 'full_day' THEN 1 ELSE 0.5 END)
             """;
 
@@ -158,14 +164,18 @@ public class LeaveLedgerRepository {
     }
 
     private final JdbcClient jdbc;
+    private final WorkingDays workingDays;
 
-    public LeaveLedgerRepository(@Qualifier(HrDatabaseConfig.DATABASE) ModuleDatabase database) {
+    public LeaveLedgerRepository(@Qualifier(HrDatabaseConfig.DATABASE) ModuleDatabase database,
+            WorkingDays workingDays) {
         this.jdbc = database.jdbc();
+        this.workingDays = workingDays;
     }
 
     /** The days the application takes. */
     public BigDecimal daysOf(UUID applicationId) {
-        return jdbc.sql(DAYS_OF).param("id", applicationId).query(BigDecimal.class).single();
+        return jdbc.sql(DAYS_OF).param("id", applicationId).param(WorkingDays.PARAMETER, workingDays.weekendDays())
+                .query(BigDecimal.class).single();
     }
 
     /** Who the staff member is; nobody when the staff member does not exist. */
@@ -248,7 +258,8 @@ public class LeaveLedgerRepository {
         SqlFragment after = page.keysetPredicate();
         String sql = POSITIONS + " AND (" + after.sql() + ") ORDER BY " + page.orderByClause() + page.limitClause();
         List<Position> rows = jdbc.sql(sql).param("staffId", staffId).param("institutionId", institutionId)
-                .param("academicYearId", academicYearId).params(after.params()).params(page.limitParams())
+                .param("academicYearId", academicYearId).param(WorkingDays.PARAMETER, workingDays.weekendDays())
+                .params(after.params()).params(page.limitParams())
                 .query((rs, row) -> new Position(rs.getObject("leave_type_id", UUID.class), rs.getLong("sort_order"),
                         rs.getString("name"), rs.getBigDecimal("entitled"), rs.getBigDecimal("taken"),
                         rs.getBigDecimal("pending")))

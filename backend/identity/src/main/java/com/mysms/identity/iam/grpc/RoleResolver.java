@@ -4,8 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.identity.iam.api.model.Role;
 import com.mysms.identity.iam.api.model.RolePermission;
-import com.mysms.identity.iam.api.model.RolePermissionUpdate;
-import com.mysms.identity.iam.api.model.RoleUpdate;
 import com.mysms.identity.iam.business.RoleService;
 import com.mysms.iam.v1.CreateRolePermissionRequest;
 import com.mysms.iam.v1.CreateRolePermissionResponse;
@@ -23,10 +21,10 @@ import com.mysms.iam.v1.ListRolePermissionsRequest;
 import com.mysms.iam.v1.ListRolePermissionsResponse;
 import com.mysms.iam.v1.ListRolesRequest;
 import com.mysms.iam.v1.ListRolesResponse;
+import com.mysms.iam.v1.RolePermissionUpdate;
 import com.mysms.iam.v1.RoleServiceGrpc;
-import com.mysms.iam.v1.UpdateRolePermissionRequest;
+import com.mysms.iam.v1.RoleUpdate;
 import com.mysms.iam.v1.UpdateRolePermissionResponse;
-import com.mysms.iam.v1.UpdateRoleRequest;
 import com.mysms.iam.v1.UpdateRoleResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -67,11 +65,11 @@ public class RoleResolver extends RoleServiceGrpc.RoleServiceImplBase {
     }
 
     @Override
-    public void updateRole(UpdateRoleRequest request, StreamObserver<UpdateRoleResponse> out) {
+    public void updateRole(RoleUpdate request, StreamObserver<UpdateRoleResponse> out) {
         Role updated = service.updateRole(
-                bridge.id(request.getRole().getId(), "id"),
-                bridge.requiredIfMatch(request.getRole().getEtag()),
-                bridge.changes(request.getRole(), request.getUpdateMask(), RoleUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                RoleProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRoleResponse.newBuilder(), "role", updated).build());
     }
 
@@ -107,13 +105,13 @@ public class RoleResolver extends RoleServiceGrpc.RoleServiceImplBase {
     }
 
     @Override
-    public void updateRolePermission(UpdateRolePermissionRequest request,
+    public void updateRolePermission(RolePermissionUpdate request,
             StreamObserver<UpdateRolePermissionResponse> out) {
         RolePermission updated = service.updateRolePermission(
                 bridge.id(request.getRoleId(), "roleId"),
-                bridge.id(request.getRolePermission().getId(), "id"),
-                bridge.requiredIfMatch(request.getRolePermission().getEtag()),
-                bridge.changes(request.getRolePermission(), request.getUpdateMask(), RolePermissionUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                RolePermissionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRolePermissionResponse.newBuilder(), "role_permission", updated)
                 .build());

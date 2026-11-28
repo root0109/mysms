@@ -3,9 +3,9 @@ package com.mysms.platform.master.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.master.api.model.Country;
-import com.mysms.platform.master.api.model.CountryUpdate;
 import com.mysms.platform.master.business.CountryService;
 import com.mysms.master.v1.CountryServiceGrpc;
+import com.mysms.master.v1.CountryUpdate;
 import com.mysms.master.v1.CreateCountryRequest;
 import com.mysms.master.v1.CreateCountryResponse;
 import com.mysms.master.v1.DeleteCountryRequest;
@@ -14,7 +14,6 @@ import com.mysms.master.v1.GetCountryRequest;
 import com.mysms.master.v1.GetCountryResponse;
 import com.mysms.master.v1.ListCountriesRequest;
 import com.mysms.master.v1.ListCountriesResponse;
-import com.mysms.master.v1.UpdateCountryRequest;
 import com.mysms.master.v1.UpdateCountryResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -59,11 +58,11 @@ public class CountryResolver extends CountryServiceGrpc.CountryServiceImplBase {
     }
 
     @Override
-    public void updateCountry(UpdateCountryRequest request, StreamObserver<UpdateCountryResponse> out) {
+    public void updateCountry(CountryUpdate request, StreamObserver<UpdateCountryResponse> out) {
         Country updated = service.updateCountry(
-                bridge.id(request.getCountry().getId(), "id"),
-                bridge.requiredIfMatch(request.getCountry().getEtag()),
-                bridge.changes(request.getCountry(), request.getUpdateMask(), CountryUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CountryProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCountryResponse.newBuilder(), "country", updated).build());
     }
 

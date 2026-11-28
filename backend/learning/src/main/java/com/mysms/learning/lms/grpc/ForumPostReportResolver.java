@@ -3,18 +3,17 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ForumPostReport;
-import com.mysms.learning.lms.api.model.ForumPostReportUpdate;
 import com.mysms.learning.lms.business.ForumPostReportService;
 import com.mysms.lms.v1.CreateForumPostReportRequest;
 import com.mysms.lms.v1.CreateForumPostReportResponse;
 import com.mysms.lms.v1.DeleteForumPostReportRequest;
 import com.mysms.lms.v1.DeleteForumPostReportResponse;
 import com.mysms.lms.v1.ForumPostReportServiceGrpc;
+import com.mysms.lms.v1.ForumPostReportUpdate;
 import com.mysms.lms.v1.GetForumPostReportRequest;
 import com.mysms.lms.v1.GetForumPostReportResponse;
 import com.mysms.lms.v1.ListForumPostReportsRequest;
 import com.mysms.lms.v1.ListForumPostReportsResponse;
-import com.mysms.lms.v1.UpdateForumPostReportRequest;
 import com.mysms.lms.v1.UpdateForumPostReportResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -60,12 +59,12 @@ public class ForumPostReportResolver extends ForumPostReportServiceGrpc.ForumPos
     }
 
     @Override
-    public void updateForumPostReport(UpdateForumPostReportRequest request,
+    public void updateForumPostReport(ForumPostReportUpdate request,
             StreamObserver<UpdateForumPostReportResponse> out) {
         ForumPostReport updated = service.updateForumPostReport(
-                bridge.id(request.getForumPostReport().getId(), "id"),
-                bridge.requiredIfMatch(request.getForumPostReport().getEtag()),
-                bridge.changes(request.getForumPostReport(), request.getUpdateMask(), ForumPostReportUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ForumPostReportProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateForumPostReportResponse.newBuilder(), "forum_post_report", updated).build());

@@ -4,8 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.payroll.api.model.SalaryTemplate;
 import com.mysms.hrms.payroll.api.model.SalaryTemplateComponent;
-import com.mysms.hrms.payroll.api.model.SalaryTemplateComponentUpdate;
-import com.mysms.hrms.payroll.api.model.SalaryTemplateUpdate;
 import com.mysms.hrms.payroll.business.SalaryTemplateService;
 import com.mysms.payroll.v1.CreateSalaryTemplateComponentRequest;
 import com.mysms.payroll.v1.CreateSalaryTemplateComponentResponse;
@@ -23,10 +21,10 @@ import com.mysms.payroll.v1.ListSalaryTemplateComponentsRequest;
 import com.mysms.payroll.v1.ListSalaryTemplateComponentsResponse;
 import com.mysms.payroll.v1.ListSalaryTemplatesRequest;
 import com.mysms.payroll.v1.ListSalaryTemplatesResponse;
+import com.mysms.payroll.v1.SalaryTemplateComponentUpdate;
 import com.mysms.payroll.v1.SalaryTemplateServiceGrpc;
-import com.mysms.payroll.v1.UpdateSalaryTemplateComponentRequest;
+import com.mysms.payroll.v1.SalaryTemplateUpdate;
 import com.mysms.payroll.v1.UpdateSalaryTemplateComponentResponse;
-import com.mysms.payroll.v1.UpdateSalaryTemplateRequest;
 import com.mysms.payroll.v1.UpdateSalaryTemplateResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -71,12 +69,12 @@ public class SalaryTemplateResolver extends SalaryTemplateServiceGrpc.SalaryTemp
     }
 
     @Override
-    public void updateSalaryTemplate(UpdateSalaryTemplateRequest request,
+    public void updateSalaryTemplate(SalaryTemplateUpdate request,
             StreamObserver<UpdateSalaryTemplateResponse> out) {
         SalaryTemplate updated = salaryTemplateService.updateSalaryTemplate(
-                bridge.id(request.getSalaryTemplate().getId(), "id"),
-                bridge.requiredIfMatch(request.getSalaryTemplate().getEtag()),
-                bridge.changes(request.getSalaryTemplate(), request.getUpdateMask(), SalaryTemplateUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SalaryTemplateProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSalaryTemplateResponse.newBuilder(),
                 "salary_template", updated).build());
@@ -121,14 +119,13 @@ public class SalaryTemplateResolver extends SalaryTemplateServiceGrpc.SalaryTemp
     }
 
     @Override
-    public void updateSalaryTemplateComponent(UpdateSalaryTemplateComponentRequest request,
+    public void updateSalaryTemplateComponent(SalaryTemplateComponentUpdate request,
             StreamObserver<UpdateSalaryTemplateComponentResponse> out) {
         SalaryTemplateComponent updated = salaryTemplateService.updateSalaryTemplateComponent(
                 bridge.id(request.getSalaryTemplateId(), "salaryTemplateId"),
-                bridge.id(request.getSalaryTemplateComponent().getId(), "id"),
-                bridge.requiredIfMatch(request.getSalaryTemplateComponent().getEtag()),
-                bridge.changes(request.getSalaryTemplateComponent(), request.getUpdateMask(),
-                        SalaryTemplateComponentUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SalaryTemplateComponentProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSalaryTemplateComponentResponse.newBuilder(),
                 "salary_template_component", updated).build());
     }

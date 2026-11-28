@@ -4,11 +4,11 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.CertificateEvaluation;
 import com.mysms.learning.lms.api.model.CertificateRequest;
-import com.mysms.learning.lms.api.model.CertificateRequestUpdate;
 import com.mysms.learning.lms.business.CertificateRequestService;
 import com.mysms.lms.v1.CancelCertificateRequestRequest;
 import com.mysms.lms.v1.CancelCertificateRequestResponse;
 import com.mysms.lms.v1.CertificateRequestServiceGrpc;
+import com.mysms.lms.v1.CertificateRequestUpdate;
 import com.mysms.lms.v1.CreateCertificateRequestRequest;
 import com.mysms.lms.v1.CreateCertificateRequestResponse;
 import com.mysms.lms.v1.DeleteCertificateRequestRequest;
@@ -19,7 +19,6 @@ import com.mysms.lms.v1.ListCertificateRequestsRequest;
 import com.mysms.lms.v1.ListCertificateRequestsResponse;
 import com.mysms.lms.v1.StartEvaluationRequest;
 import com.mysms.lms.v1.StartEvaluationResponse;
-import com.mysms.lms.v1.UpdateCertificateRequestRequest;
 import com.mysms.lms.v1.UpdateCertificateRequestResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -64,11 +63,11 @@ public class CertificateRequestResolver extends CertificateRequestServiceGrpc.Ce
     }
 
     @Override
-    public void updateCertificateRequest(UpdateCertificateRequestRequest request,
+    public void updateCertificateRequest(CertificateRequestUpdate request,
             StreamObserver<UpdateCertificateRequestResponse> out) {
-        CertificateRequest updated = service.updateCertificateRequest(bridge.id(request.getCertificateRequest().getId(), "id"),
-                bridge.requiredIfMatch(request.getCertificateRequest().getEtag()),
-                bridge.changes(request.getCertificateRequest(), request.getUpdateMask(), CertificateRequestUpdate.class),
+        CertificateRequest updated = service.updateCertificateRequest(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CertificateRequestProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCertificateRequestResponse.newBuilder(), "certificate_request",
                 updated).build());

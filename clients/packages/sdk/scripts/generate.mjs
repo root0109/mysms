@@ -43,7 +43,7 @@ for (const dir of readdirSync(backend).filter((d) => existsSync(resolve(backend,
   }
 }
 const modules = [...moduleOf.keys()].sort();
-if (modules.length !== 22) throw new Error(`expected 22 areas, found ${modules.length}`);
+if (modules.length !== 23) throw new Error(`expected 23 areas, found ${modules.length}`);
 const specOf = (area) => resolve(backend, moduleOf.get(area), `target/openapi/${area}/api-docs.yml`);
 const missing = modules.filter((m) => !existsSync(specOf(m)));
 if (missing.length > 0) {

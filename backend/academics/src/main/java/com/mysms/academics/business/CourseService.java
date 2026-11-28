@@ -156,6 +156,9 @@ public class CourseService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -341,6 +344,9 @@ public class CourseService extends AppTransactionManager {
             assertValidCourseSubject(entity, false);
             scope.requireWritable(institutionOfCourseSubject(entity));
             assertUniqueCourseSubject(entity);
+            if (fields.isEmpty()) {
+                return courseSubjectMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return courseSubjectMapper.toDto(entity);

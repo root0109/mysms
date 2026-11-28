@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.GradingCategory;
-import com.mysms.learning.lms.api.model.GradingCategoryUpdate;
 import com.mysms.learning.lms.business.GradingCategoryService;
 import com.mysms.lms.v1.CreateGradingCategoryRequest;
 import com.mysms.lms.v1.CreateGradingCategoryResponse;
@@ -12,9 +11,9 @@ import com.mysms.lms.v1.DeleteGradingCategoryResponse;
 import com.mysms.lms.v1.GetGradingCategoryRequest;
 import com.mysms.lms.v1.GetGradingCategoryResponse;
 import com.mysms.lms.v1.GradingCategoryServiceGrpc;
+import com.mysms.lms.v1.GradingCategoryUpdate;
 import com.mysms.lms.v1.ListGradingCategoriesRequest;
 import com.mysms.lms.v1.ListGradingCategoriesResponse;
-import com.mysms.lms.v1.UpdateGradingCategoryRequest;
 import com.mysms.lms.v1.UpdateGradingCategoryResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,10 +55,10 @@ public class GradingCategoryResolver extends GradingCategoryServiceGrpc.GradingC
     }
 
     @Override
-    public void updateGradingCategory(UpdateGradingCategoryRequest request, StreamObserver<UpdateGradingCategoryResponse> out) {
-        GradingCategory updated = service.updateGradingCategory(bridge.id(request.getGradingCategory().getId(), "id"),
-                bridge.requiredIfMatch(request.getGradingCategory().getEtag()),
-                bridge.changes(request.getGradingCategory(), request.getUpdateMask(), GradingCategoryUpdate.class),
+    public void updateGradingCategory(GradingCategoryUpdate request, StreamObserver<UpdateGradingCategoryResponse> out) {
+        GradingCategory updated = service.updateGradingCategory(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                GradingCategoryProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateGradingCategoryResponse.newBuilder(), "grading_category", updated).build());
     }

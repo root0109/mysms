@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.PeerReview;
-import com.mysms.learning.lms.api.model.PeerReviewUpdate;
 import com.mysms.learning.lms.business.PeerReviewService;
 import com.mysms.lms.v1.CreatePeerReviewRequest;
 import com.mysms.lms.v1.CreatePeerReviewResponse;
@@ -14,7 +13,7 @@ import com.mysms.lms.v1.GetPeerReviewResponse;
 import com.mysms.lms.v1.ListPeerReviewsRequest;
 import com.mysms.lms.v1.ListPeerReviewsResponse;
 import com.mysms.lms.v1.PeerReviewServiceGrpc;
-import com.mysms.lms.v1.UpdatePeerReviewRequest;
+import com.mysms.lms.v1.PeerReviewUpdate;
 import com.mysms.lms.v1.UpdatePeerReviewResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,10 +55,10 @@ public class PeerReviewResolver extends PeerReviewServiceGrpc.PeerReviewServiceI
     }
 
     @Override
-    public void updatePeerReview(UpdatePeerReviewRequest request, StreamObserver<UpdatePeerReviewResponse> out) {
-        PeerReview updated = service.updatePeerReview(bridge.id(request.getPeerReview().getId(), "id"),
-                bridge.requiredIfMatch(request.getPeerReview().getEtag()),
-                bridge.changes(request.getPeerReview(), request.getUpdateMask(), PeerReviewUpdate.class),
+    public void updatePeerReview(PeerReviewUpdate request, StreamObserver<UpdatePeerReviewResponse> out) {
+        PeerReview updated = service.updatePeerReview(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PeerReviewProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePeerReviewResponse.newBuilder(), "peer_review", updated).build());
     }

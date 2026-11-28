@@ -97,7 +97,9 @@
    "create": {
     "keyword": "t-keyword-56d00b2f"
    },
-   "update": {},
+   "update": {
+    "keyword": "t-keyword-renamed"
+   },
    "patch": {
     "keeps": "keyword"
    },

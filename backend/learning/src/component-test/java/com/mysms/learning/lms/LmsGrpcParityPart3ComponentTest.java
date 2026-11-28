@@ -7,7 +7,6 @@ import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.FieldMask;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
@@ -318,16 +317,16 @@ class LmsGrpcParityPart3ComponentTest {
             ObjectNode changes = (ObjectNode) resource.path("update");
             String item = collection + "/" + id;
             same(rest("PATCH", item, ADMIN, changes.toString(), "If-Match", "\"99\""),
-                    grpc(update, updateRequest(update, field, body, id, changes, "99"), ADMIN));
+                    grpc(update, updateRequest(update, body, id, changes, "99"), ADMIN));
             same(rest("PATCH", item, ADMIN, changes.toString()),
-                    grpc(update, updateRequest(update, field, body, id, changes, ""), ADMIN));
+                    grpc(update, updateRequest(update, body, id, changes, ""), ADMIN));
             same(rest("PATCH", item, NOBODY, changes.toString(), "If-Match", etag),
-                    grpc(update, updateRequest(update, field, body, id, changes, etag), NOBODY));
-            Answer updated = grpc(update, updateRequest(update, field, body, id, changes, etag), ADMIN);
+                    grpc(update, updateRequest(update, body, id, changes, etag), NOBODY));
+            Answer updated = grpc(update, updateRequest(update, body, id, changes, etag), ADMIN);
             assertThat(updated.status()).as("%s update: %s", name, updated.code()).isEqualTo(200);
             JsonNode reread = read(ops, collection, range, id);
             GrpcParity.assertSameResource(reread, updated.body().path(json));
-            etag = reread.path("etag").asString();
+            etag = contract().patchStates(GrpcParityContract.Resource.of(resource), id, reread.path("etag").asString());
         }
         if (ops.contains("Delete")) {
             MethodDescriptor delete = rpc("Delete" + name);
@@ -395,20 +394,12 @@ class LmsGrpcParityPart3ComponentTest {
         return withPathIds(bridge.reply(request(create), field, JSON.convertValue(body, Map.class)), path);
     }
 
-    /** An update request: the row's id and etag in the resource, the changes, and a mask naming them. */
-    @SuppressWarnings("unchecked")
-    private DynamicMessage.Builder updateRequest(MethodDescriptor update, String field, ObjectNode body, String id,
-                                                 ObjectNode changes, String etag) {
-        ObjectNode resource = changes.deepCopy();
-        resource.put("id", id);
-        resource.put("etag", etag);
-        DynamicMessage.Builder request = withPathIds(bridge.reply(request(update), field,
-                JSON.convertValue(resource, Map.class)), body);
-        FieldMask.Builder mask = FieldMask.newBuilder();
-        Descriptor type = update.getInputType().findFieldByName(field).getMessageType();
-        changes.propertyNames().forEach(name -> type.getFields().stream()
-                .filter(f -> f.getJsonName().equals(name)).forEach(f -> mask.addPaths(f.getName())));
-        return set(request, "update_mask", mask.build());
+    /** An update request: the {@code <Resource>Update} message of a REST PATCH body, with its parent ids, id and etag. */
+    private DynamicMessage.Builder updateRequest(MethodDescriptor update, ObjectNode body, String id, ObjectNode changes,
+                                                 String etag) {
+        DynamicMessage.Builder request = withPathIds(contract().changes(update, changes), body);
+        set(request, "id", id);
+        return set(request, "etag", etag);
     }
 
     /** A request keyed by the row id (none for a list), with the parent ids a nested resource's path carries. */
@@ -417,9 +408,14 @@ class LmsGrpcParityPart3ComponentTest {
         return id == null ? request : set(request, "id", id);
     }
 
+    /**
+     * The parent ids a REST path carries, from {@code body}: the plain string keys of the request, never a field an
+     * update message changes (those have presence or are wrappers).
+     */
     private static DynamicMessage.Builder withPathIds(DynamicMessage.Builder request, ObjectNode body) {
         for (FieldDescriptor field : request.getDescriptorForType().getFields()) {
             if (field.getName().endsWith("_id") && !"request_id".equals(field.getName())
+                    && field.getJavaType() == FieldDescriptor.JavaType.STRING && !field.hasPresence()
                     && body.has(field.getJsonName())) {
                 request.setField(field, body.path(field.getJsonName()).asString());
             }

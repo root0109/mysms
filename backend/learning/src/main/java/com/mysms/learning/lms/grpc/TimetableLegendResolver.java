@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.TimetableLegend;
-import com.mysms.learning.lms.api.model.TimetableLegendUpdate;
 import com.mysms.learning.lms.business.TimetableLegendService;
 import com.mysms.lms.v1.CreateTimetableLegendRequest;
 import com.mysms.lms.v1.CreateTimetableLegendResponse;
@@ -14,7 +13,7 @@ import com.mysms.lms.v1.GetTimetableLegendResponse;
 import com.mysms.lms.v1.ListTimetableLegendsRequest;
 import com.mysms.lms.v1.ListTimetableLegendsResponse;
 import com.mysms.lms.v1.TimetableLegendServiceGrpc;
-import com.mysms.lms.v1.UpdateTimetableLegendRequest;
+import com.mysms.lms.v1.TimetableLegendUpdate;
 import com.mysms.lms.v1.UpdateTimetableLegendResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,10 +56,10 @@ public class TimetableLegendResolver extends TimetableLegendServiceGrpc.Timetabl
     }
 
     @Override
-    public void updateTimetableLegend(UpdateTimetableLegendRequest request, StreamObserver<UpdateTimetableLegendResponse> out) {
-        TimetableLegend updated = service.updateTimetableLegend(bridge.id(request.getTimetableLegend().getId(), "id"),
-                bridge.requiredIfMatch(request.getTimetableLegend().getEtag()),
-                bridge.changes(request.getTimetableLegend(), request.getUpdateMask(), TimetableLegendUpdate.class),
+    public void updateTimetableLegend(TimetableLegendUpdate request, StreamObserver<UpdateTimetableLegendResponse> out) {
+        TimetableLegend updated = service.updateTimetableLegend(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                TimetableLegendProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateTimetableLegendResponse.newBuilder(), "timetable_legend", updated).build());
     }

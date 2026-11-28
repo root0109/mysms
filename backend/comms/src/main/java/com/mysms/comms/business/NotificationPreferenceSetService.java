@@ -163,6 +163,9 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
             assertValid(entity, false);
             rules.beforeWrite(entity);
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -311,6 +314,9 @@ public class NotificationPreferenceSetService extends AppTransactionManager {
             assertValidNotificationPreference(entity, false);
             notificationPreferenceRules.beforeWrite(entity);
             assertUniqueNotificationPreference(entity);
+            if (fields.isEmpty()) {
+                return notificationPreferenceMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return notificationPreferenceMapper.toDto(entity);

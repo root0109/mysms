@@ -612,6 +612,9 @@ public class ExamService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -804,7 +807,6 @@ public class ExamService extends AppTransactionManager {
         patch.apply("endAt", changes.getEndAt(), entity::setEndAt);
         patch.apply("totalMarks", changes.getTotalMarks(), v -> entity.setTotalMarks(WireValues.decimal(v)));
         patch.apply("passMarks", changes.getPassMarks(), v -> entity.setPassMarks(WireValues.decimal(v)));
-        patch.apply("resultsEntered", changes.getResultsEntered(), entity::setResultsEntered);
         patch.apply("notes", changes.getNotes(), entity::setNotes);
         return patch.applied();
     }
@@ -838,9 +840,6 @@ public class ExamService extends AppTransactionManager {
             errors.add(new FieldError("passMarks", "must not be null", "NotNull"));
         }
         WireValues.checkDecimal("passMarks", WireValues.decimal(entity.getPassMarks()), 8, 2, errors);
-        if (!creating && entity.getResultsEntered() == null) {
-            errors.add(new FieldError("resultsEntered", "must not be null", "NotNull"));
-        }
         if (entity.getExamSessionId() != null && !repository.existsExamSessionId(entity.getExamSessionId())) {
             errors.add(new FieldError("examSessionId", "exam session does not exist", "NOT_FOUND"));
         }
@@ -927,6 +926,9 @@ public class ExamService extends AppTransactionManager {
             assertValidExamInvigilator(entity, false);
             scope.requireWritable(institutionOfExamInvigilator(entity));
             assertUniqueExamInvigilator(entity);
+            if (fields.isEmpty()) {
+                return examInvigilatorMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return examInvigilatorMapper.toDto(entity);

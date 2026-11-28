@@ -519,7 +519,8 @@
    "scope": "chain",
    "fixtures": [
     "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-teacher-subject', 1, 'daefbb48-0a32-5c38-bd58-5a9b038af93b') ON CONFLICT (id) DO NOTHING",
-    "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-teacher-subject-2', 1, 'a0f413d4-dee3-5f95-ab38-03f1645e7eea') ON CONFLICT (id) DO NOTHING"
+    "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-teacher-subject-2', 1, 'a0f413d4-dee3-5f95-ab38-03f1645e7eea') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.staff_record (tenant_id, staff_id, person_id, source_version, synced_at) VALUES (:tenant, 'c5951d87-a921-5801-bce3-4c4d4bb30640', '7b0c3d54-41a6-5c0e-9d55-2f6b1f0a9c11', 1, now()) ON CONFLICT (tenant_id, staff_id) DO NOTHING"
    ],
    "create": {
     "staffId": "c5951d87-a921-5801-bce3-4c4d4bb30640",
@@ -551,7 +552,8 @@
     "INSERT INTO academics.section (tenant_id, institution_id, name, row_version, code, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-9f9ae37a', 1, 'C0A7B1C81', '80aeda47-ae55-554e-a134-d2ce7d9053b1') ON CONFLICT (id) DO NOTHING",
     "INSERT INTO academics.class_section (tenant_id, institution_id, academic_year_id, grade_level_id, section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', '85722fdf-6e6a-5fdf-9bad-1bdf4663ba36', 'dfed4eca-e255-5aff-80eb-9b1a5b6475d0', '80aeda47-ae55-554e-a134-d2ce7d9053b1', 1, 'de0bc4ec-d61d-588f-b97d-e152772d9d84') ON CONFLICT (id) DO NOTHING",
     "INSERT INTO academics.subject (tenant_id, institution_id, name, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-name-377341c5', 1, 'a687666a-b518-5681-b378-982712b60645') ON CONFLICT (id) DO NOTHING",
-    "INSERT INTO academics.class_subject (tenant_id, class_section_id, subject_id, row_version, id) VALUES (:tenant, 'de0bc4ec-d61d-588f-b97d-e152772d9d84', 'a687666a-b518-5681-b378-982712b60645', 1, '5519de7f-12a1-5d8e-aebb-822bce47ea16') ON CONFLICT (id) DO NOTHING"
+    "INSERT INTO academics.class_subject (tenant_id, class_section_id, subject_id, row_version, id) VALUES (:tenant, 'de0bc4ec-d61d-588f-b97d-e152772d9d84', 'a687666a-b518-5681-b378-982712b60645', 1, '5519de7f-12a1-5d8e-aebb-822bce47ea16') ON CONFLICT (id) DO NOTHING",
+    "INSERT INTO academics.staff_record (tenant_id, staff_id, person_id, source_version, synced_at) VALUES (:tenant, 'de6a11c0-0a70-5f2c-a048-84a1ba2cfba7', '3e8f5a26-9c1d-5b7a-8e40-6d2c9b1f7a35', 1, now()) ON CONFLICT (tenant_id, staff_id) DO NOTHING"
    ],
    "create": {
     "classSubjectId": "5519de7f-12a1-5d8e-aebb-822bce47ea16",

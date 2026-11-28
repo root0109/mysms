@@ -20,26 +20,15 @@ import com.mysms.learning.lms.api.model.RosterEntryList;
 import com.mysms.learning.lms.api.model.TimetableEntry;
 import com.mysms.learning.lms.api.model.TimetableEntryList;
 import com.mysms.learning.lms.api.model.CohortActivity;
-import com.mysms.learning.lms.api.model.CohortActivityUpdate;
 import com.mysms.learning.lms.api.model.CohortCourse;
-import com.mysms.learning.lms.api.model.CohortCourseUpdate;
 import com.mysms.learning.lms.api.model.CohortFeedback;
-import com.mysms.learning.lms.api.model.CohortFeedbackUpdate;
 import com.mysms.learning.lms.api.model.CohortGroup;
-import com.mysms.learning.lms.api.model.CohortGroupUpdate;
 import com.mysms.learning.lms.api.model.CohortHoliday;
-import com.mysms.learning.lms.api.model.CohortHolidayUpdate;
 import com.mysms.learning.lms.api.model.CohortScheduleSlot;
-import com.mysms.learning.lms.api.model.CohortScheduleSlotUpdate;
 import com.mysms.learning.lms.api.model.CohortSession;
-import com.mysms.learning.lms.api.model.CohortSessionUpdate;
 import com.mysms.learning.lms.api.model.CohortTeacher;
-import com.mysms.learning.lms.api.model.CohortTeacherUpdate;
-import com.mysms.learning.lms.api.model.CohortUpdate;
 import com.mysms.learning.lms.api.model.Forum;
-import com.mysms.learning.lms.api.model.ForumUpdate;
 import com.mysms.learning.lms.api.model.PlagiarismCohortLink;
-import com.mysms.learning.lms.api.model.PlagiarismCohortLinkUpdate;
 import com.mysms.learning.lms.business.CertificateService;
 import com.mysms.learning.lms.business.CohortEnrollmentService;
 import com.mysms.learning.lms.business.CohortGradebookService;
@@ -54,7 +43,16 @@ import com.mysms.lms.v1.ArchiveCohortRequest;
 import com.mysms.lms.v1.ArchiveCohortResponse;
 import com.mysms.lms.v1.BatchEnrollInCohortRequest;
 import com.mysms.lms.v1.BatchEnrollInCohortResponse;
+import com.mysms.lms.v1.CohortActivityUpdate;
+import com.mysms.lms.v1.CohortCourseUpdate;
+import com.mysms.lms.v1.CohortFeedbackUpdate;
+import com.mysms.lms.v1.CohortGroupUpdate;
+import com.mysms.lms.v1.CohortHolidayUpdate;
+import com.mysms.lms.v1.CohortScheduleSlotUpdate;
 import com.mysms.lms.v1.CohortServiceGrpc;
+import com.mysms.lms.v1.CohortSessionUpdate;
+import com.mysms.lms.v1.CohortTeacherUpdate;
+import com.mysms.lms.v1.CohortUpdate;
 import com.mysms.lms.v1.CopyCourseOutlineToCohortRequest;
 import com.mysms.lms.v1.CopyCourseOutlineToCohortResponse;
 import com.mysms.lms.v1.CreateCohortActivityRequest;
@@ -109,6 +107,7 @@ import com.mysms.lms.v1.EvaluateReleaseRulesRequest;
 import com.mysms.lms.v1.EvaluateReleaseRulesResponse;
 import com.mysms.lms.v1.ExportGradesRequest;
 import com.mysms.lms.v1.ExportGradesResponse;
+import com.mysms.lms.v1.ForumUpdate;
 import com.mysms.lms.v1.GenerateCohortCertificatesRequest;
 import com.mysms.lms.v1.GenerateCohortCertificatesResponse;
 import com.mysms.lms.v1.GetCohortActivityRequest;
@@ -171,6 +170,7 @@ import com.mysms.lms.v1.ListForumsRequest;
 import com.mysms.lms.v1.ListForumsResponse;
 import com.mysms.lms.v1.ListPlagiarismCohortLinksRequest;
 import com.mysms.lms.v1.ListPlagiarismCohortLinksResponse;
+import com.mysms.lms.v1.PlagiarismCohortLinkUpdate;
 import com.mysms.lms.v1.PublishCohortRequest;
 import com.mysms.lms.v1.PublishCohortResponse;
 import com.mysms.lms.v1.PublishFinalGradesRequest;
@@ -183,27 +183,16 @@ import com.mysms.lms.v1.SetStudentAccessRequest;
 import com.mysms.lms.v1.SetStudentAccessResponse;
 import com.mysms.lms.v1.UnpublishCohortRequest;
 import com.mysms.lms.v1.UnpublishCohortResponse;
-import com.mysms.lms.v1.UpdateCohortActivityRequest;
 import com.mysms.lms.v1.UpdateCohortActivityResponse;
-import com.mysms.lms.v1.UpdateCohortCourseRequest;
 import com.mysms.lms.v1.UpdateCohortCourseResponse;
-import com.mysms.lms.v1.UpdateCohortFeedbackRequest;
 import com.mysms.lms.v1.UpdateCohortFeedbackResponse;
-import com.mysms.lms.v1.UpdateCohortGroupRequest;
 import com.mysms.lms.v1.UpdateCohortGroupResponse;
-import com.mysms.lms.v1.UpdateCohortHolidayRequest;
 import com.mysms.lms.v1.UpdateCohortHolidayResponse;
-import com.mysms.lms.v1.UpdateCohortRequest;
 import com.mysms.lms.v1.UpdateCohortResponse;
-import com.mysms.lms.v1.UpdateCohortScheduleSlotRequest;
 import com.mysms.lms.v1.UpdateCohortScheduleSlotResponse;
-import com.mysms.lms.v1.UpdateCohortSessionRequest;
 import com.mysms.lms.v1.UpdateCohortSessionResponse;
-import com.mysms.lms.v1.UpdateCohortTeacherRequest;
 import com.mysms.lms.v1.UpdateCohortTeacherResponse;
-import com.mysms.lms.v1.UpdateForumRequest;
 import com.mysms.lms.v1.UpdateForumResponse;
-import com.mysms.lms.v1.UpdatePlagiarismCohortLinkRequest;
 import com.mysms.lms.v1.UpdatePlagiarismCohortLinkResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -264,10 +253,10 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updateCohort(UpdateCohortRequest request, StreamObserver<UpdateCohortResponse> out) {
-        Cohort updated = service.updateCohort(bridge.id(request.getCohort().getId(), "id"),
-                bridge.requiredIfMatch(request.getCohort().getEtag()),
-                bridge.changes(request.getCohort(), request.getUpdateMask(), CohortUpdate.class), request.getValidateOnly());
+    public void updateCohort(CohortUpdate request, StreamObserver<UpdateCohortResponse> out) {
+        Cohort updated = service.updateCohort(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CohortProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCohortResponse.newBuilder(), "cohort", updated).build());
     }
 
@@ -300,10 +289,10 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updateCohortCourse(UpdateCohortCourseRequest request, StreamObserver<UpdateCohortCourseResponse> out) {
+    public void updateCohortCourse(CohortCourseUpdate request, StreamObserver<UpdateCohortCourseResponse> out) {
         CohortCourse updated = service.updateCohortCourse(bridge.id(request.getCohortId(), "cohortId"),
-                bridge.id(request.getCohortCourse().getId(), "id"), bridge.requiredIfMatch(request.getCohortCourse().getEtag()),
-                bridge.changes(request.getCohortCourse(), request.getUpdateMask(), CohortCourseUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CohortCourseProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCohortCourseResponse.newBuilder(), "cohort_course", updated).build());
     }
@@ -338,10 +327,10 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updateCohortTeacher(UpdateCohortTeacherRequest request, StreamObserver<UpdateCohortTeacherResponse> out) {
+    public void updateCohortTeacher(CohortTeacherUpdate request, StreamObserver<UpdateCohortTeacherResponse> out) {
         CohortTeacher updated = service.updateCohortTeacher(bridge.id(request.getCohortId(), "cohortId"),
-                bridge.id(request.getCohortTeacher().getId(), "id"), bridge.requiredIfMatch(request.getCohortTeacher().getEtag()),
-                bridge.changes(request.getCohortTeacher(), request.getUpdateMask(), CohortTeacherUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CohortTeacherProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCohortTeacherResponse.newBuilder(), "cohort_teacher", updated).build());
     }
@@ -376,11 +365,11 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updateCohortActivity(UpdateCohortActivityRequest request, StreamObserver<UpdateCohortActivityResponse> out) {
+    public void updateCohortActivity(CohortActivityUpdate request, StreamObserver<UpdateCohortActivityResponse> out) {
         CohortActivity updated = service.updateCohortActivity(bridge.id(request.getCohortId(), "cohortId"),
-                bridge.id(request.getCohortActivity().getId(), "id"),
-                bridge.requiredIfMatch(request.getCohortActivity().getEtag()),
-                bridge.changes(request.getCohortActivity(), request.getUpdateMask(), CohortActivityUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CohortActivityProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCohortActivityResponse.newBuilder(), "cohort_activity", updated).build());
     }
@@ -415,11 +404,11 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updateCohortFeedback(UpdateCohortFeedbackRequest request, StreamObserver<UpdateCohortFeedbackResponse> out) {
+    public void updateCohortFeedback(CohortFeedbackUpdate request, StreamObserver<UpdateCohortFeedbackResponse> out) {
         CohortFeedback updated = service.updateCohortFeedback(bridge.id(request.getCohortId(), "cohortId"),
-                bridge.id(request.getCohortFeedback().getId(), "id"),
-                bridge.requiredIfMatch(request.getCohortFeedback().getEtag()),
-                bridge.changes(request.getCohortFeedback(), request.getUpdateMask(), CohortFeedbackUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CohortFeedbackProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCohortFeedbackResponse.newBuilder(), "cohort_feedback", updated).build());
     }
@@ -453,10 +442,10 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updateForum(UpdateForumRequest request, StreamObserver<UpdateForumResponse> out) {
+    public void updateForum(ForumUpdate request, StreamObserver<UpdateForumResponse> out) {
         Forum updated = service.updateForum(bridge.id(request.getCohortId(), "cohortId"),
-                bridge.id(request.getForum().getId(), "id"), bridge.requiredIfMatch(request.getForum().getEtag()),
-                bridge.changes(request.getForum(), request.getUpdateMask(), ForumUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                ForumProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateForumResponse.newBuilder(), "forum", updated).build());
     }
 
@@ -490,10 +479,10 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updateCohortGroup(UpdateCohortGroupRequest request, StreamObserver<UpdateCohortGroupResponse> out) {
+    public void updateCohortGroup(CohortGroupUpdate request, StreamObserver<UpdateCohortGroupResponse> out) {
         CohortGroup updated = service.updateCohortGroup(bridge.id(request.getCohortId(), "cohortId"),
-                bridge.id(request.getCohortGroup().getId(), "id"), bridge.requiredIfMatch(request.getCohortGroup().getEtag()),
-                bridge.changes(request.getCohortGroup(), request.getUpdateMask(), CohortGroupUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CohortGroupProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCohortGroupResponse.newBuilder(), "cohort_group", updated).build());
     }
@@ -531,12 +520,12 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updateCohortScheduleSlot(UpdateCohortScheduleSlotRequest request,
+    public void updateCohortScheduleSlot(CohortScheduleSlotUpdate request,
             StreamObserver<UpdateCohortScheduleSlotResponse> out) {
         CohortScheduleSlot updated = service.updateCohortScheduleSlot(bridge.id(request.getCohortId(), "cohortId"),
-                bridge.id(request.getCohortScheduleSlot().getId(), "id"),
-                bridge.requiredIfMatch(request.getCohortScheduleSlot().getEtag()),
-                bridge.changes(request.getCohortScheduleSlot(), request.getUpdateMask(), CohortScheduleSlotUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CohortScheduleSlotProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateCohortScheduleSlotResponse.newBuilder(), "cohort_schedule_slot", updated).build());
@@ -573,10 +562,10 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updateCohortSession(UpdateCohortSessionRequest request, StreamObserver<UpdateCohortSessionResponse> out) {
+    public void updateCohortSession(CohortSessionUpdate request, StreamObserver<UpdateCohortSessionResponse> out) {
         CohortSession updated = service.updateCohortSession(bridge.id(request.getCohortId(), "cohortId"),
-                bridge.id(request.getCohortSession().getId(), "id"), bridge.requiredIfMatch(request.getCohortSession().getEtag()),
-                bridge.changes(request.getCohortSession(), request.getUpdateMask(), CohortSessionUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CohortSessionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCohortSessionResponse.newBuilder(), "cohort_session", updated).build());
     }
@@ -611,10 +600,10 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updateCohortHoliday(UpdateCohortHolidayRequest request, StreamObserver<UpdateCohortHolidayResponse> out) {
+    public void updateCohortHoliday(CohortHolidayUpdate request, StreamObserver<UpdateCohortHolidayResponse> out) {
         CohortHoliday updated = service.updateCohortHoliday(bridge.id(request.getCohortId(), "cohortId"),
-                bridge.id(request.getCohortHoliday().getId(), "id"), bridge.requiredIfMatch(request.getCohortHoliday().getEtag()),
-                bridge.changes(request.getCohortHoliday(), request.getUpdateMask(), CohortHolidayUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CohortHolidayProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCohortHolidayResponse.newBuilder(), "cohort_holiday", updated).build());
     }
@@ -654,13 +643,12 @@ public class CohortResolver extends CohortServiceGrpc.CohortServiceImplBase {
     }
 
     @Override
-    public void updatePlagiarismCohortLink(UpdatePlagiarismCohortLinkRequest request,
+    public void updatePlagiarismCohortLink(PlagiarismCohortLinkUpdate request,
             StreamObserver<UpdatePlagiarismCohortLinkResponse> out) {
         PlagiarismCohortLink updated = service.updatePlagiarismCohortLink(bridge.id(request.getCohortId(), "cohortId"),
-                bridge.id(request.getPlagiarismCohortLink().getId(), "id"),
-                bridge.requiredIfMatch(request.getPlagiarismCohortLink().getEtag()),
-                bridge.changes(request.getPlagiarismCohortLink(), request.getUpdateMask(),
-                PlagiarismCohortLinkUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PlagiarismCohortLinkProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdatePlagiarismCohortLinkResponse.newBuilder(), "plagiarism_cohort_link", updated).build());
     }

@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.finance.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "FinanceProto";
@@ -20,7 +20,7 @@ service FeeHeadService {
   // Create FeeHead.
   rpc CreateFeeHead(CreateFeeHeadRequest) returns (CreateFeeHeadResponse);
   // Update FeeHead.
-  rpc UpdateFeeHead(UpdateFeeHeadRequest) returns (UpdateFeeHeadResponse);
+  rpc UpdateFeeHead(FeeHeadUpdate) returns (UpdateFeeHeadResponse);
   // Soft-delete FeeHead.
   rpc DeleteFeeHead(DeleteFeeHeadRequest) returns (DeleteFeeHeadResponse);
 }
@@ -34,7 +34,7 @@ service FeePlanService {
   // Create FeePlan.
   rpc CreateFeePlan(CreateFeePlanRequest) returns (CreateFeePlanResponse);
   // Update FeePlan.
-  rpc UpdateFeePlan(UpdateFeePlanRequest) returns (UpdateFeePlanResponse);
+  rpc UpdateFeePlan(FeePlanUpdate) returns (UpdateFeePlanResponse);
   // Soft-delete FeePlan.
   rpc DeleteFeePlan(DeleteFeePlanRequest) returns (DeleteFeePlanResponse);
   // List FeePlanInstallments.
@@ -44,7 +44,7 @@ service FeePlanService {
   // Create FeePlanInstallment.
   rpc CreateFeePlanInstallment(CreateFeePlanInstallmentRequest) returns (CreateFeePlanInstallmentResponse);
   // Update FeePlanInstallment.
-  rpc UpdateFeePlanInstallment(UpdateFeePlanInstallmentRequest) returns (UpdateFeePlanInstallmentResponse);
+  rpc UpdateFeePlanInstallment(FeePlanInstallmentUpdate) returns (UpdateFeePlanInstallmentResponse);
   // Soft-delete FeePlanInstallment.
   rpc DeleteFeePlanInstallment(DeleteFeePlanInstallmentRequest) returns (DeleteFeePlanInstallmentResponse);
 }
@@ -58,7 +58,7 @@ service FeePlanInstallmentComponentService {
   // Create FeePlanInstallmentComponent.
   rpc CreateFeePlanInstallmentComponent(CreateFeePlanInstallmentComponentRequest) returns (CreateFeePlanInstallmentComponentResponse);
   // Update FeePlanInstallmentComponent.
-  rpc UpdateFeePlanInstallmentComponent(UpdateFeePlanInstallmentComponentRequest) returns (UpdateFeePlanInstallmentComponentResponse);
+  rpc UpdateFeePlanInstallmentComponent(FeePlanInstallmentComponentUpdate) returns (UpdateFeePlanInstallmentComponentResponse);
   // Soft-delete FeePlanInstallmentComponent.
   rpc DeleteFeePlanInstallmentComponent(DeleteFeePlanInstallmentComponentRequest) returns (DeleteFeePlanInstallmentComponentResponse);
 }
@@ -70,7 +70,7 @@ service StudentFeeDueService {
   // Get StudentFeeDue.
   rpc GetStudentFeeDue(GetStudentFeeDueRequest) returns (GetStudentFeeDueResponse);
   // Update StudentFeeDue.
-  rpc UpdateStudentFeeDue(UpdateStudentFeeDueRequest) returns (UpdateStudentFeeDueResponse);
+  rpc UpdateStudentFeeDue(StudentFeeDueUpdate) returns (UpdateStudentFeeDueResponse);
   // Create dues for students from a fee plan.
   rpc GenerateFeeDues(GenerateFeeDuesRequest) returns (GenerateFeeDuesResponse);
 }
@@ -84,7 +84,7 @@ service InvoiceService {
   // Create Invoice.
   rpc CreateInvoice(CreateInvoiceRequest) returns (CreateInvoiceResponse);
   // Update Invoice.
-  rpc UpdateInvoice(UpdateInvoiceRequest) returns (UpdateInvoiceResponse);
+  rpc UpdateInvoice(InvoiceUpdate) returns (UpdateInvoiceResponse);
   // List InvoiceLines.
   rpc ListInvoiceLines(ListInvoiceLinesRequest) returns (ListInvoiceLinesResponse);
   // Get InvoiceLine.
@@ -112,7 +112,7 @@ service CouponService {
   // Create Coupon.
   rpc CreateCoupon(CreateCouponRequest) returns (CreateCouponResponse);
   // Update Coupon.
-  rpc UpdateCoupon(UpdateCouponRequest) returns (UpdateCouponResponse);
+  rpc UpdateCoupon(CouponUpdate) returns (UpdateCouponResponse);
   // Soft-delete Coupon.
   rpc DeleteCoupon(DeleteCouponRequest) returns (DeleteCouponResponse);
   // List CouponScopes.
@@ -122,7 +122,7 @@ service CouponService {
   // Create CouponScope.
   rpc CreateCouponScope(CreateCouponScopeRequest) returns (CreateCouponScopeResponse);
   // Update CouponScope.
-  rpc UpdateCouponScope(UpdateCouponScopeRequest) returns (UpdateCouponScopeResponse);
+  rpc UpdateCouponScope(CouponScopeUpdate) returns (UpdateCouponScopeResponse);
   // Soft-delete CouponScope.
   rpc DeleteCouponScope(DeleteCouponScopeRequest) returns (DeleteCouponScopeResponse);
 }
@@ -184,13 +184,31 @@ message CreateFeeHeadResponse {
   FeeHead fee_head = 1;
 }
 
-message UpdateFeeHeadRequest {
-  // Resource with id and etag set.
-  FeeHead fee_head = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateFeeHead (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message FeeHeadUpdate {
+  // FeeHead id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution (NULL = tenant-wide). [UUID]
+  mysms.common.v1.NullableString institution_id = 4;
+  // Fee head code.
+  optional string code = 5;
+  // Fee head name.
+  optional string name = 6;
+  // Description.
+  mysms.common.v1.NullableString description = 7;
+  // Default amount. [Decimal string]
+  mysms.common.v1.NullableString default_amount = 8;
+  // Currency. [UUID]
+  mysms.common.v1.NullableString currency_id = 9;
+  // General-ledger account code for accounting export.
+  mysms.common.v1.NullableString ledger_account_code = 10;
+  // Whether billable.
+  optional bool is_active = 11;
 }
 message UpdateFeeHeadResponse {
   FeeHead fee_head = 1;
@@ -244,13 +262,33 @@ message CreateFeePlanResponse {
   FeePlan fee_plan = 1;
 }
 
-message UpdateFeePlanRequest {
-  // Resource with id and etag set.
-  FeePlan fee_plan = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateFeePlan (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message FeePlanUpdate {
+  // FeePlan id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Plan code.
+  optional string code = 5;
+  // Plan name.
+  optional string name = 6;
+  // Installments due after N days or on fixed dates.
+  optional FeePlan.ScheduleBasis schedule_basis = 7;
+  // Days used with offset_direction for the first installment.
+  mysms.common.v1.NullableInt32 offset_days = 8;
+  // Before or after the reference date.
+  optional FeePlan.OffsetDirection offset_direction = 9;
+  // Plan-level discount. [Decimal string]
+  mysms.common.v1.NullableString discount_percent = 10;
+  // Notes.
+  mysms.common.v1.NullableString notes = 11;
+  // Whether usable.
+  optional bool is_active = 12;
 }
 message UpdateFeePlanResponse {
   FeePlan fee_plan = 1;
@@ -310,15 +348,25 @@ message CreateFeePlanInstallmentResponse {
   FeePlanInstallment fee_plan_installment = 1;
 }
 
-message UpdateFeePlanInstallmentRequest {
+// The changes of UpdateFeePlanInstallment (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message FeePlanInstallmentUpdate {
   // FeePlan id (UUID).
   string fee_plan_id = 1;
-  // Resource with id and etag set.
-  FeePlanInstallment fee_plan_installment = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // FeePlanInstallment id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Installment number.
+  optional int32 sequence = 5;
+  // Days after the start date (fixed_days).
+  mysms.common.v1.NullableInt32 due_days = 6;
+  // Fixed due date (fixed_date). [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString due_date = 7;
+  // Share of the total fee due in this installment. [Decimal string]
+  optional string share_percent = 8;
 }
 message UpdateFeePlanInstallmentResponse {
   FeePlanInstallment fee_plan_installment = 1;
@@ -374,13 +422,23 @@ message CreateFeePlanInstallmentComponentResponse {
   FeePlanInstallmentComponent fee_plan_installment_component = 1;
 }
 
-message UpdateFeePlanInstallmentComponentRequest {
-  // Resource with id and etag set.
-  FeePlanInstallmentComponent fee_plan_installment_component = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateFeePlanInstallmentComponent (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message FeePlanInstallmentComponentUpdate {
+  // FeePlanInstallmentComponent id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Installment. [UUID]
+  optional string installment_id = 4;
+  // Fee head. [UUID]
+  optional string fee_head_id = 5;
+  // Order.
+  mysms.common.v1.NullableInt32 sequence = 6;
+  // Share of the installment amount. [Decimal string]
+  optional string share_percent = 7;
 }
 message UpdateFeePlanInstallmentComponentResponse {
   FeePlanInstallmentComponent fee_plan_installment_component = 1;
@@ -423,13 +481,19 @@ message GetStudentFeeDueResponse {
   StudentFeeDue student_fee_due = 1;
 }
 
-message UpdateStudentFeeDueRequest {
-  // Resource with id and etag set.
-  StudentFeeDue student_fee_due = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStudentFeeDue (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StudentFeeDueUpdate {
+  // StudentFeeDue id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Due date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString due_date = 5;
 }
 message UpdateStudentFeeDueResponse {
   StudentFeeDue student_fee_due = 1;
@@ -474,13 +538,23 @@ message CreateInvoiceResponse {
   Invoice invoice = 1;
 }
 
-message UpdateInvoiceRequest {
-  // Resource with id and etag set.
-  Invoice invoice = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateInvoice (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message InvoiceUpdate {
+  // Invoice id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  mysms.common.v1.NullableString institution_id = 4;
+  // Name on the invoice.
+  optional string bill_to_name = 5;
+  // Invoice date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string invoice_date = 6;
+  // Due date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString due_date = 7;
 }
 message UpdateInvoiceResponse {
   Invoice invoice = 1;
@@ -557,13 +631,31 @@ message CreateCouponResponse {
   Coupon coupon = 1;
 }
 
-message UpdateCouponRequest {
-  // Resource with id and etag set.
-  Coupon coupon = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateCoupon (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CouponUpdate {
+  // Coupon id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Coupon code.
+  optional string code = 4;
+  // Discount type.
+  optional Coupon.DiscountType discount_type = 5;
+  // Percentage off. [Decimal string]
+  mysms.common.v1.NullableString percentage_discount = 6;
+  // Amount off. [Decimal string]
+  mysms.common.v1.NullableString fixed_discount = 7;
+  // Expiry. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString expires_on = 8;
+  // Maximum redemptions.
+  mysms.common.v1.NullableInt32 usage_limit = 9;
+  // Redemptions so far.
+  optional int32 redemption_count = 10;
+  // Whether active.
+  optional bool is_enabled = 11;
 }
 message UpdateCouponResponse {
   Coupon coupon = 1;
@@ -623,15 +715,21 @@ message CreateCouponScopeResponse {
   CouponScope coupon_scope = 1;
 }
 
-message UpdateCouponScopeRequest {
+// The changes of UpdateCouponScope (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CouponScopeUpdate {
   // Coupon id (UUID).
   string coupon_id = 1;
-  // Resource with id and etag set.
-  CouponScope coupon_scope = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // CouponScope id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Course. [UUID]
+  mysms.common.v1.NullableString lms_course_id = 5;
+  // Cohort. [UUID]
+  mysms.common.v1.NullableString lms_cohort_id = 6;
 }
 message UpdateCouponScopeResponse {
   CouponScope coupon_scope = 1;
@@ -1478,13 +1576,23 @@ message ListAcquisitionSourcesResponse {
   reserved 2, 3;
   reserved "next_page_token", "total_size";
 }
-message UpdateAcquisitionSourceRequest {
-  // Resource with id and etag set.
-  AcquisitionSource acquisition_source = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateAcquisitionSource (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AcquisitionSourceUpdate {
+  // AcquisitionSource id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Source name.
+  optional string name = 7;
 }
 message UpdateAcquisitionSourceResponse {
   AcquisitionSource acquisition_source = 1;
@@ -1498,7 +1606,7 @@ service AcquisitionSourceService {
   // Create AcquisitionSource.
   rpc CreateAcquisitionSource(CreateAcquisitionSourceRequest) returns (CreateAcquisitionSourceResponse);
   // Update AcquisitionSource.
-  rpc UpdateAcquisitionSource(UpdateAcquisitionSourceRequest) returns (UpdateAcquisitionSourceResponse);
+  rpc UpdateAcquisitionSource(AcquisitionSourceUpdate) returns (UpdateAcquisitionSourceResponse);
   // Soft-delete AcquisitionSource.
   rpc DeleteAcquisitionSource(DeleteAcquisitionSourceRequest) returns (DeleteAcquisitionSourceResponse);
 }
@@ -1572,13 +1680,27 @@ message CreateFeeStructureResponse {
   FeeStructure fee_structure = 1;
 }
 
-message UpdateFeeStructureRequest {
-  // Resource with id and etag set.
-  FeeStructure fee_structure = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateFeeStructure (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message FeeStructureUpdate {
+  // FeeStructure id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution (NULL = tenant-wide). [UUID]
+  mysms.common.v1.NullableString institution_id = 4;
+  // Academic year the structure prices. [UUID]
+  optional string academic_year_id = 5;
+  // K-12 grade level (class) the structure applies to. [UUID]
+  mysms.common.v1.NullableString grade_level_id = 6;
+  // Higher-ed program the structure applies to. [UUID]
+  mysms.common.v1.NullableString program_id = 7;
+  // Fee plan (heads + installments) charged. [UUID]
+  optional string fee_plan_id = 8;
+  // Admin-facing name.
+  optional string name = 9;
 }
 message UpdateFeeStructureResponse {
   FeeStructure fee_structure = 1;
@@ -1602,7 +1724,7 @@ service FeeStructureService {
   // Create FeeStructure.
   rpc CreateFeeStructure(CreateFeeStructureRequest) returns (CreateFeeStructureResponse);
   // Update FeeStructure.
-  rpc UpdateFeeStructure(UpdateFeeStructureRequest) returns (UpdateFeeStructureResponse);
+  rpc UpdateFeeStructure(FeeStructureUpdate) returns (UpdateFeeStructureResponse);
   // Soft-delete FeeStructure.
   rpc DeleteFeeStructure(DeleteFeeStructureRequest) returns (DeleteFeeStructureResponse);
   // Publish and generate dues (long-running).
@@ -1708,13 +1830,31 @@ message CreateFeeConcessionResponse {
   FeeConcession fee_concession = 1;
 }
 
-message UpdateFeeConcessionRequest {
-  // Resource with id and etag set.
-  FeeConcession fee_concession = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateFeeConcession (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message FeeConcessionUpdate {
+  // FeeConcession id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution (NULL = tenant-wide). [UUID]
+  mysms.common.v1.NullableString institution_id = 4;
+  // Fee head it applies to (NULL = all heads). [UUID]
+  mysms.common.v1.NullableString fee_head_id = 5;
+  // percent or amount.
+  optional string concession_type = 6;
+  // Percentage (0-100) or absolute amount per the type. [Decimal string]
+  optional string concession_value = 7;
+  // Why it was granted.
+  mysms.common.v1.NullableString reason = 8;
+  // active / revoked.
+  optional string status = 9;
+  // Start of validity (NULL = whole year).
+  mysms.common.v1.NullableString valid_from = 10;
+  // End of validity (NULL = whole year).
+  mysms.common.v1.NullableString valid_until = 11;
 }
 message UpdateFeeConcessionResponse {
   FeeConcession fee_concession = 1;
@@ -1738,7 +1878,7 @@ service FeeConcessionService {
   // Create FeeConcession.
   rpc CreateFeeConcession(CreateFeeConcessionRequest) returns (CreateFeeConcessionResponse);
   // Update FeeConcession.
-  rpc UpdateFeeConcession(UpdateFeeConcessionRequest) returns (UpdateFeeConcessionResponse);
+  rpc UpdateFeeConcession(FeeConcessionUpdate) returns (UpdateFeeConcessionResponse);
   // Soft-delete FeeConcession.
   rpc DeleteFeeConcession(DeleteFeeConcessionRequest) returns (DeleteFeeConcessionResponse);
 }
@@ -1928,13 +2068,35 @@ message CreatePaymentGatewayAccountResponse {
   PaymentGatewayAccount payment_gateway_account = 1;
 }
 
-message UpdatePaymentGatewayAccountRequest {
-  // Resource with id and etag set.
-  PaymentGatewayAccount payment_gateway_account = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePaymentGatewayAccount (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PaymentGatewayAccountUpdate {
+  // PaymentGatewayAccount id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // API key secret; stored encrypted, never returned. Input only.
+  optional string key_secret = 4;
+  // Webhook signing secret; stored encrypted, never returned. Input only.
+  optional string webhook_secret = 5;
+  // Institution (absent = tenant-wide). [UUID]
+  mysms.common.v1.NullableString institution_id = 6;
+  // Gateway identifier (razorpay, stripe, payu...).
+  optional string gateway_name = 7;
+  // Admin-facing name of this account.
+  optional string display_name = 8;
+  // Merchant/account id at the gateway.
+  mysms.common.v1.NullableString merchant_id = 9;
+  // API key id (public part).
+  mysms.common.v1.NullableString key_id = 10;
+  // Settlement currency. [UUID]
+  mysms.common.v1.NullableString currency_id = 11;
+  // Default account for the tenant/institution.
+  optional bool is_default = 12;
+  // Whether usable for new payments.
+  optional bool is_active = 13;
 }
 message UpdatePaymentGatewayAccountResponse {
   PaymentGatewayAccount payment_gateway_account = 1;
@@ -1958,7 +2120,7 @@ service PaymentGatewayAccountService {
   // Create PaymentGatewayAccount.
   rpc CreatePaymentGatewayAccount(CreatePaymentGatewayAccountRequest) returns (CreatePaymentGatewayAccountResponse);
   // Update PaymentGatewayAccount.
-  rpc UpdatePaymentGatewayAccount(UpdatePaymentGatewayAccountRequest) returns (UpdatePaymentGatewayAccountResponse);
+  rpc UpdatePaymentGatewayAccount(PaymentGatewayAccountUpdate) returns (UpdatePaymentGatewayAccountResponse);
   // Soft-delete PaymentGatewayAccount.
   rpc DeletePaymentGatewayAccount(DeletePaymentGatewayAccountRequest) returns (DeletePaymentGatewayAccountResponse);
 }

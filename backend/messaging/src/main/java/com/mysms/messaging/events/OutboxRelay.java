@@ -65,7 +65,7 @@ public final class OutboxRelay extends AppTransactionManager {
 
     static final Duration TRANSACTION_TIMEOUT = Duration.ofSeconds(60);
     private static final Logger LOG = LoggerFactory.getLogger(OutboxRelay.class);
-    private static final Pattern SCHEMA = Pattern.compile("^[a-z]+$");
+    private static final Pattern SCHEMA = Pattern.compile("^[a-z][a-z_]*$");
     private static final int MAX_ERROR = 500;
     private static final String BYPASSES = """
             SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user

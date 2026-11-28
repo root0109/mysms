@@ -51,7 +51,9 @@
     "studentId": "0196f000-0000-7000-8000-0000000575d1",
     "issueDate": "2026-01-10"
    },
-   "update": {},
+   "update": {
+    "cardNumber": "t-card-number-1764a6b0"
+   },
    "patch": {
     "keeps": "cardNumber",
     "clears": "maxItemsOverride"
@@ -112,7 +114,9 @@
     "borrowerUserId": "0196f000-0000-7000-8000-00000000c0c2",
     "issuedOn": "2026-01-10"
    },
-   "update": {},
+   "update": {
+    "issuedOn": "2026-01-10"
+   },
    "patch": {
     "keeps": "fineAmount",
     "clears": "returnedOn"
@@ -168,7 +172,9 @@
     "mediaId": "76365677-5d4d-5773-881d-664515802a12",
     "authorId": "9cd0bde9-25f0-5c4a-95d0-b34c323aedb5"
    },
-   "update": {},
+   "update": {
+    "authorId": "9cd0bde9-25f0-5c4a-95d0-b34c323aedb5"
+   },
    "patch": {
     "keeps": "sortOrder"
    },
@@ -221,7 +227,9 @@
     "mediaId": "76365677-5d4d-5773-881d-664515802a12",
     "courseId": "9c893b3d-d87a-545f-bc0e-5eca6f1d2538"
    },
-   "update": {},
+   "update": {
+    "courseId": "9c893b3d-d87a-545f-bc0e-5eca6f1d2538"
+   },
    "patch": {
     "keeps": "courseId"
    },
@@ -248,7 +256,9 @@
     "mediaId": "76365677-5d4d-5773-881d-664515802a12",
     "publisherId": "a1672fa6-8411-560d-91ce-a8c587976f4e"
    },
-   "update": {},
+   "update": {
+    "publisherId": "a1672fa6-8411-560d-91ce-a8c587976f4e"
+   },
    "patch": {
     "keeps": "publisherId"
    },
@@ -274,7 +284,9 @@
     "mediaId": "76365677-5d4d-5773-881d-664515802a12",
     "subjectId": "46168871-8e64-5f06-a647-7dea46a65217"
    },
-   "update": {},
+   "update": {
+    "subjectId": "46168871-8e64-5f06-a647-7dea46a65217"
+   },
    "patch": {
     "keeps": "subjectId"
    },
@@ -471,7 +483,9 @@
     "purchaseRequestId": "a8cafca6-d152-5f7d-82dc-9c6671f3df2a",
     "courseId": "29664d4c-2c42-5c7e-9b11-e2f649ba3494"
    },
-   "update": {},
+   "update": {
+    "courseId": "29664d4c-2c42-5c7e-9b11-e2f649ba3494"
+   },
    "patch": {
     "keeps": "courseId"
    },
@@ -497,7 +511,9 @@
     "purchaseRequestId": "a8cafca6-d152-5f7d-82dc-9c6671f3df2a",
     "subjectId": "d2b4999f-1674-5c6b-9145-77fb6ee1c073"
    },
-   "update": {},
+   "update": {
+    "subjectId": "d2b4999f-1674-5c6b-9145-77fb6ee1c073"
+   },
    "patch": {
     "keeps": "subjectId"
    },

@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.org.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "OrgProto";
@@ -20,7 +20,7 @@ service InstitutionService {
   // Create Institution.
   rpc CreateInstitution(CreateInstitutionRequest) returns (CreateInstitutionResponse);
   // Update Institution.
-  rpc UpdateInstitution(UpdateInstitutionRequest) returns (UpdateInstitutionResponse);
+  rpc UpdateInstitution(InstitutionUpdate) returns (UpdateInstitutionResponse);
   // Soft-delete Institution.
   rpc DeleteInstitution(DeleteInstitutionRequest) returns (DeleteInstitutionResponse);
   // List InstitutionAttributes.
@@ -30,7 +30,7 @@ service InstitutionService {
   // Create InstitutionAttribute.
   rpc CreateInstitutionAttribute(CreateInstitutionAttributeRequest) returns (CreateInstitutionAttributeResponse);
   // Update InstitutionAttribute.
-  rpc UpdateInstitutionAttribute(UpdateInstitutionAttributeRequest) returns (UpdateInstitutionAttributeResponse);
+  rpc UpdateInstitutionAttribute(InstitutionAttributeUpdate) returns (UpdateInstitutionAttributeResponse);
   // Soft-delete InstitutionAttribute.
   rpc DeleteInstitutionAttribute(DeleteInstitutionAttributeRequest) returns (DeleteInstitutionAttributeResponse);
   // Find a school / college to sign in to (mobile app school picker). Public.
@@ -48,7 +48,7 @@ service DepartmentService {
   // Create Department.
   rpc CreateDepartment(CreateDepartmentRequest) returns (CreateDepartmentResponse);
   // Update Department.
-  rpc UpdateDepartment(UpdateDepartmentRequest) returns (UpdateDepartmentResponse);
+  rpc UpdateDepartment(DepartmentUpdate) returns (UpdateDepartmentResponse);
   // Soft-delete Department.
   rpc DeleteDepartment(DeleteDepartmentRequest) returns (DeleteDepartmentResponse);
 }
@@ -62,7 +62,7 @@ service AcademicYearService {
   // Create AcademicYear.
   rpc CreateAcademicYear(CreateAcademicYearRequest) returns (CreateAcademicYearResponse);
   // Update AcademicYear.
-  rpc UpdateAcademicYear(UpdateAcademicYearRequest) returns (UpdateAcademicYearResponse);
+  rpc UpdateAcademicYear(AcademicYearUpdate) returns (UpdateAcademicYearResponse);
   // Soft-delete AcademicYear.
   rpc DeleteAcademicYear(DeleteAcademicYearRequest) returns (DeleteAcademicYearResponse);
   // List AcademicTerms.
@@ -72,7 +72,7 @@ service AcademicYearService {
   // Create AcademicTerm.
   rpc CreateAcademicTerm(CreateAcademicTermRequest) returns (CreateAcademicTermResponse);
   // Update AcademicTerm.
-  rpc UpdateAcademicTerm(UpdateAcademicTermRequest) returns (UpdateAcademicTermResponse);
+  rpc UpdateAcademicTerm(AcademicTermUpdate) returns (UpdateAcademicTermResponse);
   // Soft-delete AcademicTerm.
   rpc DeleteAcademicTerm(DeleteAcademicTermRequest) returns (DeleteAcademicTermResponse);
   // Make the year active and current for its institution.
@@ -92,7 +92,7 @@ service InstitutionTypeService {
   // Create InstitutionType.
   rpc CreateInstitutionType(CreateInstitutionTypeRequest) returns (CreateInstitutionTypeResponse);
   // Update InstitutionType.
-  rpc UpdateInstitutionType(UpdateInstitutionTypeRequest) returns (UpdateInstitutionTypeResponse);
+  rpc UpdateInstitutionType(InstitutionTypeUpdate) returns (UpdateInstitutionTypeResponse);
   // Soft-delete InstitutionType.
   rpc DeleteInstitutionType(DeleteInstitutionTypeRequest) returns (DeleteInstitutionTypeResponse);
   // List InstitutionTypeAttributes.
@@ -102,7 +102,7 @@ service InstitutionTypeService {
   // Create InstitutionTypeAttribute.
   rpc CreateInstitutionTypeAttribute(CreateInstitutionTypeAttributeRequest) returns (CreateInstitutionTypeAttributeResponse);
   // Update InstitutionTypeAttribute.
-  rpc UpdateInstitutionTypeAttribute(UpdateInstitutionTypeAttributeRequest) returns (UpdateInstitutionTypeAttributeResponse);
+  rpc UpdateInstitutionTypeAttribute(InstitutionTypeAttributeUpdate) returns (UpdateInstitutionTypeAttributeResponse);
   // Soft-delete InstitutionTypeAttribute.
   rpc DeleteInstitutionTypeAttribute(DeleteInstitutionTypeAttributeRequest) returns (DeleteInstitutionTypeAttributeResponse);
 }
@@ -116,7 +116,7 @@ service AttributeDefinitionService {
   // Create AttributeDefinition.
   rpc CreateAttributeDefinition(CreateAttributeDefinitionRequest) returns (CreateAttributeDefinitionResponse);
   // Update AttributeDefinition.
-  rpc UpdateAttributeDefinition(UpdateAttributeDefinitionRequest) returns (UpdateAttributeDefinitionResponse);
+  rpc UpdateAttributeDefinition(AttributeDefinitionUpdate) returns (UpdateAttributeDefinitionResponse);
   // Soft-delete AttributeDefinition.
   rpc DeleteAttributeDefinition(DeleteAttributeDefinitionRequest) returns (DeleteAttributeDefinitionResponse);
 }
@@ -130,7 +130,7 @@ service HolidayService {
   // Create Holiday.
   rpc CreateHoliday(CreateHolidayRequest) returns (CreateHolidayResponse);
   // Update Holiday.
-  rpc UpdateHoliday(UpdateHolidayRequest) returns (UpdateHolidayResponse);
+  rpc UpdateHoliday(HolidayUpdate) returns (UpdateHolidayResponse);
   // Soft-delete Holiday.
   rpc DeleteHoliday(DeleteHolidayRequest) returns (DeleteHolidayResponse);
 }
@@ -174,13 +174,59 @@ message CreateInstitutionResponse {
   Institution institution = 1;
 }
 
-message UpdateInstitutionRequest {
-  // Resource with id and etag set.
-  Institution institution = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateInstitution (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message InstitutionUpdate {
+  // Institution id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Parent institution for multi-campus groups. [UUID]
+  mysms.common.v1.NullableString parent_institution_id = 4;
+  // Institution code, unique within the tenant.
+  optional string code = 5;
+  // Institution name.
+  optional string name = 6;
+  // URL-safe name used for public pages and sub-domains.
+  mysms.common.v1.NullableString slug = 7;
+  // Kind of institution.
+  optional Institution.InstitutionType institution_type = 8;
+  // Official e-mail.
+  mysms.common.v1.NullableString email = 9;
+  // Official phone.
+  mysms.common.v1.NullableString phone = 10;
+  // Street address line 1.
+  mysms.common.v1.NullableString address_line1 = 11;
+  // Street address line 2.
+  mysms.common.v1.NullableString address_line2 = 12;
+  // City. [UUID]
+  mysms.common.v1.NullableString city_id = 13;
+  // State / province. [UUID]
+  mysms.common.v1.NullableString state_province_id = 14;
+  // Country. [UUID]
+  mysms.common.v1.NullableString country_id = 15;
+  // Postal / PIN code.
+  mysms.common.v1.NullableString postal_code = 16;
+  // Time zone if different from the tenant.
+  mysms.common.v1.NullableString timezone = 17;
+  // Operating currency if different from the tenant. [UUID]
+  mysms.common.v1.NullableString currency_id = 18;
+  // Logo image. [UUID]
+  mysms.common.v1.NullableString logo_file_id = 19;
+  // Authorised signatory's signature used on certificates. [UUID]
+  mysms.common.v1.NullableString signature_file_id = 20;
+  // Accreditation statement printed on certificates.
+  mysms.common.v1.NullableString accreditation = 21;
+  // Approving / affiliating authority.
+  mysms.common.v1.NullableString approval_authority = 22;
+  // Institution state.
+  optional Institution.Status status = 23;
+  // Configurable unit type (drives which attributes are captured). [UUID]
+  mysms.common.v1.NullableString institution_type_id = 24;
+  // Visual theme of the institution's portal and apps. [UUID]
+  mysms.common.v1.NullableString theme_id = 25;
 }
 message UpdateInstitutionResponse {
   Institution institution = 1;
@@ -240,15 +286,23 @@ message CreateInstitutionAttributeResponse {
   InstitutionAttribute institution_attribute = 1;
 }
 
-message UpdateInstitutionAttributeRequest {
+// The changes of UpdateInstitutionAttribute (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message InstitutionAttributeUpdate {
   // Institution id (UUID).
   string institution_id = 1;
-  // Resource with id and etag set.
-  InstitutionAttribute institution_attribute = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // InstitutionAttribute id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Attribute key.
+  optional string attr_key = 5;
+  // Attribute value.
+  mysms.common.v1.NullableString attr_value = 6;
+  // Attribute definition (NULL = free key/value). [UUID]
+  mysms.common.v1.NullableString attribute_definition_id = 7;
 }
 message UpdateInstitutionAttributeResponse {
   InstitutionAttribute institution_attribute = 1;
@@ -304,13 +358,25 @@ message CreateDepartmentResponse {
   Department department = 1;
 }
 
-message UpdateDepartmentRequest {
-  // Resource with id and etag set.
-  Department department = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateDepartment (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message DepartmentUpdate {
+  // Department id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Parent department. [UUID]
+  mysms.common.v1.NullableString parent_department_id = 5;
+  // Department code.
+  optional string code = 6;
+  // Department name.
+  optional string name = 7;
+  // Whether in use.
+  optional bool is_active = 8;
 }
 message UpdateDepartmentResponse {
   Department department = 1;
@@ -364,13 +430,29 @@ message CreateAcademicYearResponse {
   AcademicYear academic_year = 1;
 }
 
-message UpdateAcademicYearRequest {
-  // Resource with id and etag set.
-  AcademicYear academic_year = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateAcademicYear (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AcademicYearUpdate {
+  // AcademicYear id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Year label, e.g. 2026-27.
+  optional string name = 5;
+  // Notes.
+  mysms.common.v1.NullableString description = 6;
+  // First day. [ISO-8601 date (YYYY-MM-DD)]
+  optional string start_date = 7;
+  // Last day. [ISO-8601 date (YYYY-MM-DD)]
+  optional string end_date = 8;
+  // How the year is divided into terms.
+  optional AcademicYear.TermStructure term_structure = 9;
+  // Current year for the institution (at most one).
+  optional bool is_current = 10;
 }
 message UpdateAcademicYearResponse {
   AcademicYear academic_year = 1;
@@ -430,15 +512,31 @@ message CreateAcademicTermResponse {
   AcademicTerm academic_term = 1;
 }
 
-message UpdateAcademicTermRequest {
+// The changes of UpdateAcademicTerm (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AcademicTermUpdate {
   // AcademicYear id (UUID).
   string academic_year_id = 1;
-  // Resource with id and etag set.
-  AcademicTerm academic_term = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // AcademicTerm id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Parent term (e.g. quarter inside a semester). [UUID]
+  mysms.common.v1.NullableString parent_term_id = 5;
+  // Term name.
+  optional string name = 6;
+  // First day. [ISO-8601 date (YYYY-MM-DD)]
+  optional string start_date = 7;
+  // Last day. [ISO-8601 date (YYYY-MM-DD)]
+  optional string end_date = 8;
+  // Order within the year.
+  mysms.common.v1.NullableInt32 sequence = 9;
+  // Short code (e.g. FA26).
+  mysms.common.v1.NullableString code = 10;
+  // Term can be used for new cohorts / registrations.
+  optional bool is_active = 11;
 }
 message UpdateAcademicTermResponse {
   AcademicTerm academic_term = 1;
@@ -494,13 +592,23 @@ message CreateInstitutionTypeResponse {
   InstitutionType institution_type = 1;
 }
 
-message UpdateInstitutionTypeRequest {
-  // Resource with id and etag set.
-  InstitutionType institution_type = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateInstitutionType (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message InstitutionTypeUpdate {
+  // InstitutionType id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Type name.
+  optional string name = 7;
 }
 message UpdateInstitutionTypeResponse {
   InstitutionType institution_type = 1;
@@ -554,13 +662,21 @@ message CreateAttributeDefinitionResponse {
   AttributeDefinition attribute_definition = 1;
 }
 
-message UpdateAttributeDefinitionRequest {
-  // Resource with id and etag set.
-  AttributeDefinition attribute_definition = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateAttributeDefinition (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AttributeDefinitionUpdate {
+  // AttributeDefinition id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Attribute label.
+  optional string name = 4;
+  // Data type of the value.
+  optional AttributeDefinition.DataType data_type = 5;
+  // Display order.
+  optional int32 sort_order = 6;
 }
 message UpdateAttributeDefinitionResponse {
   AttributeDefinition attribute_definition = 1;
@@ -620,15 +736,21 @@ message CreateInstitutionTypeAttributeResponse {
   InstitutionTypeAttribute institution_type_attribute = 1;
 }
 
-message UpdateInstitutionTypeAttributeRequest {
+// The changes of UpdateInstitutionTypeAttribute (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message InstitutionTypeAttributeUpdate {
   // InstitutionType id (UUID).
   string institution_type_id = 1;
-  // Resource with id and etag set.
-  InstitutionTypeAttribute institution_type_attribute = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // InstitutionTypeAttribute id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Attribute. [UUID]
+  optional string attribute_definition_id = 5;
+  // Value is mandatory.
+  optional bool is_required = 6;
 }
 message UpdateInstitutionTypeAttributeResponse {
   InstitutionTypeAttribute institution_type_attribute = 1;
@@ -684,13 +806,23 @@ message CreateHolidayResponse {
   Holiday holiday = 1;
 }
 
-message UpdateHolidayRequest {
-  // Resource with id and etag set.
-  Holiday holiday = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateHoliday (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message HolidayUpdate {
+  // Holiday id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution (NULL = every institution of the tenant). [UUID]
+  mysms.common.v1.NullableString institution_id = 4;
+  // Holiday name.
+  optional string title = 5;
+  // First day. [ISO-8601 date (YYYY-MM-DD)]
+  optional string start_date = 6;
+  // Last day. [ISO-8601 date (YYYY-MM-DD)]
+  optional string end_date = 7;
 }
 message UpdateHolidayResponse {
   Holiday holiday = 1;

@@ -26,5 +26,6 @@ public class LeaveTypeEntity extends BaseEntity {
     private UUID academicYearId;
     private String name;
     private BigDecimal maxDaysPerYear;
+    private Boolean isPaid;
     private Boolean isActive;
 }

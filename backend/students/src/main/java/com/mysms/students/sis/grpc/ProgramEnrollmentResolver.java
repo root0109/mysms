@@ -4,8 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.ProgramEnrollment;
 import com.mysms.students.sis.api.model.ProgramEnrollmentSubject;
-import com.mysms.students.sis.api.model.ProgramEnrollmentSubjectUpdate;
-import com.mysms.students.sis.api.model.ProgramEnrollmentUpdate;
 import com.mysms.students.sis.business.ProgramEnrollmentService;
 import com.mysms.sis.v1.CreateProgramEnrollmentRequest;
 import com.mysms.sis.v1.CreateProgramEnrollmentResponse;
@@ -24,9 +22,9 @@ import com.mysms.sis.v1.ListProgramEnrollmentSubjectsResponse;
 import com.mysms.sis.v1.ListProgramEnrollmentsRequest;
 import com.mysms.sis.v1.ListProgramEnrollmentsResponse;
 import com.mysms.sis.v1.ProgramEnrollmentServiceGrpc;
-import com.mysms.sis.v1.UpdateProgramEnrollmentRequest;
+import com.mysms.sis.v1.ProgramEnrollmentSubjectUpdate;
+import com.mysms.sis.v1.ProgramEnrollmentUpdate;
 import com.mysms.sis.v1.UpdateProgramEnrollmentResponse;
-import com.mysms.sis.v1.UpdateProgramEnrollmentSubjectRequest;
 import com.mysms.sis.v1.UpdateProgramEnrollmentSubjectResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -71,12 +69,12 @@ public class ProgramEnrollmentResolver extends ProgramEnrollmentServiceGrpc.Prog
     }
 
     @Override
-    public void updateProgramEnrollment(UpdateProgramEnrollmentRequest request,
+    public void updateProgramEnrollment(ProgramEnrollmentUpdate request,
             StreamObserver<UpdateProgramEnrollmentResponse> out) {
         ProgramEnrollment updated = service.updateProgramEnrollment(
-                bridge.id(request.getProgramEnrollment().getId(), "id"),
-                bridge.requiredIfMatch(request.getProgramEnrollment().getEtag()),
-                bridge.changes(request.getProgramEnrollment(), request.getUpdateMask(), ProgramEnrollmentUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ProgramEnrollmentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateProgramEnrollmentResponse.newBuilder(), "program_enrollment", updated).build());
@@ -119,14 +117,13 @@ public class ProgramEnrollmentResolver extends ProgramEnrollmentServiceGrpc.Prog
     }
 
     @Override
-    public void updateProgramEnrollmentSubject(UpdateProgramEnrollmentSubjectRequest request,
+    public void updateProgramEnrollmentSubject(ProgramEnrollmentSubjectUpdate request,
             StreamObserver<UpdateProgramEnrollmentSubjectResponse> out) {
         ProgramEnrollmentSubject updated = service.updateProgramEnrollmentSubject(
                 bridge.id(request.getProgramEnrollmentId(), "programEnrollmentId"),
-                bridge.id(request.getProgramEnrollmentSubject().getId(), "id"),
-                bridge.requiredIfMatch(request.getProgramEnrollmentSubject().getEtag()),
-                bridge.changes(request.getProgramEnrollmentSubject(), request.getUpdateMask(),
-                        ProgramEnrollmentSubjectUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ProgramEnrollmentSubjectProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateProgramEnrollmentSubjectResponse.newBuilder(), "program_enrollment_subject", updated).build());
     }

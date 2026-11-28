@@ -182,6 +182,9 @@ public class DriveItemService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -350,6 +353,9 @@ public class DriveItemService extends AppTransactionManager {
             assertValidDriveItemShare(entity, false);
             scope.requireWritable(institutionOfDriveItemShare(entity));
             assertUniqueDriveItemShare(entity);
+            if (fields.isEmpty()) {
+                return driveItemShareMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return driveItemShareMapper.toDto(entity);

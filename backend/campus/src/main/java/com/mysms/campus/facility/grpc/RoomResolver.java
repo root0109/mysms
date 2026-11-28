@@ -4,10 +4,7 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.facility.api.model.Room;
 import com.mysms.campus.facility.api.model.RoomAsset;
-import com.mysms.campus.facility.api.model.RoomAssetUpdate;
 import com.mysms.campus.facility.api.model.RoomFacility;
-import com.mysms.campus.facility.api.model.RoomFacilityUpdate;
-import com.mysms.campus.facility.api.model.RoomUpdate;
 import com.mysms.campus.facility.business.RoomService;
 import com.mysms.facility.v1.CreateRoomAssetRequest;
 import com.mysms.facility.v1.CreateRoomAssetResponse;
@@ -33,12 +30,12 @@ import com.mysms.facility.v1.ListRoomFacilitiesRequest;
 import com.mysms.facility.v1.ListRoomFacilitiesResponse;
 import com.mysms.facility.v1.ListRoomsRequest;
 import com.mysms.facility.v1.ListRoomsResponse;
+import com.mysms.facility.v1.RoomAssetUpdate;
+import com.mysms.facility.v1.RoomFacilityUpdate;
 import com.mysms.facility.v1.RoomServiceGrpc;
-import com.mysms.facility.v1.UpdateRoomAssetRequest;
+import com.mysms.facility.v1.RoomUpdate;
 import com.mysms.facility.v1.UpdateRoomAssetResponse;
-import com.mysms.facility.v1.UpdateRoomFacilityRequest;
 import com.mysms.facility.v1.UpdateRoomFacilityResponse;
-import com.mysms.facility.v1.UpdateRoomRequest;
 import com.mysms.facility.v1.UpdateRoomResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -79,10 +76,10 @@ public class RoomResolver extends RoomServiceGrpc.RoomServiceImplBase {
     }
 
     @Override
-    public void updateRoom(UpdateRoomRequest request, StreamObserver<UpdateRoomResponse> out) {
-        Room updated = service.updateRoom(bridge.id(request.getRoom().getId(), "id"),
-                bridge.requiredIfMatch(request.getRoom().getEtag()),
-                bridge.changes(request.getRoom(), request.getUpdateMask(), RoomUpdate.class), request.getValidateOnly());
+    public void updateRoom(RoomUpdate request, StreamObserver<UpdateRoomResponse> out) {
+        Room updated = service.updateRoom(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                RoomProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRoomResponse.newBuilder(), "room", updated).build());
     }
 
@@ -114,10 +111,10 @@ public class RoomResolver extends RoomServiceGrpc.RoomServiceImplBase {
     }
 
     @Override
-    public void updateRoomFacility(UpdateRoomFacilityRequest request, StreamObserver<UpdateRoomFacilityResponse> out) {
+    public void updateRoomFacility(RoomFacilityUpdate request, StreamObserver<UpdateRoomFacilityResponse> out) {
         RoomFacility updated = service.updateRoomFacility(bridge.id(request.getRoomId(), "roomId"),
-                bridge.id(request.getRoomFacility().getId(), "id"), bridge.requiredIfMatch(request.getRoomFacility().getEtag()),
-                bridge.changes(request.getRoomFacility(), request.getUpdateMask(), RoomFacilityUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                RoomFacilityProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRoomFacilityResponse.newBuilder(), "room_facility", updated).build());
     }
@@ -151,10 +148,10 @@ public class RoomResolver extends RoomServiceGrpc.RoomServiceImplBase {
     }
 
     @Override
-    public void updateRoomAsset(UpdateRoomAssetRequest request, StreamObserver<UpdateRoomAssetResponse> out) {
+    public void updateRoomAsset(RoomAssetUpdate request, StreamObserver<UpdateRoomAssetResponse> out) {
         RoomAsset updated = service.updateRoomAsset(bridge.id(request.getRoomId(), "roomId"),
-                bridge.id(request.getRoomAsset().getId(), "id"), bridge.requiredIfMatch(request.getRoomAsset().getEtag()),
-                bridge.changes(request.getRoomAsset(), request.getUpdateMask(), RoomAssetUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                RoomAssetProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRoomAssetResponse.newBuilder(), "room_asset", updated).build());
     }

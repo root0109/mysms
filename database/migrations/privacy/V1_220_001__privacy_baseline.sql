@@ -112,7 +112,7 @@ CREATE TABLE privacy.processing_activity (
     CONSTRAINT pk_processing_activity PRIMARY KEY (id),
     CONSTRAINT uq_processing_activity_code UNIQUE (code),
     CONSTRAINT fk_processing_activity_purpose_id FOREIGN KEY (purpose_id) REFERENCES privacy.purpose (id),
-    CONSTRAINT ck_processing_activity_code CHECK (code ~ '^[a-z]+\.[a-z_]+$' AND code LIKE module || '.%'),
+    CONSTRAINT ck_processing_activity_code CHECK (code ~ '^[a-z_]+\.[a-z_]+$' AND code LIKE module || '.%'),
     CONSTRAINT ck_processing_activity_basis CHECK (legal_basis IN ('consent', 'legitimate_use', 'legitimate_use_voluntary',
         'legal_obligation', 'education_exemption', 'medical_emergency', 'employment', 'contract')),
     CONSTRAINT ck_processing_activity_exemption CHECK (legal_basis <> 'education_exemption'
@@ -815,7 +815,7 @@ CREATE TABLE privacy.rights_request_task (
     CONSTRAINT uq_rights_request_task UNIQUE (tenant_id, request_id, module, action),
     CONSTRAINT fk_rights_request_task_request_id FOREIGN KEY (request_id, tenant_id)
         REFERENCES privacy.rights_request (id, tenant_id),
-    CONSTRAINT ck_rights_request_task_module CHECK (module ~ '^[a-z]{2,30}$'),
+    CONSTRAINT ck_rights_request_task_module CHECK (module ~ '^[a-z][a-z_]{1,29}$'),
     CONSTRAINT ck_rights_request_task_action CHECK (action IN ('erase', 'export')),
     CONSTRAINT ck_rights_request_task_wave CHECK (wave IN (1, 2)),
     CONSTRAINT ck_rights_request_task_status CHECK (status IN ('pending', 'dispatched', 'done', 'partial', 'failed',
@@ -890,7 +890,7 @@ CREATE TABLE privacy.legal_hold (
         AND module IS NULL AND entity_type IS NULL AND entity_ids IS NULL)),
     CONSTRAINT ck_legal_hold_records CHECK (scope <> 'records' OR (category_code IS NULL AND module IS NOT NULL
         AND entity_type IS NOT NULL AND cardinality(entity_ids) BETWEEN 1 AND 1000)),
-    CONSTRAINT ck_legal_hold_module CHECK (module IS NULL OR module ~ '^[a-z]{2,30}$'),
+    CONSTRAINT ck_legal_hold_module CHECK (module IS NULL OR module ~ '^[a-z][a-z_]{1,29}$'),
     CONSTRAINT ck_legal_hold_entity_type CHECK (entity_type IS NULL OR length(entity_type) BETWEEN 1 AND 80),
     CONSTRAINT ck_legal_hold_released CHECK ((released_at IS NULL) = (released_by_user_id IS NULL)),
     CONSTRAINT ck_legal_hold_released_at CHECK (released_at IS NULL OR released_at >= placed_at),
@@ -1084,7 +1084,7 @@ CREATE TABLE privacy.retention_policy (
     CONSTRAINT pk_retention_policy PRIMARY KEY (id),
     CONSTRAINT uq_retention_policy_code UNIQUE (code),
     CONSTRAINT fk_retention_policy_category_code FOREIGN KEY (category_code) REFERENCES privacy.data_category (code),
-    CONSTRAINT ck_retention_policy_module CHECK (module ~ '^[a-z]{2,30}$'),
+    CONSTRAINT ck_retention_policy_module CHECK (module ~ '^[a-z][a-z_]{1,29}$'),
     CONSTRAINT ck_retention_policy_trigger_code CHECK (trigger_code IN ('after_leaving', 'after_record_date',
         'after_inactivity', 'after_purpose_end')),
     CONSTRAINT ck_retention_policy_floor CHECK (minimum_period_days >= 1 AND period_days >= minimum_period_days),
@@ -1117,7 +1117,8 @@ INSERT INTO privacy.retention_policy (id, code, category_code, module, trigger_c
     (md5('mysms.retention_policy:' || 'iam.after_inactivity')::uuid, 'iam.after_inactivity', 'identity', 'iam', 'after_inactivity', 1095, 365, 'anonymise', 2, 'DPDP Rules: erasure after a period of inactivity, with 48 hours'' notice (to verify).'),
     (md5('mysms.retention_policy:' || 'payroll.after_leaving')::uuid, 'payroll.after_leaving', 'financial', 'payroll', 'after_leaving', 2922, 2922, 'archive', NULL, 'Wage and tax records kept eight years (to verify).'),
     (md5('mysms.retention_policy:' || 'platform.access_log')::uuid, 'platform.access_log', 'device_usage', 'platform', 'after_record_date', 365, 365, 'delete', NULL, 'DPDP Rules: logs kept at least one year for security (to verify).'),
-    (md5('mysms.retention_policy:' || 'sis.health_after_leaving')::uuid, 'sis.health_after_leaving', 'health', 'sis', 'after_leaving', 365, 30, 'delete', NULL, 'No statutory period known; restricted data kept the shortest (to verify).');
+    (md5('mysms.retention_policy:' || 'sis.health_after_leaving')::uuid, 'sis.health_after_leaving', 'health', 'sis', 'after_leaving', 365, 30, 'delete', NULL, 'No statutory period known; restricted data kept the shortest (to verify).'),
+    (md5('mysms.retention_policy:' || 'time_attendance.after_leaving')::uuid, 'time_attendance.after_leaving', 'attendance', 'time_attendance', 'after_leaving', 1826, 1095, 'archive', NULL, 'Staff attendance backs the wage records (payroll.after_leaving): archived, never anonymised (to verify).');
 
 CREATE TABLE privacy.tenant_retention_policy (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -1171,7 +1172,7 @@ CREATE TABLE privacy.retention_run (
     CONSTRAINT pk_retention_run PRIMARY KEY (id),
     CONSTRAINT uq_retention_run UNIQUE (tenant_id, policy_id, cutoff),
     CONSTRAINT fk_retention_run_policy_id FOREIGN KEY (policy_id) REFERENCES privacy.retention_policy (id),
-    CONSTRAINT ck_retention_run_module CHECK (module ~ '^[a-z]{2,30}$'),
+    CONSTRAINT ck_retention_run_module CHECK (module ~ '^[a-z][a-z_]{1,29}$'),
     CONSTRAINT ck_retention_run_action CHECK (action IN ('delete', 'anonymise', 'archive')),
     CONSTRAINT ck_retention_run_status CHECK (status IN ('dispatched', 'done', 'partial', 'failed')),
     CONSTRAINT ck_retention_run_completed CHECK ((status = 'dispatched') = (completed_at IS NULL)),

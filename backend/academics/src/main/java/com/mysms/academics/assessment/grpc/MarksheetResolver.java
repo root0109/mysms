@@ -1,7 +1,6 @@
 package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.Marksheet;
-import com.mysms.academics.assessment.api.model.MarksheetUpdate;
 import com.mysms.academics.assessment.business.MarksheetService;
 import com.mysms.assessment.v1.CancelMarksheetRequest;
 import com.mysms.assessment.v1.CancelMarksheetResponse;
@@ -14,11 +13,11 @@ import com.mysms.assessment.v1.GetMarksheetResponse;
 import com.mysms.assessment.v1.ListMarksheetsRequest;
 import com.mysms.assessment.v1.ListMarksheetsResponse;
 import com.mysms.assessment.v1.MarksheetServiceGrpc;
+import com.mysms.assessment.v1.MarksheetUpdate;
 import com.mysms.assessment.v1.PublishMarksheetRequest;
 import com.mysms.assessment.v1.PublishMarksheetResponse;
 import com.mysms.assessment.v1.ResetMarksheetRequest;
 import com.mysms.assessment.v1.ResetMarksheetResponse;
-import com.mysms.assessment.v1.UpdateMarksheetRequest;
 import com.mysms.assessment.v1.UpdateMarksheetResponse;
 import com.mysms.assessment.v1.ValidateMarksheetRequest;
 import com.mysms.assessment.v1.ValidateMarksheetResponse;
@@ -74,11 +73,11 @@ public class MarksheetResolver extends MarksheetServiceGrpc.MarksheetServiceImpl
     }
 
     @Override
-    public void updateMarksheet(UpdateMarksheetRequest request, StreamObserver<UpdateMarksheetResponse> out) {
+    public void updateMarksheet(MarksheetUpdate request, StreamObserver<UpdateMarksheetResponse> out) {
         Marksheet updated = marksheetService.updateMarksheet(
-                bridge.id(request.getMarksheet().getId(), "id"),
-                bridge.requiredIfMatch(request.getMarksheet().getEtag()),
-                bridge.changes(request.getMarksheet(), request.getUpdateMask(), MarksheetUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MarksheetProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMarksheetResponse.newBuilder(), "marksheet", updated).build());
     }

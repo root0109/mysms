@@ -4,18 +4,17 @@ import com.mysms.learning.lms.business.ReleaseRuleService;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.AssignmentGroup;
-import com.mysms.learning.lms.api.model.AssignmentGroupUpdate;
 import com.mysms.learning.lms.api.model.ContentItem;
 import com.mysms.learning.lms.api.model.ContentItemRating;
-import com.mysms.learning.lms.api.model.ContentItemRatingUpdate;
-import com.mysms.learning.lms.api.model.ContentItemUpdate;
 import com.mysms.learning.lms.api.model.ItemOverride;
-import com.mysms.learning.lms.api.model.ItemOverrideUpdate;
 import com.mysms.learning.lms.api.model.ReleaseGrant;
 import com.mysms.learning.lms.business.ContentItemService;
 import com.mysms.lms.v1.AddFromRepositoryRequest;
 import com.mysms.lms.v1.AddFromRepositoryResponse;
+import com.mysms.lms.v1.AssignmentGroupUpdate;
+import com.mysms.lms.v1.ContentItemRatingUpdate;
 import com.mysms.lms.v1.ContentItemServiceGrpc;
+import com.mysms.lms.v1.ContentItemUpdate;
 import com.mysms.lms.v1.CopyContentItemRequest;
 import com.mysms.lms.v1.CopyContentItemResponse;
 import com.mysms.lms.v1.CreateAssignmentGroupRequest;
@@ -56,6 +55,7 @@ import com.mysms.lms.v1.GetWebResourceLaunchRequest;
 import com.mysms.lms.v1.GetWebResourceLaunchResponse;
 import com.mysms.lms.v1.GrantItemAccessRequest;
 import com.mysms.lms.v1.GrantItemAccessResponse;
+import com.mysms.lms.v1.ItemOverrideUpdate;
 import com.mysms.lms.v1.ListAssignmentGroupsRequest;
 import com.mysms.lms.v1.ListAssignmentGroupsResponse;
 import com.mysms.lms.v1.ListContentItemRatingsRequest;
@@ -86,13 +86,9 @@ import com.mysms.lms.v1.SetReleaseRulesEnabledRequest;
 import com.mysms.lms.v1.SetReleaseRulesEnabledResponse;
 import com.mysms.lms.v1.SubmitPeerReviewRequest;
 import com.mysms.lms.v1.SubmitPeerReviewResponse;
-import com.mysms.lms.v1.UpdateAssignmentGroupRequest;
 import com.mysms.lms.v1.UpdateAssignmentGroupResponse;
-import com.mysms.lms.v1.UpdateContentItemRatingRequest;
 import com.mysms.lms.v1.UpdateContentItemRatingResponse;
-import com.mysms.lms.v1.UpdateContentItemRequest;
 import com.mysms.lms.v1.UpdateContentItemResponse;
-import com.mysms.lms.v1.UpdateItemOverrideRequest;
 import com.mysms.lms.v1.UpdateItemOverrideResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -136,10 +132,10 @@ public class ContentItemResolver extends ContentItemServiceGrpc.ContentItemServi
     }
 
     @Override
-    public void updateContentItem(UpdateContentItemRequest request, StreamObserver<UpdateContentItemResponse> out) {
-        ContentItem updated = service.updateContentItem(bridge.id(request.getContentItem().getId(), "id"),
-                bridge.requiredIfMatch(request.getContentItem().getEtag()),
-                bridge.changes(request.getContentItem(), request.getUpdateMask(), ContentItemUpdate.class),
+    public void updateContentItem(ContentItemUpdate request, StreamObserver<UpdateContentItemResponse> out) {
+        ContentItem updated = service.updateContentItem(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ContentItemProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateContentItemResponse.newBuilder(), "content_item", updated).build());
     }
@@ -176,12 +172,12 @@ public class ContentItemResolver extends ContentItemServiceGrpc.ContentItemServi
     }
 
     @Override
-    public void updateContentItemRating(UpdateContentItemRatingRequest request,
+    public void updateContentItemRating(ContentItemRatingUpdate request,
             StreamObserver<UpdateContentItemRatingResponse> out) {
         ContentItemRating updated = service.updateContentItemRating(bridge.id(request.getContentItemId(), "contentItemId"),
-                bridge.id(request.getContentItemRating().getId(), "id"),
-                bridge.requiredIfMatch(request.getContentItemRating().getEtag()),
-                bridge.changes(request.getContentItemRating(), request.getUpdateMask(), ContentItemRatingUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ContentItemRatingProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateContentItemRatingResponse.newBuilder(), "content_item_rating",
                 updated).build());
@@ -218,10 +214,10 @@ public class ContentItemResolver extends ContentItemServiceGrpc.ContentItemServi
     }
 
     @Override
-    public void updateItemOverride(UpdateItemOverrideRequest request, StreamObserver<UpdateItemOverrideResponse> out) {
+    public void updateItemOverride(ItemOverrideUpdate request, StreamObserver<UpdateItemOverrideResponse> out) {
         ItemOverride updated = service.updateItemOverride(bridge.id(request.getContentItemId(), "contentItemId"),
-                bridge.id(request.getItemOverride().getId(), "id"), bridge.requiredIfMatch(request.getItemOverride().getEtag()),
-                bridge.changes(request.getItemOverride(), request.getUpdateMask(), ItemOverrideUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                ItemOverrideProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateItemOverrideResponse.newBuilder(), "item_override", updated).build());
     }
@@ -256,11 +252,11 @@ public class ContentItemResolver extends ContentItemServiceGrpc.ContentItemServi
     }
 
     @Override
-    public void updateAssignmentGroup(UpdateAssignmentGroupRequest request, StreamObserver<UpdateAssignmentGroupResponse> out) {
+    public void updateAssignmentGroup(AssignmentGroupUpdate request, StreamObserver<UpdateAssignmentGroupResponse> out) {
         AssignmentGroup updated = service.updateAssignmentGroup(bridge.id(request.getContentItemId(), "contentItemId"),
-                bridge.id(request.getAssignmentGroup().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssignmentGroup().getEtag()),
-                bridge.changes(request.getAssignmentGroup(), request.getUpdateMask(), AssignmentGroupUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AssignmentGroupProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAssignmentGroupResponse.newBuilder(), "assignment_group", updated).build());
     }

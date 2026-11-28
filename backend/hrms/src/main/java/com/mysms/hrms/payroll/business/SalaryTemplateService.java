@@ -156,6 +156,9 @@ public class SalaryTemplateService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -322,6 +325,9 @@ public class SalaryTemplateService extends AppTransactionManager {
             assertValidSalaryTemplateComponent(entity, false);
             scope.requireWritable(institutionOfSalaryTemplateComponent(entity));
             assertUniqueSalaryTemplateComponent(entity);
+            if (fields.isEmpty()) {
+                return salaryTemplateComponentMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return salaryTemplateComponentMapper.toDto(entity);

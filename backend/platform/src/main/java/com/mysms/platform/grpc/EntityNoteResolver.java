@@ -3,18 +3,17 @@ package com.mysms.platform.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.api.model.EntityNote;
-import com.mysms.platform.api.model.EntityNoteUpdate;
 import com.mysms.platform.business.EntityNoteService;
 import com.mysms.platform.v1.CreateEntityNoteRequest;
 import com.mysms.platform.v1.CreateEntityNoteResponse;
 import com.mysms.platform.v1.DeleteEntityNoteRequest;
 import com.mysms.platform.v1.DeleteEntityNoteResponse;
 import com.mysms.platform.v1.EntityNoteServiceGrpc;
+import com.mysms.platform.v1.EntityNoteUpdate;
 import com.mysms.platform.v1.GetEntityNoteRequest;
 import com.mysms.platform.v1.GetEntityNoteResponse;
 import com.mysms.platform.v1.ListEntityNotesRequest;
 import com.mysms.platform.v1.ListEntityNotesResponse;
-import com.mysms.platform.v1.UpdateEntityNoteRequest;
 import com.mysms.platform.v1.UpdateEntityNoteResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class EntityNoteResolver extends EntityNoteServiceGrpc.EntityNoteServiceI
     }
 
     @Override
-    public void updateEntityNote(UpdateEntityNoteRequest request, StreamObserver<UpdateEntityNoteResponse> out) {
+    public void updateEntityNote(EntityNoteUpdate request, StreamObserver<UpdateEntityNoteResponse> out) {
         EntityNote updated = service.updateEntityNote(
-                bridge.id(request.getEntityNote().getId(), "id"),
-                bridge.requiredIfMatch(request.getEntityNote().getEtag()),
-                bridge.changes(request.getEntityNote(), request.getUpdateMask(), EntityNoteUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EntityNoteProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEntityNoteResponse.newBuilder(), "entity_note", updated).build());
     }

@@ -12,10 +12,10 @@ One Maven reactor (`backend/pom.xml`), flat modules, Java 17, Spring Boot 4.1:
 | auth-client | The only auth surface modules use: token verification, edge filter and gRPC interceptor, permission resolution, service tokens | none |
 | messaging | `EventBus` API, `EventRuntime` (relay, inbox) and the RabbitMQ, Google Cloud Pub/Sub and in-process adapters | none |
 | privacy-client | Consent checks against privacy over gRPC, with a per-process cache; the base of a module's privacy tasks and retention sweeps (legal holds from privacy over gRPC) | none |
-| 10 domain modules | platform, identity, privacy, comms (kernel); hrms; students, academics, finance, campus (school); learning — serving the 22 areas below | one per area, same name as the area |
+| 10 domain modules | platform, identity, privacy, comms (kernel); hrms; students, academics, finance, campus (school); learning — serving the 23 areas below | one per area, same name as the area |
 | app | Assembly only: all 10 domain modules in one process | none |
 
-**Modules and areas** (ARC-7, [JAVA-CODING-RULES §2.2](JAVA-CODING-RULES.md)). An *area* is one schema with its contract: protos (`mysms.<area>.v1`), operation table, `/v1/<area>` prefix, `mysms.<area>.*` configuration, its own pool, transaction manager, outbox and Flyway history. The areas keep the 22 former module names, so schemas, URLs, operation ids, permission codes and the SDK namespaces are unchanged.
+**Modules and areas** (ARC-7, [JAVA-CODING-RULES §2.2](JAVA-CODING-RULES.md)). An *area* is one schema with its contract: protos (`mysms.<area>.v1`), operation table, `/v1/<area>` prefix (an underscore in the area name is a hyphen in the URL: `time_attendance` serves `/v1/time-attendance`), `mysms.<area>.*` configuration (hyphenated likewise: `mysms.time-attendance.*`, since a canonical Spring property name holds no underscore), its own pool, transaction manager, outbox and Flyway history. 22 areas keep the former module names, so their schemas, URLs, operation ids, permission codes and SDK namespaces are unchanged; `time_attendance` (staff attendance, moved out of `attendance`, reorganisation 2c) is the 23rd, with new paths and codes — clients followed.
 
 | Module | Product | Areas | Packages |
 |---|---|---|---|
@@ -23,7 +23,7 @@ One Maven reactor (`backend/pom.xml`), flat modules, Java 17, Spring Boot 4.1:
 | identity | kernel | iam, people | `com.mysms.identity.iam`, `….identity.people` |
 | privacy | kernel | privacy | `com.mysms.privacy` |
 | comms | kernel | comms | `com.mysms.comms` |
-| hrms | HRMS | hr, payroll | `com.mysms.hrms.hr`, `….hrms.payroll` |
+| hrms | HRMS | hr, payroll, time_attendance | `com.mysms.hrms.hr`, `….hrms.payroll`, `….hrms.timeattendance` |
 | students | school | sis, admission, careers | `com.mysms.students.sis`, `….admission`, `….careers` |
 | academics | school | academics, timetable, attendance, assessment | `com.mysms.academics`, `….academics.timetable`, `….attendance`, `….assessment` |
 | finance | school (fees) | finance | `com.mysms.finance` |
@@ -63,8 +63,9 @@ A module may call over gRPC (from its `integration` package, with copies of the 
 | `sis` | `academics` (13), `hr` (1), `iam` (5), `org` (15), `people` (3), `platform` (1) |
 | `hr` | `iam` (2), `org` (9), `people` (2) |
 | `payroll` | `hr` (4), `iam` (1), `org` (5), `platform` (2) |
+| `time_attendance` | `hr` (1), `iam` (1) |
 | `admission` | `academics` (9), `finance` (3), `master` (2), `org` (6), `people` (3), `platform` (2), `sis` (1) |
-| `attendance` | `academics` (4), `hr` (3), `iam` (2), `org` (3), `sis` (2), `timetable` (1) |
+| `attendance` | `academics` (4), `hr` (1), `iam` (1), `org` (3), `sis` (2), `timetable` (1) |
 | `facility` | `academics` (3), `org` (3) |
 | `timetable` | `academics` (4), `facility` (1), `hr` (1), `org` (2), `sis` (1) |
 | `assessment` | `academics` (11), `facility` (1), `hr` (4), `iam` (8), `org` (9), `platform` (2), `sis` (5) |
@@ -121,16 +122,14 @@ Lesson, quiz, question, assignment and rubric rows carry `version` / `superseded
 
 ### 5.1 Synchronous calls (gRPC)
 
-The caller cannot answer when the callee is down, so these are the dependencies that matter most. Source: each module's `integration/*GrpcClient` (RPCs as named in the callee's proto).
+The caller cannot answer when the callee is down, so these are the dependencies that matter most. Source: each module's `integration/*GrpcClient` (RPCs as named in the callee's proto). Sibling areas of one module call each other's business services in process, not over gRPC (JAVA-CODING-RULES §2.2: attendance → timetable, assessment → academics, iam → people, platform and org → master, admission → sis), so they are not listed.
 
 | Caller | Callee | RPCs |
 |---|---|---|
-| admission | sis | GetStudent, ListStudents, CreateStudent, ListStudentGuardians, CreateStudentGuardian, ListGuardians, CreateGuardian, ListRelationshipTypes, ListStudentEnrollments, CreateStudentEnrollment, ListProgramEnrollments, CreateProgramEnrollment, CreatePortalAccount, CreateStudentPortalAccount |
 | admission | people | CreatePerson, ListPersons |
 | assessment | sis | GetStudentSummary, ListMyChildren, ListClassRoster, ListSubjectRegistrations |
-| assessment | academics / facility / iam | ListCourseSubjects / GetRoom / GetMe |
+| assessment | facility / iam | GetRoom / GetMe |
 | attendance | sis | ListClassRoster, ListStudents |
-| attendance | timetable | GetSession, ListSessionStudents |
 | attendance | org | GetInstitution |
 | careers | iam | ResolveTenantCode, GetUserAccount |
 | comms | iam / platform | GetMe, ListUserAccounts / CreateUploadUrl, CompleteUpload, GetDownloadUrl |
@@ -138,16 +137,15 @@ The caller cannot answer when the callee is down, so these are the dependencies 
 | finance | academics | ListClassSections, ListCourses |
 | finance | iam / master / org | GetMe / GetCurrency / GetAcademicYear |
 | hr | iam | ListUserAccounts, CreateUserAccount |
-| iam | org / people | ListActiveInstitutions / GetMyPerson |
+| iam | org | ListActiveInstitutions |
 | lms | platform | ListEntityAttachments, GetFileObject, GetDownloadUrl, CreateUploadUrl, CompleteUpload |
 | lms | iam | GetMe, ListUserAccounts, ResolveTenantCode |
 | lms | assessment | ListGradingBands |
-| platform | master | GetCurrency |
 | sis | academics | GetClassSection, ListClassSections, GetGradeLevel, GetSection, ListCourseSubjects |
 | sis | iam | ListUserAccounts, CreateUserAccount, CreateUserRole, ListRoles |
 | sis | org / people | GetAcademicYear, GetInstitution / ListPersons |
 
-28 caller→callee edges, 70 RPCs. Callers of nobody: master, org, people, academics, payroll, facility, timetable, library, transport, frontoffice, privacy. Most called: iam (7 callers), sis (4), org (4), academics (3). Shared libraries add two more: auth-client → iam (`GetRolePermissions`, every module) and privacy-client → privacy (`BatchCheckConsent`, used by people).
+23 caller→callee edges, 51 RPCs. Callers of nobody: master, platform, org, people, academics, payroll, facility, timetable, library, transport, frontoffice, privacy. Most called: iam (7 callers), org (4), sis (3), academics (2). Shared libraries add two more: auth-client → iam (`GetRolePermissions`, every module) and privacy-client → privacy (`BatchCheckConsent`, used by people).
 
 ### 5.2 Asynchronous (events)
 
@@ -167,16 +165,16 @@ Outbox and inbox make these reliable, so they are cheap coupling. Diagram: [even
 
 ### 5.3 Data references (logical, no FK)
 
-Per module in §2. By owner (forward references): org 133, iam 128, academics 59, platform 55, master 26, sis 22, people 18, hr 17, finance 7, comms 7, facility 2, assessment 2, timetable 1. Nothing references payroll, admission, attendance, lms, library, transport, frontoffice, careers or privacy, except event-only references against the DAG.
+Per module in §2. By owner (forward references): org 133, iam 128, academics 59, platform 55, master 26, sis 22, people 18, hr 16, finance 7, comms 7, facility 2, assessment 2, timetable 1 (`time_attendance.staff_attendance.leave_application_id` left the register: it is an in-module foreign key to `hr.leave_application` since the 2c move). Nothing references payroll, time_attendance, admission, attendance, lms, library, transport, frontoffice, careers or privacy, except event-only references against the DAG.
 
 ## 6. Reorganisation: platform kernel and products
 
-Backend module structure built (22 → 10 modules of areas, §1; status and remaining steps in
-[docs/design/MODULE-AND-PRODUCT-REORGANISATION.md](docs/design/MODULE-AND-PRODUCT-REORGANISATION.md) §11). Still
-open there: product entitlements, the HRMS data moves (`staff_attendance`), replacing in-module gRPC
-by direct calls, the client feature packages and the HRMS apps.
+Backend module structure built (10 modules of 23 areas, §1; status and remaining steps in
+[docs/design/MODULE-AND-PRODUCT-REORGANISATION.md](docs/design/MODULE-AND-PRODUCT-REORGANISATION.md) §11). The
+HRMS data move is done: `staff_attendance` lives in hrms as the `time_attendance` area (2c). Still open there:
+product entitlements, replacing in-module gRPC by direct calls, the client feature packages and the HRMS apps.
 
-Target: 22 → 10 modules — kernel (platform, identity, privacy, comms) and products (hrms; school: students, academics,
+Target: 10 modules — kernel (platform, identity, privacy, comms) and products (hrms; school: students, academics,
 finance, campus; learning). Products depend only on the kernel, except school → hrms by id and events. HRMS and
 learning can each be assembled and sold on their own; the clients are split into product feature packages the same
 way.

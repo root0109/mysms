@@ -277,6 +277,30 @@ class LmsTeachingComponentTest {
                 + " WHERE c.course_id = '" + next + "'")).as("the lesson was copied, not shared").isEqualTo(1);
     }
 
+    // ---- item kinds
+
+    @Test
+    void anUpdateTurnsAnItemIntoAProgrammingExercise() throws Exception {
+        Course course = publishedCourse("Exercise kind");
+        Reply lesson = call("POST", "/v1/lms/lessons", ADMIN, """
+                {"chapterId":"%s","title":"Lesson","sortOrder":0}""".formatted(course.chapter()));
+        assertThat(lesson.status()).as(lesson.body().toString()).isEqualTo(201);
+        Reply item = call("POST", "/v1/lms/content-items", ADMIN, """
+                {"chapterId":"%s","courseId":"%s","itemKind":"lesson","lessonId":"%s","title":"Lesson"}"""
+                .formatted(course.chapter(), course.id(), lesson.text("id")));
+        assertThat(item.status()).as(item.body().toString()).isEqualTo(201);
+        UUID exercise = UUID.randomUUID();
+        sql("INSERT INTO lms.programming_exercise (id, tenant_id, title, problem_statement, language) VALUES ('"
+                + exercise + "', '" + TENANT + "', 'FizzBuzz', 'Print the numbers.', 'python')");
+
+        Reply changed = call("PATCH", "/v1/lms/content-items/" + item.text("id"), ADMIN, """
+                {"itemKind":"exercise","exerciseId":"%s","lessonId":null}""".formatted(exercise),
+                "If-Match", item.text("etag"));
+        assertThat(changed.status()).as(changed.body().toString()).isEqualTo(200);
+        assertThat(changed.text("itemKind")).isEqualTo("exercise");
+        assertThat(changed.text("exerciseId")).isEqualTo(exercise.toString());
+    }
+
     // ---- evaluator slots and certificates
 
     @Test

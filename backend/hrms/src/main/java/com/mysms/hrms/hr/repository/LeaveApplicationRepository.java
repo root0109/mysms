@@ -11,6 +11,7 @@ import com.mysms.hrms.hr.config.HrDatabaseConfig;
 import com.mysms.hrms.hr.domain.LeaveApplicationEntity;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -65,8 +66,8 @@ public class LeaveApplicationRepository {
     private static final String SELECT_LIVE = """
             SELECT r.id, r.tenant_id, r.institution_id, r.academic_year_id, r.staff_id, r.leave_type_id,
                    r.absence_reason_id, r.class_section_id, r.from_at, r.to_at, r.day_part, r.remarks, r.status,
-                   r.decided_by_user_id, r.decided_on, r.decision_comments, r.created_at, r.created_by, r.updated_at,
-                   r.updated_by, r.deleted_at, r.row_version
+                   r.decided_by_user_id, r.decided_on, r.decision_comments, r.counted_days, r.created_at, r.created_by,
+                   r.updated_at, r.updated_by, r.deleted_at, r.row_version
               FROM hr.leave_application r
              WHERE r.tenant_id = :tenantId
                AND r.deleted_at IS NULL
@@ -82,7 +83,8 @@ public class LeaveApplicationRepository {
                     :decisionComments, :createdAt, :createdBy, :updatedAt, :updatedBy, :rowVersion)
             RETURNING id, tenant_id, institution_id, academic_year_id, staff_id, leave_type_id, absence_reason_id,
                       class_section_id, from_at, to_at, day_part, remarks, status, decided_by_user_id, decided_on,
-                      decision_comments, created_at, created_by, updated_at, updated_by, deleted_at, row_version
+                      decision_comments, counted_days, created_at, created_by, updated_at, updated_by, deleted_at,
+                      row_version
             """;
     private static final String SOFT_DELETE = """
             UPDATE hr.leave_application
@@ -141,6 +143,7 @@ public class LeaveApplicationRepository {
                    decided_by_user_id = :actor,
                    decided_on = :today,
                    decision_comments = :comments,
+                   counted_days = :countedDays,
                    updated_at = :now,
                    updated_by = :actor,
                    row_version = row_version + 1
@@ -258,8 +261,10 @@ public class LeaveApplicationRepository {
     }
 
     /** hr.ApproveLeave; 0 rows means the row changed (or vanished) since it was read. */
-    public int approveLeave(UUID id, int expected, OffsetDateTime now, UUID actor, LocalDate today, String comments) {
+    public int approveLeave(UUID id, int expected, OffsetDateTime now, UUID actor, LocalDate today, String comments,
+            BigDecimal countedDays) {
         return jdbc.sql(TRANSITION_APPROVE_LEAVE)
+                .param("countedDays", countedDays)
                 .param("id", id)
                 .param("expected", expected)
                 .param("now", now)
@@ -304,6 +309,7 @@ public class LeaveApplicationRepository {
                 .decidedByUserId(rs.getObject("decided_by_user_id", UUID.class))
                 .decidedOn(rs.getObject("decided_on", LocalDate.class))
                 .decisionComments(rs.getString("decision_comments"))
+                .countedDays(rs.getBigDecimal("counted_days"))
                 .createdAt(rs.getObject("created_at", OffsetDateTime.class))
                 .createdBy(rs.getObject("created_by", UUID.class))
                 .updatedAt(rs.getObject("updated_at", OffsetDateTime.class))

@@ -48,7 +48,9 @@
     "candidatePreferenceId": "5e91bc93-3853-5e4d-9295-d974371d3560",
     "functionAreaId": "c5bf7f6f-4782-583b-8d45-e75187ea1d13"
    },
-   "update": {},
+   "update": {
+    "functionAreaId": "c5bf7f6f-4782-583b-8d45-e75187ea1d13"
+   },
    "patch": {
     "keeps": "functionAreaId"
    },
@@ -75,7 +77,9 @@
     "candidatePreferenceId": "5e91bc93-3853-5e4d-9295-d974371d3560",
     "industryId": "28e22dc1-799a-5377-ac98-ea397725061a"
    },
-   "update": {},
+   "update": {
+    "industryId": "28e22dc1-799a-5377-ac98-ea397725061a"
+   },
    "patch": {
     "keeps": "industryId"
    },
@@ -153,7 +157,9 @@
     "jobOpeningId": "61b1aa84-f117-5f71-a4a9-6807b5299cf8",
     "resumeFileId": "aa42f44a-fdc9-5517-8900-3460201a7e4a"
    },
-   "update": {},
+   "update": {
+    "resumeFileId": "aa42f44a-fdc9-5517-8900-3460201a7e4a"
+   },
    "patch": {
     "keeps": "resumeFileId"
    },

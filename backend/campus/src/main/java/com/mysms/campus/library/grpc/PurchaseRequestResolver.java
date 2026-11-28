@@ -4,10 +4,7 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.library.api.model.PurchaseRequest;
 import com.mysms.campus.library.api.model.PurchaseRequestCourse;
-import com.mysms.campus.library.api.model.PurchaseRequestCourseUpdate;
 import com.mysms.campus.library.api.model.PurchaseRequestSubject;
-import com.mysms.campus.library.api.model.PurchaseRequestSubjectUpdate;
-import com.mysms.campus.library.api.model.PurchaseRequestUpdate;
 import com.mysms.campus.library.business.PurchaseRequestService;
 import com.mysms.library.v1.AcceptPurchaseRequestRequest;
 import com.mysms.library.v1.AcceptPurchaseRequestResponse;
@@ -35,16 +32,16 @@ import com.mysms.library.v1.ListPurchaseRequestSubjectsRequest;
 import com.mysms.library.v1.ListPurchaseRequestSubjectsResponse;
 import com.mysms.library.v1.ListPurchaseRequestsRequest;
 import com.mysms.library.v1.ListPurchaseRequestsResponse;
+import com.mysms.library.v1.PurchaseRequestCourseUpdate;
 import com.mysms.library.v1.PurchaseRequestServiceGrpc;
+import com.mysms.library.v1.PurchaseRequestSubjectUpdate;
+import com.mysms.library.v1.PurchaseRequestUpdate;
 import com.mysms.library.v1.RejectPurchaseRequestRequest;
 import com.mysms.library.v1.RejectPurchaseRequestResponse;
 import com.mysms.library.v1.SubmitPurchaseRequestRequest;
 import com.mysms.library.v1.SubmitPurchaseRequestResponse;
-import com.mysms.library.v1.UpdatePurchaseRequestCourseRequest;
 import com.mysms.library.v1.UpdatePurchaseRequestCourseResponse;
-import com.mysms.library.v1.UpdatePurchaseRequestRequest;
 import com.mysms.library.v1.UpdatePurchaseRequestResponse;
-import com.mysms.library.v1.UpdatePurchaseRequestSubjectRequest;
 import com.mysms.library.v1.UpdatePurchaseRequestSubjectResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -87,11 +84,11 @@ public class PurchaseRequestResolver extends PurchaseRequestServiceGrpc.Purchase
     }
 
     @Override
-    public void updatePurchaseRequest(UpdatePurchaseRequestRequest request, StreamObserver<UpdatePurchaseRequestResponse> out) {
+    public void updatePurchaseRequest(PurchaseRequestUpdate request, StreamObserver<UpdatePurchaseRequestResponse> out) {
         PurchaseRequest updated = service.updatePurchaseRequest(
-                bridge.id(request.getPurchaseRequest().getId(), "id"),
-                bridge.requiredIfMatch(request.getPurchaseRequest().getEtag()),
-                bridge.changes(request.getPurchaseRequest(), request.getUpdateMask(), PurchaseRequestUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PurchaseRequestProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePurchaseRequestResponse.newBuilder(), "purchase_request", updated).build());
     }
@@ -134,14 +131,13 @@ public class PurchaseRequestResolver extends PurchaseRequestServiceGrpc.Purchase
     }
 
     @Override
-    public void updatePurchaseRequestCourse(UpdatePurchaseRequestCourseRequest request,
+    public void updatePurchaseRequestCourse(PurchaseRequestCourseUpdate request,
             StreamObserver<UpdatePurchaseRequestCourseResponse> out) {
         PurchaseRequestCourse updated = service.updatePurchaseRequestCourse(
                 bridge.id(request.getPurchaseRequestId(), "purchaseRequestId"),
-                bridge.id(request.getPurchaseRequestCourse().getId(), "id"),
-                bridge.requiredIfMatch(request.getPurchaseRequestCourse().getEtag()),
-                bridge.changes(request.getPurchaseRequestCourse(), request.getUpdateMask(),
-                PurchaseRequestCourseUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PurchaseRequestCourseProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePurchaseRequestCourseResponse.newBuilder(), "purchase_request_course",
                 updated).build());
     }
@@ -186,14 +182,13 @@ public class PurchaseRequestResolver extends PurchaseRequestServiceGrpc.Purchase
     }
 
     @Override
-    public void updatePurchaseRequestSubject(UpdatePurchaseRequestSubjectRequest request,
+    public void updatePurchaseRequestSubject(PurchaseRequestSubjectUpdate request,
             StreamObserver<UpdatePurchaseRequestSubjectResponse> out) {
         PurchaseRequestSubject updated = service.updatePurchaseRequestSubject(
                 bridge.id(request.getPurchaseRequestId(), "purchaseRequestId"),
-                bridge.id(request.getPurchaseRequestSubject().getId(), "id"),
-                bridge.requiredIfMatch(request.getPurchaseRequestSubject().getEtag()),
-                bridge.changes(request.getPurchaseRequestSubject(), request.getUpdateMask(),
-                        PurchaseRequestSubjectUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PurchaseRequestSubjectProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePurchaseRequestSubjectResponse.newBuilder(), "purchase_request_subject",
                 updated).build());
     }

@@ -1,9 +1,9 @@
 package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.CommentReaction;
-import com.mysms.comms.api.model.CommentReactionUpdate;
 import com.mysms.comms.business.ReactionService;
 import com.mysms.comms.v1.CommentReactionServiceGrpc;
+import com.mysms.comms.v1.CommentReactionUpdate;
 import com.mysms.comms.v1.CreateCommentReactionRequest;
 import com.mysms.comms.v1.CreateCommentReactionResponse;
 import com.mysms.comms.v1.DeleteCommentReactionRequest;
@@ -12,7 +12,6 @@ import com.mysms.comms.v1.GetCommentReactionRequest;
 import com.mysms.comms.v1.GetCommentReactionResponse;
 import com.mysms.comms.v1.ListCommentReactionsRequest;
 import com.mysms.comms.v1.ListCommentReactionsResponse;
-import com.mysms.comms.v1.UpdateCommentReactionRequest;
 import com.mysms.comms.v1.UpdateCommentReactionResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,12 +55,12 @@ public class CommentReactionResolver extends CommentReactionServiceGrpc.CommentR
     }
 
     @Override
-    public void updateCommentReaction(UpdateCommentReactionRequest request,
+    public void updateCommentReaction(CommentReactionUpdate request,
             StreamObserver<UpdateCommentReactionResponse> out) {
         CommentReaction updated = service.updateCommentReaction(
-                bridge.id(request.getCommentReaction().getId(), "id"),
-                bridge.requiredIfMatch(request.getCommentReaction().getEtag()),
-                bridge.changes(request.getCommentReaction(), request.getUpdateMask(), CommentReactionUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CommentReactionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCommentReactionResponse.newBuilder(), "comment_reaction", updated)
                 .build());

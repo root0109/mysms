@@ -17,7 +17,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { problemText } from '../recordText';
 
-const DAYS = resourceDef('attendance.StaffAttendance');
+const DAYS = resourceDef('time_attendance.StaffAttendance');
 const STATUSES = ['present', 'absent', 'half_day', 'late', 'on_leave', 'holiday'] as const;
 
 /**
@@ -111,15 +111,15 @@ function StaffDay({
 export function StaffAttendanceScreen() {
   const { t, timeZone } = useI18n();
   const [search, setSearch] = useSearchParams();
-  const mayRead = useCan('attendance.staff_attendance.read');
+  const mayRead = useCan('time_attendance.staff_attendance.read');
   const mayStaff = useCan('hr.staff.read');
-  const mayCreate = useCan('attendance.staff_attendance.create');
-  const mayUpdate = useCan('attendance.staff_attendance.update');
+  const mayCreate = useCan('time_attendance.staff_attendance.create');
+  const mayUpdate = useCan('time_attendance.staff_attendance.update');
   const asked = search.get('day') ?? '';
   const day = isTimetableDay(asked) ? asked : localDay(new Date(), timeZone);
   const staff = useAllRecords('hr.Staff', { filter: 'status = "active"' }, mayRead && mayStaff);
   const records = useAllRecords(
-    'attendance.StaffAttendance',
+    'time_attendance.StaffAttendance',
     { filter: DAYS ? rangeFilter(DAYS, day, day) : undefined },
     mayRead,
   );

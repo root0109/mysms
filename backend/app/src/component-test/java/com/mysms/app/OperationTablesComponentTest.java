@@ -19,12 +19,12 @@ class OperationTablesComponentTest {
 
     private static final List<String> MODULES = List.of("academics", "admission", "assessment", "attendance", "careers",
             "comms", "facility", "finance", "frontoffice", "hr", "iam", "library", "lms", "master", "org", "payroll", "people",
-            "platform", "privacy", "sis", "timetable", "transport");
+            "platform", "privacy", "sis", "time_attendance", "timetable", "transport");
 
     @Test
     void everyOperationMatchesItsOwnRule() throws Exception {
         OperationTable table = OperationTable.load(MODULES);
-        assertThat(table.size()).isEqualTo(2123);
+        assertThat(table.size()).isEqualTo(2121);
         JsonMapper json = JsonMapper.builder().build();
         int checked = 0;
         for (String module : MODULES) {
@@ -40,7 +40,7 @@ class OperationTablesComponentTest {
                 }
             }
         }
-        assertThat(checked).isEqualTo(2123);
+        assertThat(checked).isEqualTo(2121);
     }
 
     /**
@@ -52,8 +52,11 @@ class OperationTablesComponentTest {
         OperationTable table = OperationTable.load(MODULES);
         int checked = 0;
         for (String module : MODULES) {
-            String outer = "com.mysms." + module + ".v1." + Character.toUpperCase(module.charAt(0)) + module.substring(1)
-                    + "Proto";
+            StringBuilder prefix = new StringBuilder();
+            for (String word : module.split("_")) {
+                prefix.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+            }
+            String outer = "com.mysms." + module + ".v1." + prefix + "Proto";
             com.google.protobuf.Descriptors.FileDescriptor file = (com.google.protobuf.Descriptors.FileDescriptor)
                     Class.forName(outer).getMethod("getDescriptor").invoke(null);
             for (com.google.protobuf.Descriptors.ServiceDescriptor service : file.getServices()) {
@@ -65,6 +68,6 @@ class OperationTablesComponentTest {
                 }
             }
         }
-        assertThat(checked).isEqualTo(2123);
+        assertThat(checked).isEqualTo(2121);
     }
 }

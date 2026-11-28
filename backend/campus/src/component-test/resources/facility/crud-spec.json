@@ -137,7 +137,9 @@
     "facilityId": "18e6dad2-54c2-5e2e-afee-41e5bc8c600d",
     "quantity": "1"
    },
-   "update": {},
+   "update": {
+    "quantity": "1.00"
+   },
    "patch": {
     "keeps": "quantity"
    },

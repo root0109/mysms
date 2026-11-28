@@ -185,6 +185,9 @@ public class PurchaseRequestService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -449,6 +452,9 @@ public class PurchaseRequestService extends AppTransactionManager {
             assertValidPurchaseRequestCourse(entity, false);
             scope.requireWritable(institutionOfPurchaseRequestCourse(entity));
             assertUniquePurchaseRequestCourse(entity);
+            if (fields.isEmpty()) {
+                return purchaseRequestCourseMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return purchaseRequestCourseMapper.toDto(entity);
@@ -604,6 +610,9 @@ public class PurchaseRequestService extends AppTransactionManager {
             assertValidPurchaseRequestSubject(entity, false);
             scope.requireWritable(institutionOfPurchaseRequestSubject(entity));
             assertUniquePurchaseRequestSubject(entity);
+            if (fields.isEmpty()) {
+                return purchaseRequestSubjectMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return purchaseRequestSubjectMapper.toDto(entity);

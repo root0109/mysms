@@ -136,7 +136,7 @@ public final class ModuleBoundaryRule implements ConformanceRule {
     private static void packages(SourceTree tree, String module, List<Violation> found) {
         List<SourceTree.Area> areas = tree.areas(module);
         Set<String> nested = new HashSet<>();
-        areas.stream().filter(a -> !a.name().equals(module)).forEach(a -> nested.add(a.name()));
+        areas.stream().filter(a -> !a.name().equals(module)).forEach(a -> nested.add(a.packageSegment()));
         String root = "/com/mysms/" + module + "/";
         for (Path file : tree.java(module, "main")) {
             String path = tree.relative(file);

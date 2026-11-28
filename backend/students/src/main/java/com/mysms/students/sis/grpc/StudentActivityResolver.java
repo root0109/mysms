@@ -3,7 +3,6 @@ package com.mysms.students.sis.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.StudentActivity;
-import com.mysms.students.sis.api.model.StudentActivityUpdate;
 import com.mysms.students.sis.business.StudentActivityService;
 import com.mysms.sis.v1.CreateStudentActivityRequest;
 import com.mysms.sis.v1.CreateStudentActivityResponse;
@@ -14,7 +13,7 @@ import com.mysms.sis.v1.GetStudentActivityResponse;
 import com.mysms.sis.v1.ListStudentActivitiesRequest;
 import com.mysms.sis.v1.ListStudentActivitiesResponse;
 import com.mysms.sis.v1.StudentActivityServiceGrpc;
-import com.mysms.sis.v1.UpdateStudentActivityRequest;
+import com.mysms.sis.v1.StudentActivityUpdate;
 import com.mysms.sis.v1.UpdateStudentActivityResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class StudentActivityResolver extends StudentActivityServiceGrpc.StudentA
     }
 
     @Override
-    public void updateStudentActivity(UpdateStudentActivityRequest request, StreamObserver<UpdateStudentActivityResponse> out) {
+    public void updateStudentActivity(StudentActivityUpdate request, StreamObserver<UpdateStudentActivityResponse> out) {
         StudentActivity updated = service.updateStudentActivity(
-                bridge.id(request.getStudentActivity().getId(), "id"),
-                bridge.requiredIfMatch(request.getStudentActivity().getEtag()),
-                bridge.changes(request.getStudentActivity(), request.getUpdateMask(), StudentActivityUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StudentActivityProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStudentActivityResponse.newBuilder(), "student_activity", updated).build());
     }

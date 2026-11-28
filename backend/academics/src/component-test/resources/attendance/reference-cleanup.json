@@ -38,20 +38,6 @@
    ],
    "other": "INSERT INTO attendance.attendance_sheet (tenant_id, register_id, attendance_date, row_version, day_part, timetable_session_id, id) VALUES (:tenant, '0cda4ffd-378f-5d35-af5b-f914c7488d4b', '2026-01-12', 1, 'afternoon', '1959cb6b-bf4a-5f04-919d-5602ffded1f0', '8f8a7d28-cc02-562d-89d1-f477c39b7fd8')",
    "softDeletable": true
-  },
-  {
-   "event": "hr.leave_application.deleted",
-   "table": "attendance.staff_attendance",
-   "column": "leave_application_id",
-   "action": "null the column",
-   "ownerId": "c373ebec-a311-5b7c-940e-be7571f5dd7d",
-   "rowId": "a4eaad67-fb2b-5390-81bd-d3cd5f07e66b",
-   "otherRowId": "2bf8ece4-42ed-57f5-94a2-776556f29bd0",
-   "fixtures": [],
-   "row": "INSERT INTO attendance.staff_attendance (tenant_id, staff_id, attendance_date, status, row_version, leave_application_id, id) VALUES (:tenant, '0f006513-4cd0-5ff5-9c6a-b3bf60779a5b', '2026-01-10', 'present', 1, 'c373ebec-a311-5b7c-940e-be7571f5dd7d', 'a4eaad67-fb2b-5390-81bd-d3cd5f07e66b')",
-   "otherFixtures": [],
-   "other": "INSERT INTO attendance.staff_attendance (tenant_id, staff_id, attendance_date, status, row_version, leave_application_id, id) VALUES (:tenant, '4c138994-0650-5899-a443-5633bbe99a14', '2026-01-10', 'present', 1, 'c373ebec-a311-5b7c-940e-be7571f5dd7d', '2bf8ece4-42ed-57f5-94a2-776556f29bd0')",
-   "softDeletable": true
   }
  ]
 }

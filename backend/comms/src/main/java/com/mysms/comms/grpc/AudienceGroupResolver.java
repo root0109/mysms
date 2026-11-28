@@ -3,12 +3,12 @@ package com.mysms.comms.grpc;
 import com.mysms.comms.api.model.AudienceGroup;
 import com.mysms.comms.api.model.AudienceGroupMember;
 import com.mysms.comms.api.model.AudienceGroupMemberList;
-import com.mysms.comms.api.model.AudienceGroupMemberUpdate;
-import com.mysms.comms.api.model.AudienceGroupUpdate;
 import com.mysms.comms.business.AudienceGroupService;
 import com.mysms.comms.v1.AddGroupMembersRequest;
 import com.mysms.comms.v1.AddGroupMembersResponse;
+import com.mysms.comms.v1.AudienceGroupMemberUpdate;
 import com.mysms.comms.v1.AudienceGroupServiceGrpc;
+import com.mysms.comms.v1.AudienceGroupUpdate;
 import com.mysms.comms.v1.CreateAudienceGroupMemberRequest;
 import com.mysms.comms.v1.CreateAudienceGroupMemberResponse;
 import com.mysms.comms.v1.CreateAudienceGroupRequest;
@@ -25,9 +25,7 @@ import com.mysms.comms.v1.ListAudienceGroupMembersRequest;
 import com.mysms.comms.v1.ListAudienceGroupMembersResponse;
 import com.mysms.comms.v1.ListAudienceGroupsRequest;
 import com.mysms.comms.v1.ListAudienceGroupsResponse;
-import com.mysms.comms.v1.UpdateAudienceGroupMemberRequest;
 import com.mysms.comms.v1.UpdateAudienceGroupMemberResponse;
-import com.mysms.comms.v1.UpdateAudienceGroupRequest;
 import com.mysms.comms.v1.UpdateAudienceGroupResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -71,10 +69,10 @@ public class AudienceGroupResolver extends AudienceGroupServiceGrpc.AudienceGrou
     }
 
     @Override
-    public void updateAudienceGroup(UpdateAudienceGroupRequest request, StreamObserver<UpdateAudienceGroupResponse> out) {
+    public void updateAudienceGroup(AudienceGroupUpdate request, StreamObserver<UpdateAudienceGroupResponse> out) {
         AudienceGroup updated = service.updateAudienceGroup(
-                bridge.id(request.getAudienceGroup().getId(), "id"), bridge.requiredIfMatch(request.getAudienceGroup().getEtag()),
-                bridge.changes(request.getAudienceGroup(), request.getUpdateMask(), AudienceGroupUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                AudienceGroupProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAudienceGroupResponse.newBuilder(), "audience_group", updated).build());
     }
@@ -114,13 +112,13 @@ public class AudienceGroupResolver extends AudienceGroupServiceGrpc.AudienceGrou
     }
 
     @Override
-    public void updateAudienceGroupMember(UpdateAudienceGroupMemberRequest request,
+    public void updateAudienceGroupMember(AudienceGroupMemberUpdate request,
             StreamObserver<UpdateAudienceGroupMemberResponse> out) {
         AudienceGroupMember updated = service.updateAudienceGroupMember(
                 bridge.id(request.getAudienceGroupId(), "audienceGroupId"),
-                bridge.id(request.getAudienceGroupMember().getId(), "id"),
-                bridge.requiredIfMatch(request.getAudienceGroupMember().getEtag()),
-                bridge.changes(request.getAudienceGroupMember(), request.getUpdateMask(), AudienceGroupMemberUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AudienceGroupMemberProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateAudienceGroupMemberResponse.newBuilder(), "audience_group_member", updated).build());

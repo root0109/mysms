@@ -3,7 +3,6 @@ package com.mysms.campus.library.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.library.api.model.LibraryCard;
-import com.mysms.campus.library.api.model.LibraryCardUpdate;
 import com.mysms.campus.library.business.LibraryCardService;
 import com.mysms.library.v1.CreateLibraryCardRequest;
 import com.mysms.library.v1.CreateLibraryCardResponse;
@@ -12,9 +11,9 @@ import com.mysms.library.v1.DeleteLibraryCardResponse;
 import com.mysms.library.v1.GetLibraryCardRequest;
 import com.mysms.library.v1.GetLibraryCardResponse;
 import com.mysms.library.v1.LibraryCardServiceGrpc;
+import com.mysms.library.v1.LibraryCardUpdate;
 import com.mysms.library.v1.ListLibraryCardsRequest;
 import com.mysms.library.v1.ListLibraryCardsResponse;
-import com.mysms.library.v1.UpdateLibraryCardRequest;
 import com.mysms.library.v1.UpdateLibraryCardResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,11 +56,11 @@ public class LibraryCardResolver extends LibraryCardServiceGrpc.LibraryCardServi
     }
 
     @Override
-    public void updateLibraryCard(UpdateLibraryCardRequest request, StreamObserver<UpdateLibraryCardResponse> out) {
+    public void updateLibraryCard(LibraryCardUpdate request, StreamObserver<UpdateLibraryCardResponse> out) {
         LibraryCard updated = service.updateLibraryCard(
-                bridge.id(request.getLibraryCard().getId(), "id"),
-                bridge.requiredIfMatch(request.getLibraryCard().getEtag()),
-                bridge.changes(request.getLibraryCard(), request.getUpdateMask(), LibraryCardUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LibraryCardProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLibraryCardResponse.newBuilder(), "library_card", updated).build());
     }

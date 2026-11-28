@@ -3,18 +3,17 @@ package com.mysms.finance.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.finance.api.model.FeeHead;
-import com.mysms.finance.api.model.FeeHeadUpdate;
 import com.mysms.finance.business.FeeHeadService;
 import com.mysms.finance.v1.CreateFeeHeadRequest;
 import com.mysms.finance.v1.CreateFeeHeadResponse;
 import com.mysms.finance.v1.DeleteFeeHeadRequest;
 import com.mysms.finance.v1.DeleteFeeHeadResponse;
 import com.mysms.finance.v1.FeeHeadServiceGrpc;
+import com.mysms.finance.v1.FeeHeadUpdate;
 import com.mysms.finance.v1.GetFeeHeadRequest;
 import com.mysms.finance.v1.GetFeeHeadResponse;
 import com.mysms.finance.v1.ListFeeHeadsRequest;
 import com.mysms.finance.v1.ListFeeHeadsResponse;
-import com.mysms.finance.v1.UpdateFeeHeadRequest;
 import com.mysms.finance.v1.UpdateFeeHeadResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class FeeHeadResolver extends FeeHeadServiceGrpc.FeeHeadServiceImplBase {
     }
 
     @Override
-    public void updateFeeHead(UpdateFeeHeadRequest request, StreamObserver<UpdateFeeHeadResponse> out) {
+    public void updateFeeHead(FeeHeadUpdate request, StreamObserver<UpdateFeeHeadResponse> out) {
         FeeHead updated = service.updateFeeHead(
-                bridge.id(request.getFeeHead().getId(), "id"),
-                bridge.requiredIfMatch(request.getFeeHead().getEtag()),
-                bridge.changes(request.getFeeHead(), request.getUpdateMask(), FeeHeadUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                FeeHeadProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeeHeadResponse.newBuilder(), "fee_head", updated).build());
     }
 

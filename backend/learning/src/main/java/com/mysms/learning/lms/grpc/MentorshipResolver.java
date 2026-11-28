@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Mentorship;
-import com.mysms.learning.lms.api.model.MentorshipUpdate;
 import com.mysms.learning.lms.business.MentorshipService;
 import com.mysms.lms.v1.CreateMentorshipRequest;
 import com.mysms.lms.v1.CreateMentorshipResponse;
@@ -14,7 +13,7 @@ import com.mysms.lms.v1.GetMentorshipResponse;
 import com.mysms.lms.v1.ListMentorshipsRequest;
 import com.mysms.lms.v1.ListMentorshipsResponse;
 import com.mysms.lms.v1.MentorshipServiceGrpc;
-import com.mysms.lms.v1.UpdateMentorshipRequest;
+import com.mysms.lms.v1.MentorshipUpdate;
 import com.mysms.lms.v1.UpdateMentorshipResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class MentorshipResolver extends MentorshipServiceGrpc.MentorshipServiceI
     }
 
     @Override
-    public void updateMentorship(UpdateMentorshipRequest request, StreamObserver<UpdateMentorshipResponse> out) {
+    public void updateMentorship(MentorshipUpdate request, StreamObserver<UpdateMentorshipResponse> out) {
         Mentorship updated = service.updateMentorship(
-                bridge.id(request.getMentorship().getId(), "id"),
-                bridge.requiredIfMatch(request.getMentorship().getEtag()),
-                bridge.changes(request.getMentorship(), request.getUpdateMask(), MentorshipUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MentorshipProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMentorshipResponse.newBuilder(), "mentorship", updated).build());
     }

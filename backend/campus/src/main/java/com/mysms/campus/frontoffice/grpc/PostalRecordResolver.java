@@ -3,7 +3,6 @@ package com.mysms.campus.frontoffice.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.frontoffice.api.model.PostalRecord;
-import com.mysms.campus.frontoffice.api.model.PostalRecordUpdate;
 import com.mysms.campus.frontoffice.business.PostalRecordService;
 import com.mysms.frontoffice.v1.CreatePostalRecordRequest;
 import com.mysms.frontoffice.v1.CreatePostalRecordResponse;
@@ -14,7 +13,7 @@ import com.mysms.frontoffice.v1.GetPostalRecordResponse;
 import com.mysms.frontoffice.v1.ListPostalRecordsRequest;
 import com.mysms.frontoffice.v1.ListPostalRecordsResponse;
 import com.mysms.frontoffice.v1.PostalRecordServiceGrpc;
-import com.mysms.frontoffice.v1.UpdatePostalRecordRequest;
+import com.mysms.frontoffice.v1.PostalRecordUpdate;
 import com.mysms.frontoffice.v1.UpdatePostalRecordResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -58,12 +57,12 @@ public class PostalRecordResolver extends PostalRecordServiceGrpc.PostalRecordSe
     }
 
     @Override
-    public void updatePostalRecord(UpdatePostalRecordRequest request,
+    public void updatePostalRecord(PostalRecordUpdate request,
             StreamObserver<UpdatePostalRecordResponse> out) {
         PostalRecord updated = postalRecordService.updatePostalRecord(
-                bridge.id(request.getPostalRecord().getId(), "id"),
-                bridge.requiredIfMatch(request.getPostalRecord().getEtag()),
-                bridge.changes(request.getPostalRecord(), request.getUpdateMask(), PostalRecordUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PostalRecordProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(
                 out, bridge.reply(UpdatePostalRecordResponse.newBuilder(), "postal_record", updated).build());

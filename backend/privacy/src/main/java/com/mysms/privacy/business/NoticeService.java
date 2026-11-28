@@ -166,6 +166,9 @@ public class NoticeService extends AppTransactionManager {
             requireCurrent(entity.getRowVersion(), expected);
             List<String> fields = apply(entity, changes);
             validator.validate(mapper.toDto(entity));
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -312,6 +315,9 @@ public class NoticeService extends AppTransactionManager {
             List<String> fields = applyNoticeVersion(entity, changes);
             validator.validate(noticeVersionMapper.toDto(entity));
             assertValidNoticeVersion(entity);
+            if (fields.isEmpty()) {
+                return noticeVersionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return noticeVersionMapper.toDto(entity);
@@ -487,6 +493,9 @@ public class NoticeService extends AppTransactionManager {
             validator.validate(noticeTranslationMapper.toDto(entity));
             entity.setContentSha256(hashNoticeTranslation(entity));
             assertUniqueNoticeTranslation(entity);
+            if (fields.isEmpty()) {
+                return noticeTranslationMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return noticeTranslationMapper.toDto(entity);

@@ -3,18 +3,17 @@ package com.mysms.campus.frontoffice.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.frontoffice.api.model.DirectoryContact;
-import com.mysms.campus.frontoffice.api.model.DirectoryContactUpdate;
 import com.mysms.campus.frontoffice.business.DirectoryContactService;
 import com.mysms.frontoffice.v1.CreateDirectoryContactRequest;
 import com.mysms.frontoffice.v1.CreateDirectoryContactResponse;
 import com.mysms.frontoffice.v1.DeleteDirectoryContactRequest;
 import com.mysms.frontoffice.v1.DeleteDirectoryContactResponse;
 import com.mysms.frontoffice.v1.DirectoryContactServiceGrpc;
+import com.mysms.frontoffice.v1.DirectoryContactUpdate;
 import com.mysms.frontoffice.v1.GetDirectoryContactRequest;
 import com.mysms.frontoffice.v1.GetDirectoryContactResponse;
 import com.mysms.frontoffice.v1.ListDirectoryContactsRequest;
 import com.mysms.frontoffice.v1.ListDirectoryContactsResponse;
-import com.mysms.frontoffice.v1.UpdateDirectoryContactRequest;
 import com.mysms.frontoffice.v1.UpdateDirectoryContactResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -61,12 +60,12 @@ public class DirectoryContactResolver extends DirectoryContactServiceGrpc.Direct
     }
 
     @Override
-    public void updateDirectoryContact(UpdateDirectoryContactRequest request,
+    public void updateDirectoryContact(DirectoryContactUpdate request,
             StreamObserver<UpdateDirectoryContactResponse> out) {
         DirectoryContact updated = directoryContactService.updateDirectoryContact(
-                bridge.id(request.getDirectoryContact().getId(), "id"),
-                bridge.requiredIfMatch(request.getDirectoryContact().getEtag()),
-                bridge.changes(request.getDirectoryContact(), request.getUpdateMask(), DirectoryContactUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                DirectoryContactProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(
                 out, bridge.reply(UpdateDirectoryContactResponse.newBuilder(), "directory_contact", updated).build());

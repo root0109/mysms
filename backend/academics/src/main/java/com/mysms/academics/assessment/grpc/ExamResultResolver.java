@@ -1,14 +1,13 @@
 package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.ExamResult;
-import com.mysms.academics.assessment.api.model.ExamResultUpdate;
 import com.mysms.academics.assessment.business.ExamResultService;
 import com.mysms.assessment.v1.ExamResultServiceGrpc;
+import com.mysms.assessment.v1.ExamResultUpdate;
 import com.mysms.assessment.v1.GetExamResultRequest;
 import com.mysms.assessment.v1.GetExamResultResponse;
 import com.mysms.assessment.v1.ListExamResultsRequest;
 import com.mysms.assessment.v1.ListExamResultsResponse;
-import com.mysms.assessment.v1.UpdateExamResultRequest;
 import com.mysms.assessment.v1.UpdateExamResultResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -46,11 +45,11 @@ public class ExamResultResolver extends ExamResultServiceGrpc.ExamResultServiceI
     }
 
     @Override
-    public void updateExamResult(UpdateExamResultRequest request, StreamObserver<UpdateExamResultResponse> out) {
+    public void updateExamResult(ExamResultUpdate request, StreamObserver<UpdateExamResultResponse> out) {
         ExamResult updated = examResultService.updateExamResult(
-                bridge.id(request.getExamResult().getId(), "id"),
-                bridge.requiredIfMatch(request.getExamResult().getEtag()),
-                bridge.changes(request.getExamResult(), request.getUpdateMask(), ExamResultUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExamResultProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateExamResultResponse.newBuilder(), "exam_result",
                 updated).build());

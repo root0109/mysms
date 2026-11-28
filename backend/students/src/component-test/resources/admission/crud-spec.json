@@ -176,7 +176,9 @@
     "admissionCycleId": "d16ce6e5-13fd-5513-b48a-f2b05c35208f",
     "courseId": "b1048065-6944-5ea8-bd29-b8709210e154"
    },
-   "update": {},
+   "update": {
+    "courseId": "b1048065-6944-5ea8-bd29-b8709210e154"
+   },
    "patch": {
     "keeps": "courseId",
     "clears": "feeHeadId"

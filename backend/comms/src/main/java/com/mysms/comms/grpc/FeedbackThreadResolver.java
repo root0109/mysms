@@ -1,9 +1,7 @@
 package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.FeedbackMessage;
-import com.mysms.comms.api.model.FeedbackMessageUpdate;
 import com.mysms.comms.api.model.FeedbackThread;
-import com.mysms.comms.api.model.FeedbackThreadUpdate;
 import com.mysms.comms.business.FeedbackThreadService;
 import com.mysms.comms.v1.CloseFeedbackThreadRequest;
 import com.mysms.comms.v1.CloseFeedbackThreadResponse;
@@ -15,7 +13,9 @@ import com.mysms.comms.v1.DeleteFeedbackMessageRequest;
 import com.mysms.comms.v1.DeleteFeedbackMessageResponse;
 import com.mysms.comms.v1.DeleteFeedbackThreadRequest;
 import com.mysms.comms.v1.DeleteFeedbackThreadResponse;
+import com.mysms.comms.v1.FeedbackMessageUpdate;
 import com.mysms.comms.v1.FeedbackThreadServiceGrpc;
+import com.mysms.comms.v1.FeedbackThreadUpdate;
 import com.mysms.comms.v1.GetFeedbackMessageRequest;
 import com.mysms.comms.v1.GetFeedbackMessageResponse;
 import com.mysms.comms.v1.GetFeedbackThreadRequest;
@@ -28,9 +28,7 @@ import com.mysms.comms.v1.MarkFeedbackMessageRequest;
 import com.mysms.comms.v1.MarkFeedbackMessageResponse;
 import com.mysms.comms.v1.ReopenFeedbackThreadRequest;
 import com.mysms.comms.v1.ReopenFeedbackThreadResponse;
-import com.mysms.comms.v1.UpdateFeedbackMessageRequest;
 import com.mysms.comms.v1.UpdateFeedbackMessageResponse;
-import com.mysms.comms.v1.UpdateFeedbackThreadRequest;
 import com.mysms.comms.v1.UpdateFeedbackThreadResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -74,11 +72,11 @@ public class FeedbackThreadResolver extends FeedbackThreadServiceGrpc.FeedbackTh
     }
 
     @Override
-    public void updateFeedbackThread(UpdateFeedbackThreadRequest request, StreamObserver<UpdateFeedbackThreadResponse> out) {
+    public void updateFeedbackThread(FeedbackThreadUpdate request, StreamObserver<UpdateFeedbackThreadResponse> out) {
         FeedbackThread updated = service.updateFeedbackThread(
-                bridge.id(request.getFeedbackThread().getId(), "id"),
-                bridge.requiredIfMatch(request.getFeedbackThread().getEtag()),
-                bridge.changes(request.getFeedbackThread(), request.getUpdateMask(), FeedbackThreadUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                FeedbackThreadProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeedbackThreadResponse.newBuilder(), "feedback_thread", updated).build());
     }
@@ -114,12 +112,12 @@ public class FeedbackThreadResolver extends FeedbackThreadServiceGrpc.FeedbackTh
     }
 
     @Override
-    public void updateFeedbackMessage(UpdateFeedbackMessageRequest request, StreamObserver<UpdateFeedbackMessageResponse> out) {
+    public void updateFeedbackMessage(FeedbackMessageUpdate request, StreamObserver<UpdateFeedbackMessageResponse> out) {
         FeedbackMessage updated = service.updateFeedbackMessage(
                 bridge.id(request.getFeedbackThreadId(), "feedbackThreadId"),
-                bridge.id(request.getFeedbackMessage().getId(), "id"),
-                bridge.requiredIfMatch(request.getFeedbackMessage().getEtag()),
-                bridge.changes(request.getFeedbackMessage(), request.getUpdateMask(), FeedbackMessageUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                FeedbackMessageProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeedbackMessageResponse.newBuilder(), "feedback_message", updated).build());
     }

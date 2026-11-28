@@ -42,7 +42,7 @@ import org.springframework.web.client.RestTemplate;
 public final class JwtTokenVerifier implements TokenVerifier {
 
     private static final String MFA = "mfa";
-    private static final java.util.regex.Pattern MODULE = java.util.regex.Pattern.compile("[a-z]+");
+    private static final java.util.regex.Pattern MODULE = java.util.regex.Pattern.compile("[a-z][a-z_]*");
     private static final Duration CLOCK_SKEW = Duration.ofSeconds(60);
     private static final Duration JWKS_TIMEOUT = Duration.ofSeconds(5);
 

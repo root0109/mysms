@@ -10,7 +10,8 @@ import org.springframework.core.env.MapPropertySource;
 
 /**
  * One springdoc group per area the process serves ({@code mysms.auth.modules}): {@code /v3/api-docs/<area>} documents
- * the area's {@code /v1/<area>/**} paths, the source of the clients' SDK namespace of that area. Declared through
+ * the area's {@code /v1/<area>/**} paths (an underscore in the area name is a hyphen in the URL: time_attendance
+ * serves {@code /v1/time-attendance/**}), the source of the clients' SDK namespace of that area. Declared through
  * springdoc's {@code springdoc.group-configs} so its auto-configuration sees the groups when it decides to serve them;
  * added last, so an operator's own group configuration wins.
  */
@@ -24,8 +25,11 @@ public final class OpenApiGroupsEnvironmentPostProcessor implements EnvironmentP
         Map<String, Object> groups = new HashMap<>();
         for (int i = 0; environment.containsProperty("mysms.auth.modules[" + i + "]"); i++) {
             String area = environment.getProperty("mysms.auth.modules[" + i + "]");
+            if (area == null) {
+                continue;
+            }
             groups.put("springdoc.group-configs[" + i + "].group", area);
-            groups.put("springdoc.group-configs[" + i + "].paths-to-match", "/v1/" + area + "/**");
+            groups.put("springdoc.group-configs[" + i + "].paths-to-match", "/v1/" + area.replace('_', '-') + "/**");
         }
         if (!groups.isEmpty()) {
             environment.getPropertySources().addLast(new MapPropertySource(PROPERTY_SOURCE, groups));

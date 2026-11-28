@@ -1,7 +1,6 @@
 package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.Program;
-import com.mysms.academics.api.model.ProgramUpdate;
 import com.mysms.academics.business.ProgramService;
 import com.mysms.academics.v1.CreateProgramRequest;
 import com.mysms.academics.v1.CreateProgramResponse;
@@ -12,7 +11,7 @@ import com.mysms.academics.v1.GetProgramResponse;
 import com.mysms.academics.v1.ListProgramsRequest;
 import com.mysms.academics.v1.ListProgramsResponse;
 import com.mysms.academics.v1.ProgramServiceGrpc;
-import com.mysms.academics.v1.UpdateProgramRequest;
+import com.mysms.academics.v1.ProgramUpdate;
 import com.mysms.academics.v1.UpdateProgramResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -55,10 +54,10 @@ public class ProgramResolver extends ProgramServiceGrpc.ProgramServiceImplBase {
     }
 
     @Override
-    public void updateProgram(UpdateProgramRequest request, StreamObserver<UpdateProgramResponse> out) {
-        Program updated = service.updateProgram(bridge.id(request.getProgram().getId(), "id"),
-                bridge.requiredIfMatch(request.getProgram().getEtag()),
-                bridge.changes(request.getProgram(), request.getUpdateMask(), ProgramUpdate.class), request.getValidateOnly());
+    public void updateProgram(ProgramUpdate request, StreamObserver<UpdateProgramResponse> out) {
+        Program updated = service.updateProgram(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ProgramProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateProgramResponse.newBuilder(), "program", updated).build());
     }
 

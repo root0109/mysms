@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.FieldMask;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
@@ -215,14 +214,11 @@ class AcademicsGrpcParityComponentTest {
     }
 
 
-    /** An update request: the row's id and etag in the resource with the changes, and a mask naming them. */
-    private DynamicMessage updateRequest(MethodDescriptor update, String field, String id, String etag,
-            Map<String, Object> changes, String... masked) {
-        Map<String, Object> resource = new HashMap<>(changes);
-        resource.put("id", id);
-        resource.put("etag", etag);
-        return set(bridge.reply(request(update), field, resource), "update_mask",
-                FieldMask.newBuilder().addAllPaths(List.of(masked)).build()).build();
+    /** An update request: the {@code <Resource>Update} message of a REST PATCH body, with the row's id and etag. */
+    private DynamicMessage updateRequest(MethodDescriptor update, String id, String etag, Map<String, Object> changes) {
+        DynamicMessage.Builder request = contract().changes(update, JSON.valueToTree(changes));
+        set(request, "id", id);
+        return set(request, "etag", etag).build();
     }
 
     // ------------------------------------------------------------------ the state transitions of crud-spec.json
@@ -387,11 +383,11 @@ class AcademicsGrpcParityComponentTest {
         String etag = read.body().path("etag").asString();
         Answer updated = rest("PATCH", collection + "/" + id, ADMIN, "{\"comments\":\"Changed\"}", "If-Match", etag);
         assertThat(updated.status()).as(updated.body().toString()).isEqualTo(409);
-        GrpcParityContract.assertSameAnswer(updated, grpc(update, set(updateRequest(update, "lesson_plan_approval", id,
-                etag, Map.of("comments", "Changed"), "comments").toBuilder(), "lesson_plan_id", plan).build(), ADMIN));
+        GrpcParityContract.assertSameAnswer(updated, grpc(update, set(updateRequest(update, id, etag,
+                Map.of("comments", "Changed")).toBuilder(), "lesson_plan_id", plan).build(), ADMIN));
         GrpcParityContract.assertSameAnswer(rest("PATCH", collection + "/" + id, ADMIN, "{\"comments\":\"Changed\"}"),
-                grpc(update, set(updateRequest(update, "lesson_plan_approval", id, "", Map.of("comments", "Changed"),
-                        "comments").toBuilder(), "lesson_plan_id", plan).build(), ADMIN));
+                grpc(update, set(updateRequest(update, id, "", Map.of("comments", "Changed")).toBuilder(),
+                        "lesson_plan_id", plan).build(), ADMIN));
         MethodDescriptor delete = rpc("DeleteLessonPlanApproval");
         Answer deleted = rest("DELETE", collection + "/" + id, ADMIN, null, "If-Match", etag);
         assertThat(deleted.status()).as(deleted.body().toString()).isEqualTo(409);

@@ -3,18 +3,17 @@ package com.mysms.hrms.hr.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.hr.api.model.Designation;
-import com.mysms.hrms.hr.api.model.DesignationUpdate;
 import com.mysms.hrms.hr.business.DesignationService;
 import com.mysms.hr.v1.CreateDesignationRequest;
 import com.mysms.hr.v1.CreateDesignationResponse;
 import com.mysms.hr.v1.DeleteDesignationRequest;
 import com.mysms.hr.v1.DeleteDesignationResponse;
 import com.mysms.hr.v1.DesignationServiceGrpc;
+import com.mysms.hr.v1.DesignationUpdate;
 import com.mysms.hr.v1.GetDesignationRequest;
 import com.mysms.hr.v1.GetDesignationResponse;
 import com.mysms.hr.v1.ListDesignationsRequest;
 import com.mysms.hr.v1.ListDesignationsResponse;
-import com.mysms.hr.v1.UpdateDesignationRequest;
 import com.mysms.hr.v1.UpdateDesignationResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class DesignationResolver extends DesignationServiceGrpc.DesignationServi
     }
 
     @Override
-    public void updateDesignation(UpdateDesignationRequest request, StreamObserver<UpdateDesignationResponse> out) {
+    public void updateDesignation(DesignationUpdate request, StreamObserver<UpdateDesignationResponse> out) {
         Designation updated = designationService.updateDesignation(
-                bridge.id(request.getDesignation().getId(), "id"),
-                bridge.requiredIfMatch(request.getDesignation().getEtag()),
-                bridge.changes(request.getDesignation(), request.getUpdateMask(), DesignationUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                DesignationProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateDesignationResponse.newBuilder(), "designation", updated).build());
     }

@@ -278,7 +278,9 @@
     "payComponentId": "67b9df8f-4979-5e41-bbe2-f3385c7b8fb2",
     "payCategoryId": "49d38ade-c1e6-505a-8cdd-a68f7ce7bedd"
    },
-   "update": {},
+   "update": {
+    "payComponentId": "67b9df8f-4979-5e41-bbe2-f3385c7b8fb2"
+   },
    "patch": {
     "clears": "value",
     "keeps": "payComponentId"
@@ -379,7 +381,9 @@
     "salaryTemplateComponentId": "2dce024b-11a2-5766-af97-81a210b1b7fc",
     "amount": "1"
    },
-   "update": {},
+   "update": {
+    "amount": "1.00"
+   },
    "patch": {
     "keeps": "amount"
    },

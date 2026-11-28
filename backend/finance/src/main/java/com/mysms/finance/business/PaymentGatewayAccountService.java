@@ -155,6 +155,9 @@ public class PaymentGatewayAccountService extends AppTransactionManager implemen
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return dto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return dto(entity);

@@ -275,6 +275,9 @@ public class QuestionService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -508,6 +511,9 @@ public class QuestionService extends AppTransactionManager {
             assertValidQuestionAcceptedAnswer(entity, false);
             scope.requireWritable(institutionOfQuestionAcceptedAnswer(entity));
             assertUniqueQuestionAcceptedAnswer(entity);
+            if (fields.isEmpty()) {
+                return questionAcceptedAnswerMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return questionAcceptedAnswerMapper.toDto(entity);
@@ -662,6 +668,9 @@ public class QuestionService extends AppTransactionManager {
             assertValidQuestionBlank(entity, false);
             scope.requireWritable(institutionOfQuestionBlank(entity));
             assertUniqueQuestionBlank(entity);
+            if (fields.isEmpty()) {
+                return questionBlankMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return questionBlankMapper.toDto(entity);
@@ -815,6 +824,9 @@ public class QuestionService extends AppTransactionManager {
             assertValidQuestionHotspot(entity, false);
             scope.requireWritable(institutionOfQuestionHotspot(entity));
             assertUniqueQuestionHotspot(entity);
+            if (fields.isEmpty()) {
+                return questionHotspotMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return questionHotspotMapper.toDto(entity);
@@ -966,6 +978,9 @@ public class QuestionService extends AppTransactionManager {
             assertValidQuestionMatchPair(entity, false);
             scope.requireWritable(institutionOfQuestionMatchPair(entity));
             assertUniqueQuestionMatchPair(entity);
+            if (fields.isEmpty()) {
+                return questionMatchPairMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return questionMatchPairMapper.toDto(entity);
@@ -1120,6 +1135,9 @@ public class QuestionService extends AppTransactionManager {
             assertValidQuestionOption(entity, false);
             scope.requireWritable(institutionOfQuestionOption(entity));
             assertUniqueQuestionOption(entity);
+            if (fields.isEmpty()) {
+                return questionOptionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return questionOptionMapper.toDto(entity);
@@ -1277,6 +1295,9 @@ public class QuestionService extends AppTransactionManager {
             assertValidQuestionPattern(entity, false);
             scope.requireWritable(institutionOfQuestionPattern(entity));
             assertUniqueQuestionPattern(entity);
+            if (fields.isEmpty()) {
+                return questionPatternMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return questionPatternMapper.toDto(entity);

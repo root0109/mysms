@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.sis.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 import "mysms/people/v1/people.proto";
 
 option java_multiple_files = true;
@@ -21,7 +21,7 @@ service StudentCategoryService {
   // Create StudentCategory.
   rpc CreateStudentCategory(CreateStudentCategoryRequest) returns (CreateStudentCategoryResponse);
   // Update StudentCategory.
-  rpc UpdateStudentCategory(UpdateStudentCategoryRequest) returns (UpdateStudentCategoryResponse);
+  rpc UpdateStudentCategory(StudentCategoryUpdate) returns (UpdateStudentCategoryResponse);
   // Soft-delete StudentCategory.
   rpc DeleteStudentCategory(DeleteStudentCategoryRequest) returns (DeleteStudentCategoryResponse);
 }
@@ -35,7 +35,7 @@ service StudentService {
   // Create Student.
   rpc CreateStudent(CreateStudentRequest) returns (CreateStudentResponse);
   // Update Student.
-  rpc UpdateStudent(UpdateStudentRequest) returns (UpdateStudentResponse);
+  rpc UpdateStudent(StudentUpdate) returns (UpdateStudentResponse);
   // Soft-delete Student.
   rpc DeleteStudent(DeleteStudentRequest) returns (DeleteStudentResponse);
   // List StudentGuardians.
@@ -45,7 +45,7 @@ service StudentService {
   // Create StudentGuardian.
   rpc CreateStudentGuardian(CreateStudentGuardianRequest) returns (CreateStudentGuardianResponse);
   // Update StudentGuardian.
-  rpc UpdateStudentGuardian(UpdateStudentGuardianRequest) returns (UpdateStudentGuardianResponse);
+  rpc UpdateStudentGuardian(StudentGuardianUpdate) returns (UpdateStudentGuardianResponse);
   // Soft-delete StudentGuardian.
   rpc DeleteStudentGuardian(DeleteStudentGuardianRequest) returns (DeleteStudentGuardianResponse);
   // List StudentSiblings.
@@ -55,7 +55,7 @@ service StudentService {
   // Create StudentSibling.
   rpc CreateStudentSibling(CreateStudentSiblingRequest) returns (CreateStudentSiblingResponse);
   // Update StudentSibling.
-  rpc UpdateStudentSibling(UpdateStudentSiblingRequest) returns (UpdateStudentSiblingResponse);
+  rpc UpdateStudentSibling(StudentSiblingUpdate) returns (UpdateStudentSiblingResponse);
   // Soft-delete StudentSibling.
   rpc DeleteStudentSibling(DeleteStudentSiblingRequest) returns (DeleteStudentSiblingResponse);
   // Change status (active, inactive, withdrawn, transferred, alumni, graduated) with exit details.
@@ -77,7 +77,7 @@ service GuardianService {
   // Create Guardian.
   rpc CreateGuardian(CreateGuardianRequest) returns (CreateGuardianResponse);
   // Update Guardian.
-  rpc UpdateGuardian(UpdateGuardianRequest) returns (UpdateGuardianResponse);
+  rpc UpdateGuardian(GuardianUpdate) returns (UpdateGuardianResponse);
   // Soft-delete Guardian.
   rpc DeleteGuardian(DeleteGuardianRequest) returns (DeleteGuardianResponse);
   // Create the guardian's login account and grant the guardian role scoped to their children.
@@ -95,7 +95,7 @@ service RelationshipTypeService {
   // Create RelationshipType.
   rpc CreateRelationshipType(CreateRelationshipTypeRequest) returns (CreateRelationshipTypeResponse);
   // Update RelationshipType.
-  rpc UpdateRelationshipType(UpdateRelationshipTypeRequest) returns (UpdateRelationshipTypeResponse);
+  rpc UpdateRelationshipType(RelationshipTypeUpdate) returns (UpdateRelationshipTypeResponse);
   // Soft-delete RelationshipType.
   rpc DeleteRelationshipType(DeleteRelationshipTypeRequest) returns (DeleteRelationshipTypeResponse);
 }
@@ -111,7 +111,7 @@ service StudentEnrollmentService {
   // Create StudentEnrollment.
   rpc CreateStudentEnrollment(CreateStudentEnrollmentRequest) returns (CreateStudentEnrollmentResponse);
   // Update StudentEnrollment.
-  rpc UpdateStudentEnrollment(UpdateStudentEnrollmentRequest) returns (UpdateStudentEnrollmentResponse);
+  rpc UpdateStudentEnrollment(StudentEnrollmentUpdate) returns (UpdateStudentEnrollmentResponse);
   // Soft-delete StudentEnrollment.
   rpc DeleteStudentEnrollment(DeleteStudentEnrollmentRequest) returns (DeleteStudentEnrollmentResponse);
 }
@@ -125,7 +125,7 @@ service ProgramEnrollmentService {
   // Create ProgramEnrollment.
   rpc CreateProgramEnrollment(CreateProgramEnrollmentRequest) returns (CreateProgramEnrollmentResponse);
   // Update ProgramEnrollment.
-  rpc UpdateProgramEnrollment(UpdateProgramEnrollmentRequest) returns (UpdateProgramEnrollmentResponse);
+  rpc UpdateProgramEnrollment(ProgramEnrollmentUpdate) returns (UpdateProgramEnrollmentResponse);
   // Soft-delete ProgramEnrollment.
   rpc DeleteProgramEnrollment(DeleteProgramEnrollmentRequest) returns (DeleteProgramEnrollmentResponse);
   // List ProgramEnrollmentSubjects.
@@ -135,7 +135,7 @@ service ProgramEnrollmentService {
   // Create ProgramEnrollmentSubject.
   rpc CreateProgramEnrollmentSubject(CreateProgramEnrollmentSubjectRequest) returns (CreateProgramEnrollmentSubjectResponse);
   // Update ProgramEnrollmentSubject.
-  rpc UpdateProgramEnrollmentSubject(UpdateProgramEnrollmentSubjectRequest) returns (UpdateProgramEnrollmentSubjectResponse);
+  rpc UpdateProgramEnrollmentSubject(ProgramEnrollmentSubjectUpdate) returns (UpdateProgramEnrollmentSubjectResponse);
   // Soft-delete ProgramEnrollmentSubject.
   rpc DeleteProgramEnrollmentSubject(DeleteProgramEnrollmentSubjectRequest) returns (DeleteProgramEnrollmentSubjectResponse);
 }
@@ -149,7 +149,7 @@ service SubjectRegistrationService {
   // Create SubjectRegistration.
   rpc CreateSubjectRegistration(CreateSubjectRegistrationRequest) returns (CreateSubjectRegistrationResponse);
   // Update SubjectRegistration.
-  rpc UpdateSubjectRegistration(UpdateSubjectRegistrationRequest) returns (UpdateSubjectRegistrationResponse);
+  rpc UpdateSubjectRegistration(SubjectRegistrationUpdate) returns (UpdateSubjectRegistrationResponse);
   // Soft-delete SubjectRegistration.
   rpc DeleteSubjectRegistration(DeleteSubjectRegistrationRequest) returns (DeleteSubjectRegistrationResponse);
   // List SubjectRegistrationLines.
@@ -159,7 +159,7 @@ service SubjectRegistrationService {
   // Create SubjectRegistrationLine.
   rpc CreateSubjectRegistrationLine(CreateSubjectRegistrationLineRequest) returns (CreateSubjectRegistrationLineResponse);
   // Update SubjectRegistrationLine.
-  rpc UpdateSubjectRegistrationLine(UpdateSubjectRegistrationLineRequest) returns (UpdateSubjectRegistrationLineResponse);
+  rpc UpdateSubjectRegistrationLine(SubjectRegistrationLineUpdate) returns (UpdateSubjectRegistrationLineResponse);
   // Soft-delete SubjectRegistrationLine.
   rpc DeleteSubjectRegistrationLine(DeleteSubjectRegistrationLineRequest) returns (DeleteSubjectRegistrationLineResponse);
   // Submit for approval.
@@ -183,7 +183,7 @@ service PromotionService {
   // Create Promotion.
   rpc CreatePromotion(CreatePromotionRequest) returns (CreatePromotionResponse);
   // Update Promotion.
-  rpc UpdatePromotion(UpdatePromotionRequest) returns (UpdatePromotionResponse);
+  rpc UpdatePromotion(PromotionUpdate) returns (UpdatePromotionResponse);
   // Soft-delete Promotion.
   rpc DeletePromotion(DeletePromotionRequest) returns (DeletePromotionResponse);
   // Create proposed promotions for a class.
@@ -205,7 +205,7 @@ service StudentHealthRecordService {
   // Create StudentHealthRecord.
   rpc CreateStudentHealthRecord(CreateStudentHealthRecordRequest) returns (CreateStudentHealthRecordResponse);
   // Update StudentHealthRecord.
-  rpc UpdateStudentHealthRecord(UpdateStudentHealthRecordRequest) returns (UpdateStudentHealthRecordResponse);
+  rpc UpdateStudentHealthRecord(StudentHealthRecordUpdate) returns (UpdateStudentHealthRecordResponse);
   // Soft-delete StudentHealthRecord.
   rpc DeleteStudentHealthRecord(DeleteStudentHealthRecordRequest) returns (DeleteStudentHealthRecordResponse);
 }
@@ -219,7 +219,7 @@ service DisciplineIncidentService {
   // Create DisciplineIncident.
   rpc CreateDisciplineIncident(CreateDisciplineIncidentRequest) returns (CreateDisciplineIncidentResponse);
   // Update DisciplineIncident.
-  rpc UpdateDisciplineIncident(UpdateDisciplineIncidentRequest) returns (UpdateDisciplineIncidentResponse);
+  rpc UpdateDisciplineIncident(DisciplineIncidentUpdate) returns (UpdateDisciplineIncidentResponse);
   // Soft-delete DisciplineIncident.
   rpc DeleteDisciplineIncident(DeleteDisciplineIncidentRequest) returns (DeleteDisciplineIncidentResponse);
   // Record that action was taken.
@@ -237,7 +237,7 @@ service ActivityTypeService {
   // Create ActivityType.
   rpc CreateActivityType(CreateActivityTypeRequest) returns (CreateActivityTypeResponse);
   // Update ActivityType.
-  rpc UpdateActivityType(UpdateActivityTypeRequest) returns (UpdateActivityTypeResponse);
+  rpc UpdateActivityType(ActivityTypeUpdate) returns (UpdateActivityTypeResponse);
   // Soft-delete ActivityType.
   rpc DeleteActivityType(DeleteActivityTypeRequest) returns (DeleteActivityTypeResponse);
 }
@@ -251,7 +251,7 @@ service StudentActivityService {
   // Create StudentActivity.
   rpc CreateStudentActivity(CreateStudentActivityRequest) returns (CreateStudentActivityResponse);
   // Update StudentActivity.
-  rpc UpdateStudentActivity(UpdateStudentActivityRequest) returns (UpdateStudentActivityResponse);
+  rpc UpdateStudentActivity(StudentActivityUpdate) returns (UpdateStudentActivityResponse);
   // Soft-delete StudentActivity.
   rpc DeleteStudentActivity(DeleteStudentActivityRequest) returns (DeleteStudentActivityResponse);
 }
@@ -295,13 +295,25 @@ message CreateStudentCategoryResponse {
   StudentCategory student_category = 1;
 }
 
-message UpdateStudentCategoryRequest {
-  // Resource with id and etag set.
-  StudentCategory student_category = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStudentCategory (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StudentCategoryUpdate {
+  // StudentCategory id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Display order.
+  optional int32 sort_order = 4;
+  // Whether offered for new picks.
+  optional bool is_active = 5;
+  // Institution. [UUID]
+  optional string institution_id = 6;
+  // Category code.
+  optional string code = 7;
+  // Category name.
+  optional string name = 8;
 }
 message UpdateStudentCategoryResponse {
   StudentCategory student_category = 1;
@@ -355,13 +367,37 @@ message CreateStudentResponse {
   Student student = 1;
 }
 
-message UpdateStudentRequest {
-  // Resource with id and etag set.
-  Student student = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStudent (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StudentUpdate {
+  // Student id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Person. [UUID]
+  optional string person_id = 4;
+  // Student login account. [UUID]
+  mysms.common.v1.NullableString user_id = 5;
+  // Institution. [UUID]
+  optional string institution_id = 6;
+  // Admission / registration number.
+  mysms.common.v1.NullableString admission_number = 7;
+  // Date of admission. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString admission_date = 8;
+  // First attendance date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString joining_date = 9;
+  // Category. [UUID]
+  mysms.common.v1.NullableString student_category_id = 10;
+  // External government education-registry id (e.g. EMIS/UDISE+ PEN).
+  mysms.common.v1.NullableString government_student_id = 11;
+  // Number of the last bonafide certificate issued.
+  mysms.common.v1.NullableString bonafide_certificate_number = 12;
+  // Date the student left. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString exit_date = 13;
+  // Reason for leaving.
+  mysms.common.v1.NullableString exit_reason = 14;
 }
 message UpdateStudentResponse {
   Student student = 1;
@@ -415,13 +451,35 @@ message CreateGuardianResponse {
   Guardian guardian = 1;
 }
 
-message UpdateGuardianRequest {
-  // Resource with id and etag set.
-  Guardian guardian = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateGuardian (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message GuardianUpdate {
+  // Guardian id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Person. [UUID]
+  optional string person_id = 4;
+  // Guardian login account. [UUID]
+  mysms.common.v1.NullableString user_id = 5;
+  // Profession.
+  optional Guardian.Profession profession = 6;
+  // Occupation detail.
+  mysms.common.v1.NullableString sub_occupation = 7;
+  // Designation.
+  mysms.common.v1.NullableString designation = 8;
+  // Employer.
+  mysms.common.v1.NullableString organization_name = 9;
+  // Annual income. [Decimal string]
+  mysms.common.v1.NullableString annual_income = 10;
+  // Highest qualification. [UUID]
+  mysms.common.v1.NullableString qualification_id = 11;
+  // Contact mobile used for school communication.
+  mysms.common.v1.NullableString mobile = 12;
+  // Contact e-mail used for school communication.
+  mysms.common.v1.NullableString email = 13;
 }
 message UpdateGuardianResponse {
   Guardian guardian = 1;
@@ -475,13 +533,23 @@ message CreateRelationshipTypeResponse {
   RelationshipType relationship_type = 1;
 }
 
-message UpdateRelationshipTypeRequest {
-  // Resource with id and etag set.
-  RelationshipType relationship_type = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateRelationshipType (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message RelationshipTypeUpdate {
+  // RelationshipType id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Relationship name.
+  optional string name = 7;
 }
 message UpdateRelationshipTypeResponse {
   RelationshipType relationship_type = 1;
@@ -541,15 +609,33 @@ message CreateStudentGuardianResponse {
   StudentGuardian student_guardian = 1;
 }
 
-message UpdateStudentGuardianRequest {
+// The changes of UpdateStudentGuardian (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StudentGuardianUpdate {
   // Student id (UUID).
   string student_id = 1;
-  // Resource with id and etag set.
-  StudentGuardian student_guardian = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // StudentGuardian id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Whether this guardian is a legal guardian (consent authority).
+  optional bool is_legal_guardian = 5;
+  // Whether this guardian has custody; drives pickup and visibility rules.
+  optional bool has_custody = 6;
+  // Guardian. [UUID]
+  optional string guardian_id = 7;
+  // Relationship. [UUID]
+  mysms.common.v1.NullableString relationship_type_id = 8;
+  // First contact for the student.
+  optional bool is_primary_contact = 9;
+  // Receives notices and alerts.
+  optional bool receives_communication = 10;
+  // Authorised to collect the student.
+  optional bool can_pick_up = 11;
+  // Link state.
+  optional StudentGuardian.Status status = 12;
 }
 message UpdateStudentGuardianResponse {
   StudentGuardian student_guardian = 1;
@@ -611,15 +697,23 @@ message CreateStudentSiblingResponse {
   StudentSibling student_sibling = 1;
 }
 
-message UpdateStudentSiblingRequest {
+// The changes of UpdateStudentSibling (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StudentSiblingUpdate {
   // Student id (UUID).
   string student_id = 1;
-  // Resource with id and etag set.
-  StudentSibling student_sibling = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // StudentSibling id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Sibling, when enrolled in the system. [UUID]
+  mysms.common.v1.NullableString sibling_student_id = 5;
+  // Sibling name when not enrolled.
+  mysms.common.v1.NullableString sibling_name = 6;
+  // Notes (school, grade).
+  mysms.common.v1.NullableString details = 7;
 }
 message UpdateStudentSiblingResponse {
   StudentSibling student_sibling = 1;
@@ -675,13 +769,35 @@ message CreateStudentEnrollmentResponse {
   StudentEnrollment student_enrollment = 1;
 }
 
-message UpdateStudentEnrollmentRequest {
-  // Resource with id and etag set.
-  StudentEnrollment student_enrollment = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStudentEnrollment (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StudentEnrollmentUpdate {
+  // StudentEnrollment id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Student. [UUID]
+  optional string student_id = 4;
+  // Academic year. [UUID]
+  optional string academic_year_id = 5;
+  // Class section. [UUID]
+  mysms.common.v1.NullableString class_section_id = 6;
+  // Roll number in the class.
+  mysms.common.v1.NullableString roll_number = 7;
+  // Identity-card number for the year.
+  mysms.common.v1.NullableString id_card_number = 8;
+  // Examination-board registration number.
+  mysms.common.v1.NullableString board_registration_number = 9;
+  // Placement state.
+  optional StudentEnrollment.EnrollmentStatus enrollment_status = 10;
+  // Year-end result.
+  optional StudentEnrollment.ResultStatus result_status = 11;
+  // Placement date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString enrolled_on = 12;
+  // Date the placement ended. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString left_on = 13;
 }
 message UpdateStudentEnrollmentResponse {
   StudentEnrollment student_enrollment = 1;
@@ -735,13 +851,29 @@ message CreateProgramEnrollmentResponse {
   ProgramEnrollment program_enrollment = 1;
 }
 
-message UpdateProgramEnrollmentRequest {
-  // Resource with id and etag set.
-  ProgramEnrollment program_enrollment = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateProgramEnrollment (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ProgramEnrollmentUpdate {
+  // ProgramEnrollment id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Student. [UUID]
+  optional string student_id = 4;
+  // Course. [UUID]
+  optional string course_id = 5;
+  // Batch. [UUID]
+  mysms.common.v1.NullableString batch_id = 6;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 7;
+  // Academic term. [UUID]
+  mysms.common.v1.NullableString academic_term_id = 8;
+  // Roll number in the batch.
+  mysms.common.v1.NullableString roll_number = 9;
+  // Registration state.
+  optional ProgramEnrollment.Status status = 10;
 }
 message UpdateProgramEnrollmentResponse {
   ProgramEnrollment program_enrollment = 1;
@@ -801,15 +933,19 @@ message CreateProgramEnrollmentSubjectResponse {
   ProgramEnrollmentSubject program_enrollment_subject = 1;
 }
 
-message UpdateProgramEnrollmentSubjectRequest {
+// The changes of UpdateProgramEnrollmentSubject (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ProgramEnrollmentSubjectUpdate {
   // ProgramEnrollment id (UUID).
   string program_enrollment_id = 1;
-  // Resource with id and etag set.
-  ProgramEnrollmentSubject program_enrollment_subject = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ProgramEnrollmentSubject id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Subject. [UUID]
+  optional string subject_id = 5;
 }
 message UpdateProgramEnrollmentSubjectResponse {
   ProgramEnrollmentSubject program_enrollment_subject = 1;
@@ -865,13 +1001,31 @@ message CreateSubjectRegistrationResponse {
   SubjectRegistration subject_registration = 1;
 }
 
-message UpdateSubjectRegistrationRequest {
-  // Resource with id and etag set.
-  SubjectRegistration subject_registration = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateSubjectRegistration (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SubjectRegistrationUpdate {
+  // SubjectRegistration id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Student. [UUID]
+  optional string student_id = 4;
+  // Course. [UUID]
+  optional string course_id = 5;
+  // Batch. [UUID]
+  mysms.common.v1.NullableString batch_id = 6;
+  // Registration reference.
+  mysms.common.v1.NullableString reference_no = 7;
+  // Minimum credits. [Decimal string]
+  mysms.common.v1.NullableString min_unit_load = 8;
+  // Maximum credits. [Decimal string]
+  mysms.common.v1.NullableString max_unit_load = 9;
+  // Student has seen the decision.
+  optional bool read_by_student = 10;
+  // Guardian has seen the decision.
+  optional bool read_by_guardian = 11;
 }
 message UpdateSubjectRegistrationResponse {
   SubjectRegistration subject_registration = 1;
@@ -931,15 +1085,21 @@ message CreateSubjectRegistrationLineResponse {
   SubjectRegistrationLine subject_registration_line = 1;
 }
 
-message UpdateSubjectRegistrationLineRequest {
+// The changes of UpdateSubjectRegistrationLine (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SubjectRegistrationLineUpdate {
   // SubjectRegistration id (UUID).
   string subject_registration_id = 1;
-  // Resource with id and etag set.
-  SubjectRegistrationLine subject_registration_line = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // SubjectRegistrationLine id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Subject. [UUID]
+  optional string subject_id = 5;
+  // Compulsory or elective.
+  optional SubjectRegistrationLine.SelectionType selection_type = 6;
 }
 message UpdateSubjectRegistrationLineResponse {
   SubjectRegistrationLine subject_registration_line = 1;
@@ -995,13 +1155,35 @@ message CreatePromotionResponse {
   Promotion promotion = 1;
 }
 
-message UpdatePromotionRequest {
-  // Resource with id and etag set.
-  Promotion promotion = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePromotion (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PromotionUpdate {
+  // Promotion id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Student. [UUID]
+  optional string student_id = 4;
+  // Institution. [UUID]
+  optional string institution_id = 5;
+  // Current year. [UUID]
+  optional string from_academic_year_id = 6;
+  // Current grade. [UUID]
+  optional string from_grade_level_id = 7;
+  // Current section. [UUID]
+  mysms.common.v1.NullableString from_section_id = 8;
+  // Next year. [UUID]
+  mysms.common.v1.NullableString to_academic_year_id = 9;
+  // Next grade. [UUID]
+  mysms.common.v1.NullableString to_grade_level_id = 10;
+  // Next section. [UUID]
+  mysms.common.v1.NullableString to_section_id = 11;
+  // Exam series the decision is based on. [UUID]
+  mysms.common.v1.NullableString based_on_exam_session_id = 12;
+  // Comments.
+  mysms.common.v1.NullableString remarks = 13;
 }
 message UpdatePromotionResponse {
   Promotion promotion = 1;
@@ -1055,13 +1237,35 @@ message CreateStudentHealthRecordResponse {
   StudentHealthRecord student_health_record = 1;
 }
 
-message UpdateStudentHealthRecordRequest {
-  // Resource with id and etag set.
-  StudentHealthRecord student_health_record = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStudentHealthRecord (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StudentHealthRecordUpdate {
+  // StudentHealthRecord id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Student. [UUID]
+  optional string student_id = 4;
+  // Year recorded. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Height (cm). [Decimal string]
+  mysms.common.v1.NullableString height_cm = 6;
+  // Weight (kg). [Decimal string]
+  mysms.common.v1.NullableString weight_kg = 7;
+  // Known medical problems.
+  mysms.common.v1.NullableString medical_conditions = 8;
+  // Medication needs.
+  mysms.common.v1.NullableString medication_needs = 9;
+  // Drug allergies.
+  mysms.common.v1.NullableString medication_allergies = 10;
+  // Food allergies.
+  mysms.common.v1.NullableString food_allergies = 11;
+  // Other allergies.
+  mysms.common.v1.NullableString other_allergies = 12;
+  // Other medical information.
+  mysms.common.v1.NullableString other_medical_info = 13;
 }
 message UpdateStudentHealthRecordResponse {
   StudentHealthRecord student_health_record = 1;
@@ -1115,13 +1319,43 @@ message CreateDisciplineIncidentResponse {
   DisciplineIncident discipline_incident = 1;
 }
 
-message UpdateDisciplineIncidentRequest {
-  // Resource with id and etag set.
-  DisciplineIncident discipline_incident = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateDisciplineIncident (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message DisciplineIncidentUpdate {
+  // DisciplineIncident id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  optional string academic_year_id = 5;
+  // Student's class at the time. [UUID]
+  mysms.common.v1.NullableString class_section_id = 6;
+  // Student. [UUID]
+  optional string student_id = 7;
+  // When it happened.
+  google.protobuf.Timestamp incident_at = 8;
+  // Reporter. [UUID]
+  optional string reported_by_user_id = 9;
+  // Type.
+  optional DisciplineIncident.IncidentType incident_type = 10;
+  // Description.
+  optional string details = 11;
+  // Student / guardian response.
+  mysms.common.v1.NullableString response = 12;
+  // Whether action has been taken.
+  optional bool action_taken = 13;
+  // Type of evidence attached.
+  optional DisciplineIncident.EvidenceMediaType evidence_media_type = 14;
+  // Evidence file. [UUID]
+  mysms.common.v1.NullableString evidence_file_id = 15;
+  // Guardians are notified.
+  optional bool notify_guardians = 16;
+  // Guardian has viewed it.
+  optional bool seen_by_guardian = 17;
 }
 message UpdateDisciplineIncidentResponse {
   DisciplineIncident discipline_incident = 1;
@@ -1175,13 +1409,23 @@ message CreateActivityTypeResponse {
   ActivityType activity_type = 1;
 }
 
-message UpdateActivityTypeRequest {
-  // Resource with id and etag set.
-  ActivityType activity_type = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateActivityType (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ActivityTypeUpdate {
+  // ActivityType id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Activity type.
+  optional string name = 6;
+  // Whether in use.
+  optional bool is_active = 7;
 }
 message UpdateActivityTypeResponse {
   ActivityType activity_type = 1;
@@ -1235,13 +1479,25 @@ message CreateStudentActivityResponse {
   StudentActivity student_activity = 1;
 }
 
-message UpdateStudentActivityRequest {
-  // Resource with id and etag set.
-  StudentActivity student_activity = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStudentActivity (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StudentActivityUpdate {
+  // StudentActivity id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Student. [UUID]
+  optional string student_id = 4;
+  // Staff member who logged / supervised. [UUID]
+  mysms.common.v1.NullableString staff_id = 5;
+  // Type. [UUID]
+  mysms.common.v1.NullableString activity_type_id = 6;
+  // Date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString activity_date = 7;
+  // Description.
+  mysms.common.v1.NullableString description = 8;
 }
 message UpdateStudentActivityResponse {
   StudentActivity student_activity = 1;
@@ -2273,13 +2529,27 @@ message CreateStudentLeaveRequestResponse {
   StudentLeaveRequest student_leave_request = 1;
 }
 
-message UpdateStudentLeaveRequestRequest {
-  // Resource with id and etag set.
-  StudentLeaveRequest student_leave_request = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStudentLeaveRequest (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StudentLeaveRequestUpdate {
+  // StudentLeaveRequest id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Student the leave is for. [UUID]
+  optional string student_id = 4;
+  // Academic year the leave falls in. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // First day of leave.
+  optional string from_date = 6;
+  // Last day of leave.
+  optional string to_date = 7;
+  // Which part of the day.
+  optional string day_part = 8;
+  // Stated reason.
+  mysms.common.v1.NullableString reason = 9;
 }
 message UpdateStudentLeaveRequestResponse {
   StudentLeaveRequest student_leave_request = 1;
@@ -2303,7 +2573,7 @@ service StudentLeaveRequestService {
   // Create StudentLeaveRequest.
   rpc CreateStudentLeaveRequest(CreateStudentLeaveRequestRequest) returns (CreateStudentLeaveRequestResponse);
   // Update StudentLeaveRequest.
-  rpc UpdateStudentLeaveRequest(UpdateStudentLeaveRequestRequest) returns (UpdateStudentLeaveRequestResponse);
+  rpc UpdateStudentLeaveRequest(StudentLeaveRequestUpdate) returns (UpdateStudentLeaveRequestResponse);
   // Soft-delete StudentLeaveRequest.
   rpc DeleteStudentLeaveRequest(DeleteStudentLeaveRequestRequest) returns (DeleteStudentLeaveRequestResponse);
   // Approve the request.

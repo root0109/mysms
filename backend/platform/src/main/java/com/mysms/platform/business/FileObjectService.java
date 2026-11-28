@@ -87,8 +87,8 @@ public class FileObjectService extends AppTransactionManager {
     /** Signed URLs are short-lived: long enough to start a transfer, too short to share usefully. */
     static final Duration UPLOAD_TTL = Duration.ofMinutes(15);
     static final Duration DOWNLOAD_TTL = Duration.ofMinutes(10);
-    /** A record type as stored in owner/entity type columns: {@code schema.table}. */
-    private static final Pattern RECORD_TYPE = Pattern.compile("[a-z]+\\.[a-z][a-z0-9_]*");
+    /** A record type as stored in owner/entity type columns: {@code schema.table} (a schema may hold an underscore). */
+    private static final Pattern RECORD_TYPE = Pattern.compile("[a-z][a-z_]*\\.[a-z][a-z0-9_]*");
     private static final Pattern CONTENT_TYPE = Pattern.compile("[a-z]+/[a-z0-9][a-z0-9.+-]*");
     private static final Pattern SHA256 = Pattern.compile("[0-9a-f]{64}");
     private static final String PENDING = "pending";
@@ -494,9 +494,14 @@ public class FileObjectService extends AppTransactionManager {
         if (type == null || id == null) {
             errors.add(new FieldError(type == null ? "ownerEntityType" : "ownerEntityId",
                     "ownerEntityType and ownerEntityId go together", "Required"));
-        } else if (type.length() > 80 || !RECORD_TYPE.matcher(type).matches()) {
+        } else if (!isRecordType(type)) {
             errors.add(new FieldError("ownerEntityType", "a record type such as lms.course", "Pattern"));
         }
+    }
+
+    /** Whether {@code type} is a record type: {@code schema.table}, at most 80 characters (the column's length). */
+    static boolean isRecordType(String type) {
+        return type.length() <= 80 && RECORD_TYPE.matcher(type).matches();
     }
 
     /** Attaching a file to a record needs the owning module's create or update permission on that record type. */

@@ -1,7 +1,6 @@
 package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.TeachingAssignment;
-import com.mysms.academics.api.model.TeachingAssignmentUpdate;
 import com.mysms.academics.business.TeachingAssignmentService;
 import com.mysms.academics.v1.CreateTeachingAssignmentRequest;
 import com.mysms.academics.v1.CreateTeachingAssignmentResponse;
@@ -12,7 +11,7 @@ import com.mysms.academics.v1.GetTeachingAssignmentResponse;
 import com.mysms.academics.v1.ListTeachingAssignmentsRequest;
 import com.mysms.academics.v1.ListTeachingAssignmentsResponse;
 import com.mysms.academics.v1.TeachingAssignmentServiceGrpc;
-import com.mysms.academics.v1.UpdateTeachingAssignmentRequest;
+import com.mysms.academics.v1.TeachingAssignmentUpdate;
 import com.mysms.academics.v1.UpdateTeachingAssignmentResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -59,11 +58,11 @@ public class TeachingAssignmentResolver extends TeachingAssignmentServiceGrpc.Te
     }
 
     @Override
-    public void updateTeachingAssignment(UpdateTeachingAssignmentRequest request,
+    public void updateTeachingAssignment(TeachingAssignmentUpdate request,
             StreamObserver<UpdateTeachingAssignmentResponse> out) {
-        TeachingAssignment updated = service.updateTeachingAssignment(bridge.id(request.getTeachingAssignment().getId(), "id"),
-                bridge.requiredIfMatch(request.getTeachingAssignment().getEtag()),
-                bridge.changes(request.getTeachingAssignment(), request.getUpdateMask(), TeachingAssignmentUpdate.class),
+        TeachingAssignment updated = service.updateTeachingAssignment(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                TeachingAssignmentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateTeachingAssignmentResponse.newBuilder(), "teaching_assignment", updated).build());

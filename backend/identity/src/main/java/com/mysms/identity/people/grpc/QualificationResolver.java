@@ -3,7 +3,6 @@ package com.mysms.identity.people.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.identity.people.api.model.Qualification;
-import com.mysms.identity.people.api.model.QualificationUpdate;
 import com.mysms.identity.people.business.QualificationService;
 import com.mysms.people.v1.CreateQualificationRequest;
 import com.mysms.people.v1.CreateQualificationResponse;
@@ -14,7 +13,7 @@ import com.mysms.people.v1.GetQualificationResponse;
 import com.mysms.people.v1.ListQualificationsRequest;
 import com.mysms.people.v1.ListQualificationsResponse;
 import com.mysms.people.v1.QualificationServiceGrpc;
-import com.mysms.people.v1.UpdateQualificationRequest;
+import com.mysms.people.v1.QualificationUpdate;
 import com.mysms.people.v1.UpdateQualificationResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class QualificationResolver extends QualificationServiceGrpc.Qualificatio
     }
 
     @Override
-    public void updateQualification(UpdateQualificationRequest request, StreamObserver<UpdateQualificationResponse> out) {
+    public void updateQualification(QualificationUpdate request, StreamObserver<UpdateQualificationResponse> out) {
         Qualification updated = service.updateQualification(
-                bridge.id(request.getQualification().getId(), "id"),
-                bridge.requiredIfMatch(request.getQualification().getEtag()),
-                bridge.changes(request.getQualification(), request.getUpdateMask(), QualificationUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QualificationProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateQualificationResponse.newBuilder(), "qualification", updated).build());
     }

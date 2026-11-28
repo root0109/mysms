@@ -4,8 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.transport.api.model.Route;
 import com.mysms.campus.transport.api.model.RouteStop;
-import com.mysms.campus.transport.api.model.RouteStopUpdate;
-import com.mysms.campus.transport.api.model.RouteUpdate;
 import com.mysms.campus.transport.business.RouteService;
 import com.mysms.transport.v1.CreateRouteRequest;
 import com.mysms.transport.v1.CreateRouteResponse;
@@ -24,9 +22,9 @@ import com.mysms.transport.v1.ListRouteStopsResponse;
 import com.mysms.transport.v1.ListRoutesRequest;
 import com.mysms.transport.v1.ListRoutesResponse;
 import com.mysms.transport.v1.RouteServiceGrpc;
-import com.mysms.transport.v1.UpdateRouteRequest;
+import com.mysms.transport.v1.RouteStopUpdate;
+import com.mysms.transport.v1.RouteUpdate;
 import com.mysms.transport.v1.UpdateRouteResponse;
-import com.mysms.transport.v1.UpdateRouteStopRequest;
 import com.mysms.transport.v1.UpdateRouteStopResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -67,10 +65,10 @@ public class RouteResolver extends RouteServiceGrpc.RouteServiceImplBase {
     }
 
     @Override
-    public void updateRoute(UpdateRouteRequest request, StreamObserver<UpdateRouteResponse> out) {
-        Route updated = service.updateRoute(bridge.id(request.getRoute().getId(), "id"),
-                bridge.requiredIfMatch(request.getRoute().getEtag()),
-                bridge.changes(request.getRoute(), request.getUpdateMask(), RouteUpdate.class), request.getValidateOnly());
+    public void updateRoute(RouteUpdate request, StreamObserver<UpdateRouteResponse> out) {
+        Route updated = service.updateRoute(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                RouteProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRouteResponse.newBuilder(), "route", updated).build());
     }
 
@@ -102,10 +100,10 @@ public class RouteResolver extends RouteServiceGrpc.RouteServiceImplBase {
     }
 
     @Override
-    public void updateRouteStop(UpdateRouteStopRequest request, StreamObserver<UpdateRouteStopResponse> out) {
+    public void updateRouteStop(RouteStopUpdate request, StreamObserver<UpdateRouteStopResponse> out) {
         RouteStop updated = service.updateRouteStop(bridge.id(request.getRouteId(), "routeId"),
-                bridge.id(request.getRouteStop().getId(), "id"), bridge.requiredIfMatch(request.getRouteStop().getEtag()),
-                bridge.changes(request.getRouteStop(), request.getUpdateMask(), RouteStopUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                RouteStopProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRouteStopResponse.newBuilder(), "route_stop", updated).build());
     }

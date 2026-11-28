@@ -233,6 +233,9 @@ public class JobOpeningService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -499,6 +502,9 @@ public class JobOpeningService extends AppTransactionManager {
             assertValidJobApplication(entity, false);
             scope.requireWritable(institutionOfJobApplication(entity));
             assertUniqueJobApplication(entity);
+            if (fields.isEmpty()) {
+                return jobApplicationMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return jobApplicationMapper.toDto(entity);

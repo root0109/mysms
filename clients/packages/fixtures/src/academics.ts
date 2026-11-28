@@ -43,9 +43,9 @@ export const ACADEMICS_ADMIN = [
   'facility.room.read',
   'attendance.attendance_register.read',
   'assessment.homework.read',
-  'attendance.staff_attendance.read',
-  'attendance.staff_attendance.create',
-  'attendance.staff_attendance.update',
+  'time_attendance.staff_attendance.read',
+  'time_attendance.staff_attendance.create',
+  'time_attendance.staff_attendance.update',
 ] as const;
 
 /**
@@ -206,8 +206,8 @@ export function fakeAcademics(): Record<string, Handler> {
       ],
     }),
     ...fakeRecords({
-      collection: '/v1/attendance/staff-attendance-days',
-      item: '/v1/attendance/staff-attendance-days/{staffAttendanceId}',
+      collection: '/v1/time-attendance/staff-attendance-days',
+      item: '/v1/time-attendance/staff-attendance-days/{staffAttendanceId}',
       required: ['staffId', 'attendanceDate', 'status'],
       rows: [
         {

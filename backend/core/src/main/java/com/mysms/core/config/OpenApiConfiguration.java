@@ -50,9 +50,12 @@ import tools.jackson.databind.JsonNode;
 @ConditionalOnClass(OpenAPI.class)
 public class OpenApiConfiguration {
 
-    /** The area of a contract path ({@code /v1/<area>/…}). */
-    private static final Pattern DOCUMENTED_AREA = Pattern.compile("^/v1/([a-z]+)/");
-    /** A handler of an area's controller package; group(1) is the area's root package, group(2) the area. */
+    /** The area of a contract path ({@code /v1/<area>/…}; an underscore in the area name is a hyphen in the URL). */
+    private static final Pattern DOCUMENTED_AREA = Pattern.compile("^/v1/([a-z-]+)/");
+    /**
+     * A handler of an area's controller package; group(1) is the area's root package, group(2) the area's package
+     * segment (the area name without underscores: {@code time_attendance} → {@code timeattendance}).
+     */
     private static final Pattern CONTROLLER_PACKAGE =
             Pattern.compile("^(com\\.mysms\\.(?:[a-z]+\\.)?([a-z]+))\\.controller\\.");
 
@@ -75,14 +78,14 @@ public class OpenApiConfiguration {
 
     /** Restores per operation what the Java signature cannot state, from the area's operation table. */
     @Bean
-    public GlobalOperationCustomizer mysmsOperationCustomizer() {
+    public GlobalOperationCustomizer mysmsOperationCustomizer(Environment environment) {
         Map<String, Map<String, JsonNode>> tables = new ConcurrentHashMap<>();
         return (operation, handler) -> {
             Matcher controller = CONTROLLER_PACKAGE.matcher(handler.getBeanType().getName());
             if (!controller.find()) {
                 return operation;
             }
-            JsonNode row = tables.computeIfAbsent(controller.group(2), OpenApiConfiguration::table)
+            JsonNode row = tables.computeIfAbsent(areaOf(environment, controller.group(2)), OpenApiConfiguration::table)
                     .get(handler.getMethod().getName());
             if (row == null) {
                 return operation;
@@ -157,7 +160,8 @@ public class OpenApiConfiguration {
             openApi.getPaths().keySet().forEach(path -> {
                 Matcher area = DOCUMENTED_AREA.matcher(path);
                 if (area.find()) {
-                    areas.add(area.group(1));
+                    // the package segment of the path's area: hyphens out, like the underscores they stand for
+                    areas.add(area.group(1).replace("-", ""));
                 }
             });
         }
@@ -260,6 +264,20 @@ public class OpenApiConfiguration {
     }
 
     /** The area's operation rows by controller method name ({@code master.ListCountries} → {@code listCountries}). */
+    /**
+     * The area of a controller's package segment: the served area ({@code mysms.auth.modules}) whose name without
+     * underscores is the segment; the segment itself when none matches (an area named like its package).
+     */
+    private static String areaOf(Environment environment, String segment) {
+        for (int i = 0; environment.containsProperty("mysms.auth.modules[" + i + "]"); i++) {
+            String area = environment.getProperty("mysms.auth.modules[" + i + "]");
+            if (area != null && area.replace("_", "").equals(segment)) {
+                return area;
+            }
+        }
+        return segment;
+    }
+
     private static Map<String, JsonNode> table(String area) {
         String resource = "META-INF/mysms/operations/" + area + ".json";
         try (InputStream in = OpenApiConfiguration.class.getClassLoader().getResourceAsStream(resource)) {

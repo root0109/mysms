@@ -3,8 +3,9 @@ package com.mysms.platform.master;
 import com.mysms.platform.PlatformApplication;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.protobuf.FieldMask;
+import com.google.protobuf.NullValue;
 import com.mysms.authclient.testing.TestTokens;
+import com.mysms.common.v1.NullableString;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.testkit.GrpcParity;
 import com.mysms.core.testkit.GrpcParity.Answer;
@@ -12,6 +13,7 @@ import com.mysms.core.testkit.GrpcParityContract;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.master.v1.Country;
 import com.mysms.master.v1.CountryServiceGrpc;
+import com.mysms.master.v1.CountryUpdate;
 import com.mysms.master.v1.CreateCountryRequest;
 import com.mysms.master.v1.CreateStateProvinceRequest;
 import com.mysms.master.v1.DeleteCountryRequest;
@@ -19,7 +21,6 @@ import com.mysms.master.v1.GetCountryRequest;
 import com.mysms.master.v1.MasterProto;
 import com.mysms.master.v1.StateProvince;
 import com.mysms.master.v1.StateProvinceServiceGrpc;
-import com.mysms.master.v1.UpdateCountryRequest;
 import io.grpc.Channel;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
@@ -121,22 +122,26 @@ class MasterGrpcParityComponentTest {
                 bridge, new GrpcParityContract.Callers(OPERATOR, TENANT_USER, null));
         List<GrpcParityContract.Resource> resources = List.of(
                 resource("Country", "/v1/master/countries", "{\"iso2\":\"QA\",\"iso3\":\"QAX\",\"name\":\"Qland\"}",
-                        "{\"shortName\":\"Q\",\"isActive\":false}", true),
+                        "{\"shortName\":\"Q\",\"isActive\":false}", true, "phonePrefix"),
                 resource("StateProvince", "/v1/master/states",
                         "{\"countryId\":\"" + country + "\",\"code\":\"QS\",\"name\":\"Q State\"}",
-                        "{\"name\":\"Q State 2\"}", false),
+                        "{\"name\":\"Q State 2\"}", false, "code"),
                 resource("City", "/v1/master/cities", "{\"countryId\":\"" + country + "\",\"name\":\"Q City\"}",
-                        "{\"name\":\"Q City 2\"}", false),
+                        "{\"name\":\"Q City 2\"}", false, "stateProvinceId"),
                 resource("Currency", "/v1/master/currencies", "{\"code\":\"QQQ\",\"name\":\"Q Dollar\",\"minorUnits\":3}",
-                        "{\"symbol\":\"Q$\"}", true));
+                        "{\"symbol\":\"Q$\"}", true, "symbol"));
         return resources.stream().map(r -> (DynamicNode) DynamicTest.dynamicTest(r.name(), () -> contract.verify(r)))
                 .toList();
     }
 
+    /** A resource serving the five standard operations, whose {@code clears} field a null in an update clears. */
     private static GrpcParityContract.Resource resource(String name, String collection, String create, String update,
-                                                        boolean duplicateConflicts) {
+                                                        boolean duplicateConflicts, String clears) {
+        ObjectNode described = JSON.createObjectNode();
+        List.of("Create", "Get", "List", "Update", "Delete").forEach(described.putArray("ops")::add);
+        described.putObject("patch").put("clears", clears);
         return new GrpcParityContract.Resource(name, collection, (ObjectNode) JSON.readTree(create),
-                (ObjectNode) JSON.readTree(update), duplicateConflicts);
+                (ObjectNode) JSON.readTree(update), duplicateConflicts, described);
     }
 
     /** The generated stubs against the resolvers, with what only a typed client shows. */
@@ -145,20 +150,26 @@ class MasterGrpcParityComponentTest {
         CountryServiceGrpc.CountryServiceBlockingStub countries = CountryServiceGrpc.newBlockingStub(
                 GrpcParity.as(channel(), OPERATOR));
         Country created = countries.createCountry(CreateCountryRequest.newBuilder()
-                .setCountry(Country.newBuilder().setIso2("qb").setName("Qbland").setIsActive(true)).build()).getCountry();
+                .setCountry(Country.newBuilder().setIso2("qb").setName("Qbland").setShortName("Qb").setIsActive(true))
+                .build()).getCountry();
         assertThat(created.getIso2()).as("normalized by the same service").isEqualTo("QB");
         assertThat(created.getIsActive()).isTrue();
         assertThat(created.getEtag()).isEqualTo("\"1\"");
         assertThat(UUID.fromString(created.getId()).version()).isEqualTo(7);
 
-        // a flag switched off: proto3 cannot send false, the update mask names it
-        Country inactive = countries.updateCountry(UpdateCountryRequest.newBuilder()
-                .setCountry(Country.newBuilder().setId(created.getId()).setEtag(created.getEtag()))
-                .setUpdateMask(FieldMask.newBuilder().addPaths("is_active")).build()).getCountry();
+        // a flag switched off: an optional bool sends false; a wrapper holding null clears; unset keeps
+        Country inactive = countries.updateCountry(CountryUpdate.newBuilder().setId(created.getId())
+                .setEtag(created.getEtag()).setIsActive(false)
+                .setShortName(NullableString.newBuilder().setNull(NullValue.NULL_VALUE)).build()).getCountry();
         assertThat(inactive.getIsActive()).isFalse();
-        assertThat(inactive.getName()).as("unmasked fields keep their values").isEqualTo("Qbland");
+        assertThat(inactive.hasShortName()).as("cleared").isFalse();
+        assertThat(inactive.getName()).as("unset fields keep their values").isEqualTo("Qbland");
+        assertThat(inactive.getIso2()).isEqualTo("QB");
         assertThat(rest("GET", "/v1/master/countries/" + created.getId(), null, null).body().path("isActive")
                 .asBoolean()).isFalse();
+        // an empty update answers the row as it is: no new version
+        assertThat(countries.updateCountry(CountryUpdate.newBuilder().setId(created.getId())
+                .setEtag(inactive.getEtag()).build()).getCountry().getEtag()).isEqualTo("\"2\"");
         // anonymous reads, like REST
         assertThat(CountryServiceGrpc.newBlockingStub(channel()).getCountry(GetCountryRequest.newBuilder()
                 .setId(created.getId()).build()).getCountry().getEtag()).isEqualTo("\"2\"");

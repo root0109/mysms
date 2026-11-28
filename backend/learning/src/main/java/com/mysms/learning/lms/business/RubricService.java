@@ -190,6 +190,9 @@ public class RubricService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -357,6 +360,9 @@ public class RubricService extends AppTransactionManager {
             assertValidRubricCell(entity, false);
             scope.requireWritable(institutionOfRubricCell(entity));
             assertUniqueRubricCell(entity);
+            if (fields.isEmpty()) {
+                return rubricCellMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return rubricCellMapper.toDto(entity);
@@ -528,6 +534,9 @@ public class RubricService extends AppTransactionManager {
             assertValidRubricCriterion(entity, false);
             scope.requireWritable(institutionOfRubricCriterion(entity));
             assertUniqueRubricCriterion(entity);
+            if (fields.isEmpty()) {
+                return rubricCriterionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return rubricCriterionMapper.toDto(entity);
@@ -688,6 +697,9 @@ public class RubricService extends AppTransactionManager {
             assertValidRubricLevel(entity, false);
             scope.requireWritable(institutionOfRubricLevel(entity));
             assertUniqueRubricLevel(entity);
+            if (fields.isEmpty()) {
+                return rubricLevelMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return rubricLevelMapper.toDto(entity);

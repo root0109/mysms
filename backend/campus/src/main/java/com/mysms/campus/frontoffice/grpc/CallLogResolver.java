@@ -3,9 +3,9 @@ package com.mysms.campus.frontoffice.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.frontoffice.api.model.CallLog;
-import com.mysms.campus.frontoffice.api.model.CallLogUpdate;
 import com.mysms.campus.frontoffice.business.CallLogService;
 import com.mysms.frontoffice.v1.CallLogServiceGrpc;
+import com.mysms.frontoffice.v1.CallLogUpdate;
 import com.mysms.frontoffice.v1.CreateCallLogRequest;
 import com.mysms.frontoffice.v1.CreateCallLogResponse;
 import com.mysms.frontoffice.v1.DeleteCallLogRequest;
@@ -14,7 +14,6 @@ import com.mysms.frontoffice.v1.GetCallLogRequest;
 import com.mysms.frontoffice.v1.GetCallLogResponse;
 import com.mysms.frontoffice.v1.ListCallLogsRequest;
 import com.mysms.frontoffice.v1.ListCallLogsResponse;
-import com.mysms.frontoffice.v1.UpdateCallLogRequest;
 import com.mysms.frontoffice.v1.UpdateCallLogResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,10 +55,10 @@ public class CallLogResolver extends CallLogServiceGrpc.CallLogServiceImplBase {
     }
 
     @Override
-    public void updateCallLog(UpdateCallLogRequest request, StreamObserver<UpdateCallLogResponse> out) {
+    public void updateCallLog(CallLogUpdate request, StreamObserver<UpdateCallLogResponse> out) {
         CallLog updated = callLogService.updateCallLog(
-                bridge.id(request.getCallLog().getId(), "id"), bridge.requiredIfMatch(request.getCallLog().getEtag()),
-                bridge.changes(request.getCallLog(), request.getUpdateMask(), CallLogUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CallLogProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCallLogResponse.newBuilder(), "call_log", updated).build());
     }
 

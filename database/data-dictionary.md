@@ -1311,7 +1311,7 @@ Staff and student records of login accounts and persons, kept from `hr.staff` an
 - ← `assessment.marksheet.published_by_user_id`
 - ← `assessment.result_change_log.changed_by_user_id`
 - ← `attendance.attendance_record.recorded_by_user_id`
-- ← `attendance.staff_attendance.recorded_by_user_id`
+- ← `time_attendance.staff_attendance.recorded_by_user_id`
 - ← `careers.job_application.applicant_user_id`
 - ← `careers.job_opening.posted_by_user_id`
 - ← `comms.audience_group_member.user_id`
@@ -4029,7 +4029,7 @@ Student Information: Student and guardian records, placement and registration pe
 
 Workforce / HR: Staff records, designations, departments, subject competencies, leave types and leave applications.
 
-11 tables: [`designation`](#hrdesignation), [`idempotency_key`](#hridempotency_key), [`inbox_event`](#hrinbox_event), [`leave_application`](#hrleave_application), [`leave_balance`](#hrleave_balance), [`leave_type`](#hrleave_type), [`number_sequence`](#hrnumber_sequence), [`operation`](#hroperation), [`outbox_event`](#hroutbox_event), [`staff`](#hrstaff), [`staff_department`](#hrstaff_department)
+12 tables: [`designation`](#hrdesignation), [`holiday_record`](#hrholiday_record), [`idempotency_key`](#hridempotency_key), [`inbox_event`](#hrinbox_event), [`leave_application`](#hrleave_application), [`leave_balance`](#hrleave_balance), [`leave_type`](#hrleave_type), [`number_sequence`](#hrnumber_sequence), [`operation`](#hroperation), [`outbox_event`](#hroutbox_event), [`staff`](#hrstaff), [`staff_department`](#hrstaff_department)
 
 <a id="hrdesignation"></a>
 ### hr.designation
@@ -4062,6 +4062,28 @@ Workforce / HR: Staff records, designations, departments, subject competencies, 
 **Relationships**
 
 - ← `hr.staff.designation_id` — referenced by (1:N)
+
+<a id="hrholiday_record"></a>
+### hr.holiday_record
+
+The holidays of the tenant's institutions, kept from `org.holiday` events, so leave days and unpaid-leave pay count working days only (`WorkingDays`). When holidays move to `master.holiday` (ROADMAP ARC-8) only the feed changes.
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `tenant_id` | uuid | Y |  | PK | Owning tenant. Row-level security key. |
+| 2 | `holiday_id` | uuid | Y |  | PK | `org.holiday.id` (kept from its events) |
+| 3 | `institution_id` | uuid |  |  |  | Institution the holiday closes; NULL = every institution of the tenant |
+| 4 | `title` | varchar(200) | Y |  |  | Holiday name |
+| 5 | `start_date` | date | Y |  |  | First day |
+| 6 | `end_date` | date | Y |  |  | Last day |
+| 7 | `is_deleted` | bool | Y | false |  | Deleted in org; kept so a late event cannot restore it |
+| 8 | `source_version` | int4 | Y |  |  | Source row version this entry reflects; older events are ignored |
+| 9 | `synced_at` | timestamptz | Y |  |  | When an event last changed the row |
+
+**Checks**
+
+- `ck_holiday_record_dates`: end_date >= start_date
+- `ck_holiday_record_source_version`: source_version >= 1
 
 <a id="hridempotency_key"></a>
 ### hr.idempotency_key
@@ -4123,12 +4145,13 @@ Workforce / HR: Staff records, designations, departments, subject competencies, 
 | 14 | `decided_by_user_id` | uuid |  |  | logical → `iam.user_account` (cross-module, no FK) |  |
 | 15 | `decided_on` | date |  |  |  |  |
 | 16 | `decision_comments` | text |  |  |  |  |
-| 17 | `created_at` | timestamptz | Y | now() |  |  |
-| 18 | `created_by` | uuid |  |  |  |  |
-| 19 | `updated_at` | timestamptz | Y | now() |  |  |
-| 20 | `updated_by` | uuid |  |  |  |  |
-| 21 | `deleted_at` | timestamptz |  |  |  |  |
-| 22 | `row_version` | int4 | Y | 0 |  |  |
+| 17 | `counted_days` | numeric(5,1) |  |  |  | Days the approval counted against the balance; cancel gives back exactly these |
+| 18 | `created_at` | timestamptz | Y | now() |  |  |
+| 19 | `created_by` | uuid |  |  |  |  |
+| 20 | `updated_at` | timestamptz | Y | now() |  |  |
+| 21 | `updated_by` | uuid |  |  |  |  |
+| 22 | `deleted_at` | timestamptz |  |  |  |  |
+| 23 | `row_version` | int4 | Y | 0 |  |  |
 
 **Uniqueness**
 
@@ -4142,7 +4165,7 @@ Workforce / HR: Staff records, designations, departments, subject competencies, 
 
 **Referenced from other modules (logical, no FK — archive instead of deleting; publish the deleted/archived event)**
 
-- ← `attendance.staff_attendance.leave_application_id`
+- ← `time_attendance.staff_attendance.leave_application_id` (in-module FK)
 
 <a id="hrleave_balance"></a>
 ### hr.leave_balance
@@ -4183,15 +4206,16 @@ Workforce / HR: Staff records, designations, departments, subject competencies, 
 | 4 | `academic_year_id` | uuid |  |  | logical → `org.academic_year` (cross-module, no FK) |  |
 | 5 | `name` | varchar(?) | Y |  |  |  |
 | 6 | `max_days_per_year` | numeric(?,?) | Y |  |  |  |
-| 7 | `is_active` | bool | Y | TRUE |  |  |
-| 8 | `created_at` | timestamptz | Y | now() |  |  |
-| 9 | `created_by` | uuid |  |  |  |  |
-| 10 | `updated_at` | timestamptz | Y | now() |  |  |
-| 11 | `updated_by` | uuid |  |  |  |  |
-| 12 | `deleted_at` | timestamptz |  |  |  |  |
-| 13 | `row_version` | int4 | Y | 0 |  |  |
-| 14 | `code` | varchar(?) | Y |  |  |  |
-| 15 | `sort_order` | int4 | Y | 0 |  |  |
+| 7 | `is_paid` | bool | Y | TRUE |  | Whether leave of this type is paid; approved unpaid leave reduces the pay of its period |
+| 8 | `is_active` | bool | Y | TRUE |  |  |
+| 9 | `created_at` | timestamptz | Y | now() |  |  |
+| 10 | `created_by` | uuid |  |  |  |  |
+| 11 | `updated_at` | timestamptz | Y | now() |  |  |
+| 12 | `updated_by` | uuid |  |  |  |  |
+| 13 | `deleted_at` | timestamptz |  |  |  |  |
+| 14 | `row_version` | int4 | Y | 0 |  |  |
+| 15 | `code` | varchar(?) | Y |  |  |  |
+| 16 | `sort_order` | int4 | Y | 0 |  |  |
 
 **Uniqueness**
 
@@ -4330,7 +4354,7 @@ Workforce / HR: Staff records, designations, departments, subject competencies, 
 - ← `assessment.exam_invigilator.staff_id`
 - ← `assessment.homework.assigned_by_staff_id`
 - ← `attendance.attendance_sheet.taken_by_staff_id`
-- ← `attendance.staff_attendance.staff_id`
+- ← `time_attendance.staff_attendance.staff_id`
 - ← `frontoffice.visitor_log.host_staff_id`
 - ← `library.library_card.staff_id`
 - ← `payroll.payroll_payment.staff_id`
@@ -4684,7 +4708,7 @@ Payroll: Pay components, salary templates, staff salary structures, payslips and
 | 1 | `id` | uuid | Y | gen_random_uuid() | PK |  |
 | 2 | `tenant_id` | uuid | Y |  |  |  |
 | 3 | `payslip_id` | uuid | Y |  | FK → `payroll.payslip` · CASCADE · tenant-composite |  |
-| 4 | `staff_salary_component_id` | uuid | Y |  | FK → `payroll.staff_salary_component` · RESTRICT · tenant-composite |  |
+| 4 | `staff_salary_component_id` | uuid |  |  | FK → `payroll.staff_salary_component` · RESTRICT · tenant-composite | NULL on the unpaid-leave line (`UNPAID_LEAVE`) |
 | 5 | `amount` | numeric(?,?) | Y |  |  |  |
 | 6 | `created_at` | timestamptz | Y | now() |  |  |
 | 7 | `created_by` | uuid |  |  |  |  |
@@ -4835,6 +4859,49 @@ Payroll: Pay components, salary templates, staff salary structures, payslips and
 **Relationships**
 
 - ← `payroll.payslip_line.staff_salary_component_id` — referenced by (1:N)
+
+## `time_attendance` — Time & Attendance
+
+Time & Attendance: daily staff attendance (manual entry, biometric/device capture, bulk import), an hrms area beside `hr` and `payroll` (moved from `attendance`, reorganisation 2c; infrastructure tables not listed here, like the other modules'). 
+
+1 table: [`staff_attendance`](#time_attendancestaff_attendance)
+
+<a id="time_attendancestaff_attendance"></a>
+### time_attendance.staff_attendance
+
+*Partitioned by RANGE (attendance_date); monthly partitions plus a default partition.*
+
+| # | Column | Type | NN | Default | Key / relationship | Description |
+|---|---|---|---|---|---|---|
+| 1 | `id` | uuid | Y | gen_random_uuid() | PK |  |
+| 2 | `tenant_id` | uuid | Y |  |  |  |
+| 3 | `staff_id` | uuid | Y |  | logical → `hr.staff` (sibling hrms area, no FK) |  |
+| 4 | `attendance_date` | date | Y |  | PK |  |
+| 5 | `status` | varchar(?) | Y |  |  |  |
+| 6 | `check_in_at` | timestamptz |  |  |  |  |
+| 7 | `check_out_at` | timestamptz |  |  |  |  |
+| 8 | `source` | varchar(?) | Y | 'manual' |  |  |
+| 9 | `leave_application_id` | uuid |  |  | FK → `hr.leave_application` (`leave_application_id`, `tenant_id`; in-module, hrms) | Written by the leave workflow only (`LeaveAttendanceSync`) |
+| 10 | `replaced_status` | varchar(20) |  |  |  | Status a recorded day had before approved leave overrode it; restored on cancel |
+| 11 | `recorded_by_user_id` | uuid |  |  | logical → `iam.user_account` (cross-module, no FK) |  |
+| 12 | `remark` | varchar(?) |  |  |  |  |
+| 13 | `created_at` | timestamptz | Y | now() |  |  |
+| 14 | `created_by` | uuid |  |  |  |  |
+| 15 | `updated_at` | timestamptz | Y | now() |  |  |
+| 16 | `updated_by` | uuid |  |  |  |  |
+| 17 | `deleted_at` | timestamptz |  |  |  |  |
+| 18 | `row_version` | int4 | Y | 0 |  |  |
+
+**Uniqueness**
+
+- unique index `uq_staff_attendance_1` (`staff_id`, `attendance_date`) WHERE deleted_at IS NULL
+
+**Checks**
+
+- `ck_staff_attendance_status`: status IN ('present', 'absent', 'half_day', 'late', 'on_leave', 'holiday')
+- `ck_staff_attendance_source`: source IN ('manual', 'biometric', 'import')
+- `ck_staff_attendance_replaced_status`: replaced_status IN ('present', 'absent', 'half_day', 'late', 'on_leave', 'holiday')
+- `ck_staff_attendance_replaced_by_leave`: replaced_status IS NULL OR leave_application_id IS NOT NULL
 
 ## `admission` — Admissions
 
@@ -5180,7 +5247,7 @@ Admissions: Admission cycles, fees, applications with applicant, guardian and em
 
 Attendance: Attendance registers, sheets (one per register/session/date) and per-student records, with configurable attendance types and absence reasons.
 
-10 tables: [`absence_reason`](#attendanceabsence_reason), [`attendance_record`](#attendanceattendance_record), [`attendance_register`](#attendanceattendance_register), [`attendance_sheet`](#attendanceattendance_sheet), [`attendance_type`](#attendanceattendance_type), [`idempotency_key`](#attendanceidempotency_key), [`inbox_event`](#attendanceinbox_event), [`operation`](#attendanceoperation), [`outbox_event`](#attendanceoutbox_event), [`staff_attendance`](#attendancestaff_attendance)
+9 tables: [`absence_reason`](#attendanceabsence_reason), [`attendance_record`](#attendanceattendance_record), [`attendance_register`](#attendanceattendance_register), [`attendance_sheet`](#attendanceattendance_sheet), [`attendance_type`](#attendanceattendance_type), [`idempotency_key`](#attendanceidempotency_key), [`inbox_event`](#attendanceinbox_event), [`operation`](#attendanceoperation), [`outbox_event`](#attendanceoutbox_event)
 
 <a id="attendanceabsence_reason"></a>
 ### attendance.absence_reason
@@ -5439,40 +5506,6 @@ Attendance: Attendance registers, sheets (one per register/session/date) and per
 | 7 | `occurred_at` | timestamptz | Y | now() |  |  |
 | 8 | `published_at` | timestamptz |  |  |  |  |
 | 9 | `publish_error` | text |  |  |  | Why the relay set the row aside (not published) |
-
-<a id="attendancestaff_attendance"></a>
-### attendance.staff_attendance
-
-*Partitioned by RANGE (attendance_date); monthly partitions plus a default partition.*
-
-| # | Column | Type | NN | Default | Key / relationship | Description |
-|---|---|---|---|---|---|---|
-| 1 | `id` | uuid | Y | gen_random_uuid() | PK |  |
-| 2 | `tenant_id` | uuid | Y |  |  |  |
-| 3 | `staff_id` | uuid | Y |  | logical → `hr.staff` (cross-module, no FK) |  |
-| 4 | `attendance_date` | date | Y |  | PK |  |
-| 5 | `status` | varchar(?) | Y |  |  |  |
-| 6 | `check_in_at` | timestamptz |  |  |  |  |
-| 7 | `check_out_at` | timestamptz |  |  |  |  |
-| 8 | `source` | varchar(?) | Y | 'manual' |  |  |
-| 9 | `leave_application_id` | uuid |  |  | logical → `hr.leave_application` (cross-module, no FK) |  |
-| 10 | `recorded_by_user_id` | uuid |  |  | logical → `iam.user_account` (cross-module, no FK) |  |
-| 11 | `remark` | varchar(?) |  |  |  |  |
-| 12 | `created_at` | timestamptz | Y | now() |  |  |
-| 13 | `created_by` | uuid |  |  |  |  |
-| 14 | `updated_at` | timestamptz | Y | now() |  |  |
-| 15 | `updated_by` | uuid |  |  |  |  |
-| 16 | `deleted_at` | timestamptz |  |  |  |  |
-| 17 | `row_version` | int4 | Y | 0 |  |  |
-
-**Uniqueness**
-
-- unique index `uq_staff_attendance_1` (`staff_id`, `attendance_date`) WHERE deleted_at IS NULL
-
-**Checks**
-
-- `ck_staff_attendance_status`: status IN ('present', 'absent', 'half_day', 'late', 'on_leave', 'holiday')
-- `ck_staff_attendance_source`: source IN ('manual', 'biometric', 'import')
 
 ## `facility` — Rooms & Facilities
 

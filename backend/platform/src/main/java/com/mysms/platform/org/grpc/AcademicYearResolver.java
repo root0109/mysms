@@ -2,13 +2,13 @@ package com.mysms.platform.org.grpc;
 
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
+import com.mysms.org.v1.AcademicTermUpdate;
 import com.mysms.platform.org.api.model.AcademicTerm;
 import com.mysms.platform.org.api.model.AcademicTermList;
-import com.mysms.platform.org.api.model.AcademicTermUpdate;
 import com.mysms.platform.org.api.model.AcademicYear;
-import com.mysms.platform.org.api.model.AcademicYearUpdate;
 import com.mysms.platform.org.business.AcademicYearService;
 import com.mysms.org.v1.AcademicYearServiceGrpc;
+import com.mysms.org.v1.AcademicYearUpdate;
 import com.mysms.org.v1.ActivateAcademicYearRequest;
 import com.mysms.org.v1.ActivateAcademicYearResponse;
 import com.mysms.org.v1.CloseAcademicYearRequest;
@@ -31,9 +31,7 @@ import com.mysms.org.v1.ListAcademicTermsRequest;
 import com.mysms.org.v1.ListAcademicTermsResponse;
 import com.mysms.org.v1.ListAcademicYearsRequest;
 import com.mysms.org.v1.ListAcademicYearsResponse;
-import com.mysms.org.v1.UpdateAcademicTermRequest;
 import com.mysms.org.v1.UpdateAcademicTermResponse;
-import com.mysms.org.v1.UpdateAcademicYearRequest;
 import com.mysms.org.v1.UpdateAcademicYearResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -78,11 +76,11 @@ public class AcademicYearResolver extends AcademicYearServiceGrpc.AcademicYearSe
     }
 
     @Override
-    public void updateAcademicYear(UpdateAcademicYearRequest request, StreamObserver<UpdateAcademicYearResponse> out) {
+    public void updateAcademicYear(AcademicYearUpdate request, StreamObserver<UpdateAcademicYearResponse> out) {
         AcademicYear updated = service.updateAcademicYear(
-                bridge.id(request.getAcademicYear().getId(), "id"),
-                bridge.requiredIfMatch(request.getAcademicYear().getEtag()),
-                bridge.changes(request.getAcademicYear(), request.getUpdateMask(), AcademicYearUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AcademicYearProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAcademicYearResponse.newBuilder(), "academic_year", updated).build());
     }
@@ -121,12 +119,12 @@ public class AcademicYearResolver extends AcademicYearServiceGrpc.AcademicYearSe
     }
 
     @Override
-    public void updateAcademicTerm(UpdateAcademicTermRequest request, StreamObserver<UpdateAcademicTermResponse> out) {
+    public void updateAcademicTerm(AcademicTermUpdate request, StreamObserver<UpdateAcademicTermResponse> out) {
         AcademicTerm updated = service.updateAcademicTerm(
                 bridge.id(request.getAcademicYearId(), "academicYearId"),
-                bridge.id(request.getAcademicTerm().getId(), "id"),
-                bridge.requiredIfMatch(request.getAcademicTerm().getEtag()),
-                bridge.changes(request.getAcademicTerm(), request.getUpdateMask(), AcademicTermUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AcademicTermProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAcademicTermResponse.newBuilder(), "academic_term", updated).build());
     }

@@ -16,11 +16,11 @@
   </parent>
   <artifactId>hrms</artifactId>
   <name>MySMS hrms</name>
-  <description>Hrms microservice (schemas hr, payroll)</description>
+  <description>Hrms microservice (schemas hr, payroll, time_attendance)</description>
 
   <properties>
     <!-- SpotBugs analyses the module's own code: its root package and every layer package of each area (§3) -->
-    <mysms.spotbugs.onlyAnalyze>com.mysms.hrms.*,com.mysms.hrms.hr.*,com.mysms.hrms.hr.api.-,com.mysms.hrms.hr.controller.-,com.mysms.hrms.hr.grpc.-,com.mysms.hrms.hr.integration.-,com.mysms.hrms.hr.business.-,com.mysms.hrms.hr.repository.-,com.mysms.hrms.hr.domain.-,com.mysms.hrms.hr.model.-,com.mysms.hrms.hr.mapper.-,com.mysms.hrms.hr.validation.-,com.mysms.hrms.hr.errors.-,com.mysms.hrms.hr.events.-,com.mysms.hrms.hr.config.-,com.mysms.hrms.hr.constants.-,com.mysms.hrms.payroll.*,com.mysms.hrms.payroll.api.-,com.mysms.hrms.payroll.controller.-,com.mysms.hrms.payroll.grpc.-,com.mysms.hrms.payroll.integration.-,com.mysms.hrms.payroll.business.-,com.mysms.hrms.payroll.repository.-,com.mysms.hrms.payroll.domain.-,com.mysms.hrms.payroll.model.-,com.mysms.hrms.payroll.mapper.-,com.mysms.hrms.payroll.validation.-,com.mysms.hrms.payroll.errors.-,com.mysms.hrms.payroll.events.-,com.mysms.hrms.payroll.config.-,com.mysms.hrms.payroll.constants.-</mysms.spotbugs.onlyAnalyze>
+    <mysms.spotbugs.onlyAnalyze>com.mysms.hrms.*,com.mysms.hrms.hr.*,com.mysms.hrms.hr.api.-,com.mysms.hrms.hr.controller.-,com.mysms.hrms.hr.grpc.-,com.mysms.hrms.hr.integration.-,com.mysms.hrms.hr.business.-,com.mysms.hrms.hr.repository.-,com.mysms.hrms.hr.domain.-,com.mysms.hrms.hr.model.-,com.mysms.hrms.hr.mapper.-,com.mysms.hrms.hr.validation.-,com.mysms.hrms.hr.errors.-,com.mysms.hrms.hr.events.-,com.mysms.hrms.hr.config.-,com.mysms.hrms.hr.constants.-,com.mysms.hrms.payroll.*,com.mysms.hrms.payroll.api.-,com.mysms.hrms.payroll.controller.-,com.mysms.hrms.payroll.grpc.-,com.mysms.hrms.payroll.integration.-,com.mysms.hrms.payroll.business.-,com.mysms.hrms.payroll.repository.-,com.mysms.hrms.payroll.domain.-,com.mysms.hrms.payroll.model.-,com.mysms.hrms.payroll.mapper.-,com.mysms.hrms.payroll.validation.-,com.mysms.hrms.payroll.errors.-,com.mysms.hrms.payroll.events.-,com.mysms.hrms.payroll.config.-,com.mysms.hrms.payroll.constants.-,com.mysms.hrms.timeattendance.*,com.mysms.hrms.timeattendance.api.-,com.mysms.hrms.timeattendance.controller.-,com.mysms.hrms.timeattendance.grpc.-,com.mysms.hrms.timeattendance.integration.-,com.mysms.hrms.timeattendance.business.-,com.mysms.hrms.timeattendance.repository.-,com.mysms.hrms.timeattendance.domain.-,com.mysms.hrms.timeattendance.model.-,com.mysms.hrms.timeattendance.mapper.-,com.mysms.hrms.timeattendance.validation.-,com.mysms.hrms.timeattendance.errors.-,com.mysms.hrms.timeattendance.events.-,com.mysms.hrms.timeattendance.config.-,com.mysms.hrms.timeattendance.constants.-</mysms.spotbugs.onlyAnalyze>
   </properties>
 
   <dependencies>
@@ -89,6 +89,10 @@
       <resource>
         <directory>${mysms.migrations.dir}/payroll</directory>
         <targetPath>db/migration/payroll</targetPath>
+      </resource>
+      <resource>
+        <directory>${mysms.migrations.dir}/time_attendance</directory>
+        <targetPath>db/migration/time_attendance</targetPath>
       </resource>
     </resources>
     <plugins>

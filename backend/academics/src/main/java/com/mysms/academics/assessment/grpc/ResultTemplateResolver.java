@@ -3,8 +3,6 @@ package com.mysms.academics.assessment.grpc;
 import com.mysms.academics.assessment.api.model.Operation;
 import com.mysms.academics.assessment.api.model.ResultTemplate;
 import com.mysms.academics.assessment.api.model.ResultTemplateBand;
-import com.mysms.academics.assessment.api.model.ResultTemplateBandUpdate;
-import com.mysms.academics.assessment.api.model.ResultTemplateUpdate;
 import com.mysms.academics.assessment.business.ResultTemplateService;
 import com.mysms.academics.assessment.business.ResultsGenerationService;
 import com.mysms.assessment.v1.CreateResultTemplateBandRequest;
@@ -25,10 +23,10 @@ import com.mysms.assessment.v1.ListResultTemplateBandsRequest;
 import com.mysms.assessment.v1.ListResultTemplateBandsResponse;
 import com.mysms.assessment.v1.ListResultTemplatesRequest;
 import com.mysms.assessment.v1.ListResultTemplatesResponse;
+import com.mysms.assessment.v1.ResultTemplateBandUpdate;
 import com.mysms.assessment.v1.ResultTemplateServiceGrpc;
-import com.mysms.assessment.v1.UpdateResultTemplateBandRequest;
+import com.mysms.assessment.v1.ResultTemplateUpdate;
 import com.mysms.assessment.v1.UpdateResultTemplateBandResponse;
-import com.mysms.assessment.v1.UpdateResultTemplateRequest;
 import com.mysms.assessment.v1.UpdateResultTemplateResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -79,12 +77,12 @@ public class ResultTemplateResolver extends ResultTemplateServiceGrpc.ResultTemp
     }
 
     @Override
-    public void updateResultTemplate(UpdateResultTemplateRequest request,
+    public void updateResultTemplate(ResultTemplateUpdate request,
             StreamObserver<UpdateResultTemplateResponse> out) {
         ResultTemplate updated = resultTemplateService.updateResultTemplate(
-                bridge.id(request.getResultTemplate().getId(), "id"),
-                bridge.requiredIfMatch(request.getResultTemplate().getEtag()),
-                bridge.changes(request.getResultTemplate(), request.getUpdateMask(), ResultTemplateUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ResultTemplateProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateResultTemplateResponse.newBuilder(),
                 "result_template", updated).build());
@@ -128,14 +126,13 @@ public class ResultTemplateResolver extends ResultTemplateServiceGrpc.ResultTemp
     }
 
     @Override
-    public void updateResultTemplateBand(UpdateResultTemplateBandRequest request,
+    public void updateResultTemplateBand(ResultTemplateBandUpdate request,
             StreamObserver<UpdateResultTemplateBandResponse> out) {
         ResultTemplateBand updated = resultTemplateService.updateResultTemplateBand(
                 bridge.id(request.getResultTemplateId(), "resultTemplateId"),
-                bridge.id(request.getResultTemplateBand().getId(), "id"),
-                bridge.requiredIfMatch(request.getResultTemplateBand().getEtag()),
-                bridge.changes(request.getResultTemplateBand(), request.getUpdateMask(),
-                        ResultTemplateBandUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ResultTemplateBandProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateResultTemplateBandResponse.newBuilder(),
                 "result_template_band", updated).build());
     }

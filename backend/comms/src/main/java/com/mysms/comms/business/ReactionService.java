@@ -223,6 +223,9 @@ public class ReactionService extends AppTransactionManager {
         }
         List<String> fields = apply.get();
         revalidate.run();
+        if (fields.isEmpty()) {
+            return entity;
+        }
         entity.onUpdatingData(Actor.current(), clock);
         if (validateOnly) {
             return entity;

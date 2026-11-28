@@ -9,8 +9,8 @@ misleading 404.
 |---|---:|---:|---:|
 | academics | 80 | 80 | 0 |
 | admission | 43 | 43 | 0 |
-| assessment | 132 | 132 | 0 |
-| attendance | 33 | 33 | 0 |
+| assessment | 130 | 130 | 0 |
+| attendance | 29 | 29 | 0 |
 | careers | 40 | 40 | 0 |
 | comms | 235 | 235 | 0 |
 | facility | 25 | 25 | 0 |
@@ -27,9 +27,10 @@ misleading 404.
 | platform | 86 | 86 | 0 |
 | privacy | 71 | 71 | 0 |
 | sis | 108 | 108 | 0 |
+| time_attendance | 4 | 4 | 0 |
 | timetable | 25 | 25 | 0 |
 | transport | 15 | 15 | 0 |
-| **all** | **2123** | **2123** | **0** |
+| **all** | **2121** | **2121** | **0** |
 
 ## academics
 
@@ -182,7 +183,6 @@ misleading 404.
 | `assessment.CompleteExamSession` | POST | `/v1/assessment/exam-sessions/{examSessionId}:complete` | `assessment.exam_session.complete_exam_session` | served |  |
 | `assessment.CreateAssignment` | POST | `/v1/assessment/assignments` | `assessment.assignment.create` | served |  |
 | `assessment.CreateAssignmentAllocation` | POST | `/v1/assessment/assignments/{assignmentId}/allocations` | `assessment.assignment_allocation.create` | served |  |
-| `assessment.CreateAssignmentApproval` | POST | `/v1/assessment/assignments/{assignmentId}/approvals` | `assessment.assignment_approval.create` | served |  |
 | `assessment.CreateAssignmentSubject` | POST | `/v1/assessment/assignments/{assignmentId}/subjects` | `assessment.assignment_subject.create` | served |  |
 | `assessment.CreateAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions` | `assessment.assignment_submission.create` | served |  |
 | `assessment.CreateAssignmentType` | POST | `/v1/assessment/assignment-types` | `assessment.assignment_type.create` | served |  |
@@ -199,7 +199,6 @@ misleading 404.
 | `assessment.CreateResultTemplateBand` | POST | `/v1/assessment/result-templates/{resultTemplateId}/result-template-bands` | `assessment.result_template_band.create` | served |  |
 | `assessment.DeleteAssignment` | DELETE | `/v1/assessment/assignments/{assignmentId}` | `assessment.assignment.delete` | served |  |
 | `assessment.DeleteAssignmentAllocation` | DELETE | `/v1/assessment/assignments/{assignmentId}/allocations/{assignmentAllocationId}` | `assessment.assignment_allocation.delete` | served |  |
-| `assessment.DeleteAssignmentApproval` | DELETE | `/v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId}` | `assessment.assignment_approval.delete` | served |  |
 | `assessment.DeleteAssignmentSubject` | DELETE | `/v1/assessment/assignments/{assignmentId}/subjects/{assignmentSubjectId}` | `assessment.assignment_subject.delete` | served |  |
 | `assessment.DeleteAssignmentSubmission` | DELETE | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}` | `assessment.assignment_submission.delete` | served |  |
 | `assessment.DeleteAssignmentType` | DELETE | `/v1/assessment/assignment-types/{assignmentTypeId}` | `assessment.assignment_type.delete` | served |  |
@@ -272,6 +271,7 @@ misleading 404.
 | `assessment.RejectAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:reject` | `assessment.assignment_submission.reject_assignment_submission` | served |  |
 | `assessment.RejectHomework` | POST | `/v1/assessment/homeworks/{homeworkId}:reject` | `assessment.homework.reject_homework` | served |  |
 | `assessment.ReplyToHomeworkFeedback` | POST | `/v1/assessment/homework-submissions/{homeworkSubmissionId}:reply` | `assessment.homework_submission.reply_to_homework_feedback` | served |  |
+| `assessment.RequestAssignmentApproval` | POST | `/v1/assessment/assignments/{assignmentId}:requestApproval` | `assessment.assignment.request_assignment_approval` | served |  |
 | `assessment.RequestSubmissionChanges` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:requestChanges` | `assessment.assignment_submission.request_submission_changes` | served |  |
 | `assessment.ResetAssignment` | POST | `/v1/assessment/assignments/{assignmentId}:resetToDraft` | `assessment.assignment.reset_assignment` | served |  |
 | `assessment.ResetAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:resetToDraft` | `assessment.assignment_submission.reset_assignment_submission` | served |  |
@@ -283,7 +283,6 @@ misleading 404.
 | `assessment.SubmitAssignmentSubmission` | POST | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}:submit` | `assessment.assignment_submission.submit_assignment_submission` | served |  |
 | `assessment.UpdateAssignment` | PATCH | `/v1/assessment/assignments/{assignmentId}` | `assessment.assignment.update` | served |  |
 | `assessment.UpdateAssignmentAllocation` | PATCH | `/v1/assessment/assignments/{assignmentId}/allocations/{assignmentAllocationId}` | `assessment.assignment_allocation.update` | served |  |
-| `assessment.UpdateAssignmentApproval` | PATCH | `/v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId}` | `assessment.assignment_approval.update` | served |  |
 | `assessment.UpdateAssignmentSubject` | PATCH | `/v1/assessment/assignments/{assignmentId}/subjects/{assignmentSubjectId}` | `assessment.assignment_subject.update` | served |  |
 | `assessment.UpdateAssignmentSubmission` | PATCH | `/v1/assessment/assignment-submissions/{assignmentSubmissionId}` | `assessment.assignment_submission.update` | served |  |
 | `assessment.UpdateAssignmentType` | PATCH | `/v1/assessment/assignment-types/{assignmentTypeId}` | `assessment.assignment_type.update` | served |  |
@@ -311,7 +310,6 @@ misleading 404.
 | `attendance.CreateAttendanceRegister` | POST | `/v1/attendance/attendance-registers` | `attendance.attendance_register.create` | served |  |
 | `attendance.CreateAttendanceSheet` | POST | `/v1/attendance/attendance-sheets` | `attendance.attendance_sheet.create` | served |  |
 | `attendance.CreateAttendanceType` | POST | `/v1/attendance/attendance-types` | `attendance.attendance_type.create` | served |  |
-| `attendance.CreateStaffAttendance` | POST | `/v1/attendance/staff-attendance-days` | `attendance.staff_attendance.create` | served |  |
 | `attendance.DeleteAbsenceReason` | DELETE | `/v1/attendance/absence-reasons/{absenceReasonId}` | `attendance.absence_reason.delete` | served |  |
 | `attendance.DeleteAttendanceRegister` | DELETE | `/v1/attendance/attendance-registers/{attendanceRegisterId}` | `attendance.attendance_register.delete` | served |  |
 | `attendance.DeleteAttendanceSheet` | DELETE | `/v1/attendance/attendance-sheets/{attendanceSheetId}` | `attendance.attendance_sheet.delete` | served |  |
@@ -321,13 +319,11 @@ misleading 404.
 | `attendance.GetAttendanceRegister` | GET | `/v1/attendance/attendance-registers/{attendanceRegisterId}` | `attendance.attendance_register.read` | served |  |
 | `attendance.GetAttendanceSheet` | GET | `/v1/attendance/attendance-sheets/{attendanceSheetId}` | `attendance.attendance_sheet.read` | served |  |
 | `attendance.GetAttendanceType` | GET | `/v1/attendance/attendance-types/{attendanceTypeId}` | `attendance.attendance_type.read` | served |  |
-| `attendance.GetStaffAttendance` | GET | `/v1/attendance/staff-attendance-days/{staffAttendanceId}` | `attendance.staff_attendance.read` | served |  |
 | `attendance.ListAbsenceReasons` | GET | `/v1/attendance/absence-reasons` | `attendance.absence_reason.read` | served |  |
 | `attendance.ListAttendanceRecords` | GET | `/v1/attendance/attendance-sheets/{attendanceSheetId}/records` | `attendance.attendance_record.read` | served |  |
 | `attendance.ListAttendanceRegisters` | GET | `/v1/attendance/attendance-registers` | `attendance.attendance_register.read` | served |  |
 | `attendance.ListAttendanceSheets` | GET | `/v1/attendance/attendance-sheets` | `attendance.attendance_sheet.read` | served |  |
 | `attendance.ListAttendanceTypes` | GET | `/v1/attendance/attendance-types` | `attendance.attendance_type.read` | served |  |
-| `attendance.ListStaffAttendances` | GET | `/v1/attendance/staff-attendance-days` | `attendance.staff_attendance.read` | served |  |
 | `attendance.RecordAttendance` | POST | `/v1/attendance/attendance-sheets/{attendanceSheetId}:recordAttendance` | `attendance.attendance_sheet.record_attendance` | served |  |
 | `attendance.ResetAttendanceSheet` | POST | `/v1/attendance/attendance-sheets/{attendanceSheetId}:resetToDraft` | `attendance.attendance_sheet.reset_attendance_sheet` | served |  |
 | `attendance.StartAttendanceSheet` | POST | `/v1/attendance/attendance-sheets/{attendanceSheetId}:start` | `attendance.attendance_sheet.start_attendance_sheet` | served |  |
@@ -337,7 +333,6 @@ misleading 404.
 | `attendance.UpdateAttendanceRegister` | PATCH | `/v1/attendance/attendance-registers/{attendanceRegisterId}` | `attendance.attendance_register.update` | served |  |
 | `attendance.UpdateAttendanceSheet` | PATCH | `/v1/attendance/attendance-sheets/{attendanceSheetId}` | `attendance.attendance_sheet.update` | served |  |
 | `attendance.UpdateAttendanceType` | PATCH | `/v1/attendance/attendance-types/{attendanceTypeId}` | `attendance.attendance_type.update` | served |  |
-| `attendance.UpdateStaffAttendance` | PATCH | `/v1/attendance/staff-attendance-days/{staffAttendanceId}` | `attendance.staff_attendance.update` | served |  |
 
 ## careers
 
@@ -2213,6 +2208,15 @@ misleading 404.
 | `sis.UpdateStudentSibling` | PATCH | `/v1/sis/students/{studentId}/siblings/{studentSiblingId}` | `sis.student_sibling.update` | served |  |
 | `sis.UpdateSubjectRegistration` | PATCH | `/v1/sis/subject-registrations/{subjectRegistrationId}` | `sis.subject_registration.update` | served |  |
 | `sis.UpdateSubjectRegistrationLine` | PATCH | `/v1/sis/subject-registrations/{subjectRegistrationId}/lines/{subjectRegistrationLineId}` | `sis.subject_registration_line.update` | served |  |
+
+## time_attendance
+
+| Operation | Method | Path | Permission | Status | Why not served |
+|---|---|---|---|---|---|
+| `time_attendance.CreateStaffAttendance` | POST | `/v1/time-attendance/staff-attendance-days` | `time_attendance.staff_attendance.create` | served |  |
+| `time_attendance.GetStaffAttendance` | GET | `/v1/time-attendance/staff-attendance-days/{staffAttendanceId}` | `time_attendance.staff_attendance.read` | served |  |
+| `time_attendance.ListStaffAttendances` | GET | `/v1/time-attendance/staff-attendance-days` | `time_attendance.staff_attendance.read` | served |  |
+| `time_attendance.UpdateStaffAttendance` | PATCH | `/v1/time-attendance/staff-attendance-days/{staffAttendanceId}` | `time_attendance.staff_attendance.update` | served |  |
 
 ## timetable
 

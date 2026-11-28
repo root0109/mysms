@@ -3,18 +3,17 @@ package com.mysms.finance.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.finance.api.model.FeeConcession;
-import com.mysms.finance.api.model.FeeConcessionUpdate;
 import com.mysms.finance.business.FeeConcessionService;
 import com.mysms.finance.v1.CreateFeeConcessionRequest;
 import com.mysms.finance.v1.CreateFeeConcessionResponse;
 import com.mysms.finance.v1.DeleteFeeConcessionRequest;
 import com.mysms.finance.v1.DeleteFeeConcessionResponse;
 import com.mysms.finance.v1.FeeConcessionServiceGrpc;
+import com.mysms.finance.v1.FeeConcessionUpdate;
 import com.mysms.finance.v1.GetFeeConcessionRequest;
 import com.mysms.finance.v1.GetFeeConcessionResponse;
 import com.mysms.finance.v1.ListFeeConcessionsRequest;
 import com.mysms.finance.v1.ListFeeConcessionsResponse;
-import com.mysms.finance.v1.UpdateFeeConcessionRequest;
 import com.mysms.finance.v1.UpdateFeeConcessionResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -58,12 +57,12 @@ public class FeeConcessionResolver extends FeeConcessionServiceGrpc.FeeConcessio
     }
 
     @Override
-    public void updateFeeConcession(UpdateFeeConcessionRequest request,
+    public void updateFeeConcession(FeeConcessionUpdate request,
             StreamObserver<UpdateFeeConcessionResponse> out) {
         FeeConcession updated = service.updateFeeConcession(
-                bridge.id(request.getFeeConcession().getId(), "id"),
-                bridge.requiredIfMatch(request.getFeeConcession().getEtag()),
-                bridge.changes(request.getFeeConcession(), request.getUpdateMask(), FeeConcessionUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                FeeConcessionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeeConcessionResponse.newBuilder(), "fee_concession",
                 updated).build());

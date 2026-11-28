@@ -556,17 +556,21 @@ class CommsGrpcParityComponentTest {
         String stranger = token(UUID.randomUUID(), TENANT, List.of("comms.*"), true);
         same("GetPostReaction", object().put("postId", onPage).put("id", reaction), "GET",
                 reactions + "/" + reaction, null, stranger);
-        ObjectNode stale = object().put("postId", onPage).put("updateMask", "reaction");
-        stale.putObject("postReaction").put("id", reaction).put("reaction", "REACTION_UNLIKE").put("etag", STALE);
+        ObjectNode stale = object().put("postId", onPage).put("id", reaction).put("reaction", "REACTION_UNLIKE")
+                .put("etag", STALE);
         MethodDescriptor update = rpc("UpdatePostReaction");
         GrpcParityContract.assertSameAnswer(rest("PATCH", reactions + "/" + reaction, token,
                 "{\"reaction\":\"unlike\"}", "If-Match", STALE), grpc(update, request(update, stale), token));
-        ObjectNode change = object().put("postId", onPage).put("updateMask", "reaction");
-        change.putObject("postReaction").put("id", reaction).put("reaction", "REACTION_UNLIKE").put("etag", "\"1\"");
+        ObjectNode change = object().put("postId", onPage).put("id", reaction).put("reaction", "REACTION_UNLIKE")
+                .put("etag", "\"1\"");
         Answer changed = grpc(update, request(update, change), token);
         assertThat(changed.status()).as(changed.code()).isEqualTo(200);
         GrpcParity.assertSameResource(rest("GET", reactions + "/" + reaction, token, null).body(),
                 changed.body().path("postReaction"));
+        Answer unchanged = grpc(update, request(update, object().put("postId", onPage).put("id", reaction)
+                .put("etag", "\"2\"")), token);
+        assertThat(unchanged.body().path("postReaction").path("etag").asString()).as("an empty update changes nothing")
+                .isEqualTo("\"2\"");
         MethodDescriptor delete = rpc("DeletePostReaction");
         ObjectNode remove = object().put("postId", onPage).put("id", reaction).put("etag", "\"2\"");
         GrpcParityContract.assertSameAnswer(rest("DELETE", reactions + "/" + reaction, stranger, null, "If-Match",
@@ -594,13 +598,17 @@ class CommsGrpcParityComponentTest {
         same("ListCommentReactions", object(), "GET", "/v1/comms/comment-reactions", null, token);
         same("GetCommentReaction", object().put("id", commentReaction), "GET",
                 "/v1/comms/comment-reactions/" + commentReaction, null, stranger);
-        ObjectNode deactivate = object().put("updateMask", "isActive");
-        deactivate.putObject("commentReaction").put("id", commentReaction).put("isActive", false).put("etag", "\"1\"");
+        ObjectNode deactivate = object().put("id", commentReaction).put("etag", "\"1\"");
+        deactivate.putObject("isActive").put("value", false);
         MethodDescriptor updateComment = rpc("UpdateCommentReaction");
         Answer deactivated = grpc(updateComment, request(updateComment, deactivate), token);
         assertThat(deactivated.status()).as(deactivated.code()).isEqualTo(200);
         GrpcParity.assertSameResource(rest("GET", "/v1/comms/comment-reactions/" + commentReaction, token, null)
                 .body(), deactivated.body().path("commentReaction"));
+        Answer untouched = grpc(updateComment, request(updateComment, object().put("id", commentReaction)
+                .put("etag", "\"2\"")), token);
+        assertThat(untouched.body().path("commentReaction").path("etag").asString())
+                .as("an empty update changes nothing").isEqualTo("\"2\"");
         MethodDescriptor deleteComment = rpc("DeleteCommentReaction");
         ObjectNode staleDelete = object().put("id", commentReaction).put("etag", STALE);
         GrpcParityContract.assertSameAnswer(rest("DELETE", "/v1/comms/comment-reactions/" + commentReaction, token,
@@ -750,16 +758,15 @@ class CommsGrpcParityComponentTest {
                 .put("authorUserId", other.toString()).put("body", "News");
         String postId = created("CreatePost", post, "post", me, "/v1/comms/posts/", token);
         String item = "/v1/comms/posts/" + postId;
-        ObjectNode editPost = object().put("updateMask", "body");
-        editPost.putObject("post").put("id", postId).put("body", "Mine").put("etag", "\"1\"");
+        ObjectNode editPost = object().put("id", postId).put("body", "Mine").put("etag", "\"1\"");
         GrpcParityContract.assertSameAnswer(rest("PATCH", item, theirs, "{\"body\":\"Mine\"}", "If-Match", "\"1\""),
                 grpc(rpc("UpdatePost"), request(rpc("UpdatePost"), editPost), theirs));
 
         ObjectNode comment = object().put("postId", postId);
         comment.putObject("postComment").put("authorUserId", other.toString()).put("body", "Nice");
         String commentId = created("CreatePostComment", comment, "postComment", me, item + "/comments/", token);
-        ObjectNode editComment = object().put("postId", postId).put("updateMask", "body");
-        editComment.putObject("postComment").put("id", commentId).put("body", "Mine").put("etag", "\"1\"");
+        ObjectNode editComment = object().put("postId", postId).put("id", commentId).put("body", "Mine")
+                .put("etag", "\"1\"");
         GrpcParityContract.assertSameAnswer(rest("PATCH", item + "/comments/" + commentId, theirs,
                 "{\"body\":\"Mine\"}", "If-Match", "\"1\""),
                 grpc(rpc("UpdatePostComment"), request(rpc("UpdatePostComment"), editComment), theirs));
@@ -782,8 +789,8 @@ class CommsGrpcParityComponentTest {
         ObjectNode message = object().put("conversationId", conversation);
         message.putObject("conversationMessage").put("senderUserId", other.toString()).put("body", "Hi");
         String messageId = created("CreateConversationMessage", message, "conversationMessage", me, messages, token);
-        ObjectNode editMessage = object().put("conversationId", conversation).put("updateMask", "body");
-        editMessage.putObject("conversationMessage").put("id", messageId).put("body", "Mine").put("etag", "\"1\"");
+        ObjectNode editMessage = object().put("conversationId", conversation).put("id", messageId).put("body", "Mine")
+                .put("etag", "\"1\"");
         GrpcParityContract.assertSameAnswer(rest("PATCH", messages + messageId, theirs, "{\"body\":\"Mine\"}",
                 "If-Match", "\"1\""),
                 grpc(rpc("UpdateConversationMessage"), request(rpc("UpdateConversationMessage"), editMessage), theirs));
@@ -793,8 +800,8 @@ class CommsGrpcParityComponentTest {
         sent.putObject("feedbackMessage").put("senderUserId", other.toString()).put("category", "CATEGORY_COMPLAINT")
                 .put("message", "Late");
         String feedbackId = created("CreateFeedbackMessage", sent, "feedbackMessage", me, feedback, token);
-        ObjectNode editFeedback = object().put("feedbackThreadId", thread).put("updateMask", "message");
-        editFeedback.putObject("feedbackMessage").put("id", feedbackId).put("message", "Mine").put("etag", "\"1\"");
+        ObjectNode editFeedback = object().put("feedbackThreadId", thread).put("id", feedbackId).put("message", "Mine")
+                .put("etag", "\"1\"");
         GrpcParityContract.assertSameAnswer(rest("PATCH", feedback + feedbackId, theirs, "{\"message\":\"Mine\"}",
                 "If-Match", "\"1\""),
                 grpc(rpc("UpdateFeedbackMessage"), request(rpc("UpdateFeedbackMessage"), editFeedback), theirs));

@@ -3,7 +3,6 @@ package com.mysms.hrms.payroll.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.payroll.api.model.StaffBankAccount;
-import com.mysms.hrms.payroll.api.model.StaffBankAccountUpdate;
 import com.mysms.hrms.payroll.business.StaffBankAccountService;
 import com.mysms.payroll.v1.CreateStaffBankAccountRequest;
 import com.mysms.payroll.v1.CreateStaffBankAccountResponse;
@@ -14,7 +13,7 @@ import com.mysms.payroll.v1.GetStaffBankAccountResponse;
 import com.mysms.payroll.v1.ListStaffBankAccountsRequest;
 import com.mysms.payroll.v1.ListStaffBankAccountsResponse;
 import com.mysms.payroll.v1.StaffBankAccountServiceGrpc;
-import com.mysms.payroll.v1.UpdateStaffBankAccountRequest;
+import com.mysms.payroll.v1.StaffBankAccountUpdate;
 import com.mysms.payroll.v1.UpdateStaffBankAccountResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -61,12 +60,12 @@ public class StaffBankAccountResolver extends StaffBankAccountServiceGrpc.StaffB
     }
 
     @Override
-    public void updateStaffBankAccount(UpdateStaffBankAccountRequest request,
+    public void updateStaffBankAccount(StaffBankAccountUpdate request,
             StreamObserver<UpdateStaffBankAccountResponse> out) {
         StaffBankAccount updated = staffBankAccountService.updateStaffBankAccount(
-                bridge.id(request.getStaffBankAccount().getId(), "id"),
-                bridge.requiredIfMatch(request.getStaffBankAccount().getEtag()),
-                bridge.changes(request.getStaffBankAccount(), request.getUpdateMask(), StaffBankAccountUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StaffBankAccountProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStaffBankAccountResponse.newBuilder(),
                 "staff_bank_account", updated).build());

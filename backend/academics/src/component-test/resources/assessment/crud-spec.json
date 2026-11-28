@@ -115,7 +115,9 @@
     "assignmentId": "dc24f09f-bdf4-55ef-895e-768f30579b9c",
     "studentId": "936c77eb-49dc-575d-96b8-57bc4e9e059c"
    },
-   "update": {},
+   "update": {
+    "studentId": "936c77eb-49dc-575d-96b8-57bc4e9e059c"
+   },
    "patch": {
     "keeps": "studentId"
    },
@@ -125,11 +127,8 @@
    "name": "AssignmentApproval",
    "table": "assessment.assignment_approval",
    "ops": [
-    "Create",
-    "Delete",
     "Get",
-    "List",
-    "Update"
+    "List"
    ],
    "collection": "/v1/assessment/assignments/dc24f09f-bdf4-55ef-895e-768f30579b9c/approvals",
    "item": "/v1/assessment/assignments/dc24f09f-bdf4-55ef-895e-768f30579b9c/approvals/{id}",
@@ -137,17 +136,11 @@
    "fixtures": [
     "INSERT INTO assessment.assignment (tenant_id, institution_id, title, class_section_id, row_version, id) VALUES (:tenant, '0196f000-0000-7000-8000-00000000a001', 't-title-4f21ef31', '0196f000-0000-7000-8000-0000000c5e01', 1, 'dc24f09f-bdf4-55ef-895e-768f30579b9c') ON CONFLICT (id) DO NOTHING"
    ],
-   "create": {
-    "assignmentId": "dc24f09f-bdf4-55ef-895e-768f30579b9c"
-   },
-   "update": {
-    "comments": "Updated comments"
-   },
-   "patch": {
-    "clears": "comments",
-    "keeps": "decision"
-   },
-   "duplicateConflicts": false
+   "duplicateConflicts": false,
+   "seedId": "0196f000-0000-7000-8000-0000000ac0df",
+   "seed": [
+    "INSERT INTO assessment.assignment_approval (assignment_id, decision, tenant_id, row_version, id) VALUES ('dc24f09f-bdf4-55ef-895e-768f30579b9c', 'approved', :tenant, 1, '0196f000-0000-7000-8000-0000000ac0df')"
+   ]
   },
   {
    "name": "AssignmentSubject",
@@ -169,7 +162,9 @@
     "assignmentId": "dc24f09f-bdf4-55ef-895e-768f30579b9c",
     "subjectId": "70c407f9-6c3a-5cb1-86b1-afc387c8ab1e"
    },
-   "update": {},
+   "update": {
+    "subjectId": "70c407f9-6c3a-5cb1-86b1-afc387c8ab1e"
+   },
    "patch": {
     "keeps": "subjectId"
    },
@@ -441,7 +436,9 @@
     "examId": "e9bccb3b-95db-5f72-a52e-69b5311b0ea0",
     "staffId": "3a03158b-4edc-53dd-a0e9-30352e746a88"
    },
-   "update": {},
+   "update": {
+    "staffId": "3a03158b-4edc-53dd-a0e9-30352e746a88"
+   },
    "patch": {
     "keeps": "staffId"
    },
@@ -808,15 +805,13 @@
     "examSessionId": "162564a7-6514-589f-b710-55c3b08302bd",
     "resultTemplateId": "8987b025-8eed-51d2-b24b-d7f8e9dd1557",
     "name": "t-name-43289c60",
-    "generatedOn": "2026-01-10",
-    "generatedByUserId": "341d7a3e-626b-51f2-9e62-1a074a0e86e5"
+    "generatedOn": "2026-01-10"
    },
    "update": {
     "name": "Updated name"
    },
    "patch": {
-    "keeps": "name",
-    "clears": "totalPassed"
+    "keeps": "name"
    },
    "duplicateConflicts": false,
    "transitions": [
@@ -948,7 +943,9 @@
     "resultTemplateId": "8987b025-8eed-51d2-b24b-d7f8e9dd1557",
     "gradingBandId": "99a83f1f-f1a5-58a8-aa99-6a2fbee4dda8"
    },
-   "update": {},
+   "update": {
+    "gradingBandId": "99a83f1f-f1a5-58a8-aa99-6a2fbee4dda8"
+   },
    "patch": {
     "keeps": "gradingBandId"
    },

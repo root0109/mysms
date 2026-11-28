@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.people.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "PeopleProto";
@@ -20,7 +20,7 @@ service HonorificService {
   // Create Honorific.
   rpc CreateHonorific(CreateHonorificRequest) returns (CreateHonorificResponse);
   // Update Honorific.
-  rpc UpdateHonorific(UpdateHonorificRequest) returns (UpdateHonorificResponse);
+  rpc UpdateHonorific(HonorificUpdate) returns (UpdateHonorificResponse);
   // Soft-delete Honorific.
   rpc DeleteHonorific(DeleteHonorificRequest) returns (DeleteHonorificResponse);
 }
@@ -30,7 +30,7 @@ service PersonService {
   // The caller's own person record.
   rpc GetMyPerson(GetMyPersonRequest) returns (GetMyPersonResponse);
   // Update the caller's own person record.
-  rpc UpdateMyPerson(UpdateMyPersonRequest) returns (UpdateMyPersonResponse);
+  rpc UpdateMyPerson(MyPersonUpdate) returns (UpdateMyPersonResponse);
   // List Persons.
   rpc ListPersons(ListPersonsRequest) returns (ListPersonsResponse);
   // Get Person.
@@ -38,7 +38,7 @@ service PersonService {
   // Create Person.
   rpc CreatePerson(CreatePersonRequest) returns (CreatePersonResponse);
   // Update Person.
-  rpc UpdatePerson(UpdatePersonRequest) returns (UpdatePersonResponse);
+  rpc UpdatePerson(PersonUpdate) returns (UpdatePersonResponse);
   // Soft-delete Person.
   rpc DeletePerson(DeletePersonRequest) returns (DeletePersonResponse);
   // List PersonAddresses.
@@ -48,7 +48,7 @@ service PersonService {
   // Create PersonAddress.
   rpc CreatePersonAddress(CreatePersonAddressRequest) returns (CreatePersonAddressResponse);
   // Update PersonAddress.
-  rpc UpdatePersonAddress(UpdatePersonAddressRequest) returns (UpdatePersonAddressResponse);
+  rpc UpdatePersonAddress(PersonAddressUpdate) returns (UpdatePersonAddressResponse);
   // Soft-delete PersonAddress.
   rpc DeletePersonAddress(DeletePersonAddressRequest) returns (DeletePersonAddressResponse);
   // List EmergencyContacts.
@@ -58,7 +58,7 @@ service PersonService {
   // Create EmergencyContact.
   rpc CreateEmergencyContact(CreateEmergencyContactRequest) returns (CreateEmergencyContactResponse);
   // Update EmergencyContact.
-  rpc UpdateEmergencyContact(UpdateEmergencyContactRequest) returns (UpdateEmergencyContactResponse);
+  rpc UpdateEmergencyContact(EmergencyContactUpdate) returns (UpdateEmergencyContactResponse);
   // Soft-delete EmergencyContact.
   rpc DeleteEmergencyContact(DeleteEmergencyContactRequest) returns (DeleteEmergencyContactResponse);
   // List EducationHistory.
@@ -68,7 +68,7 @@ service PersonService {
   // Create EducationHistory.
   rpc CreateEducationHistory(CreateEducationHistoryRequest) returns (CreateEducationHistoryResponse);
   // Update EducationHistory.
-  rpc UpdateEducationHistory(UpdateEducationHistoryRequest) returns (UpdateEducationHistoryResponse);
+  rpc UpdateEducationHistory(EducationHistoryUpdate) returns (UpdateEducationHistoryResponse);
   // Soft-delete EducationHistory.
   rpc DeleteEducationHistory(DeleteEducationHistoryRequest) returns (DeleteEducationHistoryResponse);
   // List WorkExperiences.
@@ -78,7 +78,7 @@ service PersonService {
   // Create WorkExperience.
   rpc CreateWorkExperience(CreateWorkExperienceRequest) returns (CreateWorkExperienceResponse);
   // Update WorkExperience.
-  rpc UpdateWorkExperience(UpdateWorkExperienceRequest) returns (UpdateWorkExperienceResponse);
+  rpc UpdateWorkExperience(WorkExperienceUpdate) returns (UpdateWorkExperienceResponse);
   // Soft-delete WorkExperience.
   rpc DeleteWorkExperience(DeleteWorkExperienceRequest) returns (DeleteWorkExperienceResponse);
   // List Certifications.
@@ -88,7 +88,7 @@ service PersonService {
   // Create Certification.
   rpc CreateCertification(CreateCertificationRequest) returns (CreateCertificationResponse);
   // Update Certification.
-  rpc UpdateCertification(UpdateCertificationRequest) returns (UpdateCertificationResponse);
+  rpc UpdateCertification(CertificationUpdate) returns (UpdateCertificationResponse);
   // Soft-delete Certification.
   rpc DeleteCertification(DeleteCertificationRequest) returns (DeleteCertificationResponse);
   // List PersonSkills.
@@ -98,7 +98,7 @@ service PersonService {
   // Create PersonSkill.
   rpc CreatePersonSkill(CreatePersonSkillRequest) returns (CreatePersonSkillResponse);
   // Update PersonSkill.
-  rpc UpdatePersonSkill(UpdatePersonSkillRequest) returns (UpdatePersonSkillResponse);
+  rpc UpdatePersonSkill(PersonSkillUpdate) returns (UpdatePersonSkillResponse);
   // Soft-delete PersonSkill.
   rpc DeletePersonSkill(DeletePersonSkillRequest) returns (DeletePersonSkillResponse);
   // List PersonDocuments.
@@ -108,7 +108,7 @@ service PersonService {
   // Create PersonDocument.
   rpc CreatePersonDocument(CreatePersonDocumentRequest) returns (CreatePersonDocumentResponse);
   // Update PersonDocument.
-  rpc UpdatePersonDocument(UpdatePersonDocumentRequest) returns (UpdatePersonDocumentResponse);
+  rpc UpdatePersonDocument(PersonDocumentUpdate) returns (UpdatePersonDocumentResponse);
   // Soft-delete PersonDocument.
   rpc DeletePersonDocument(DeletePersonDocumentRequest) returns (DeletePersonDocumentResponse);
   // Get PublicProfile.
@@ -116,7 +116,7 @@ service PersonService {
   // Create PublicProfile.
   rpc CreatePublicProfile(CreatePublicProfileRequest) returns (CreatePublicProfileResponse);
   // Update PublicProfile.
-  rpc UpdatePublicProfile(UpdatePublicProfileRequest) returns (UpdatePublicProfileResponse);
+  rpc UpdatePublicProfile(PublicProfileUpdate) returns (UpdatePublicProfileResponse);
   // Soft-delete PublicProfile.
   rpc DeletePublicProfile(DeletePublicProfileRequest) returns (DeletePublicProfileResponse);
   // List PersonSocialLinks.
@@ -126,7 +126,7 @@ service PersonService {
   // Create PersonSocialLink.
   rpc CreatePersonSocialLink(CreatePersonSocialLinkRequest) returns (CreatePersonSocialLinkResponse);
   // Update PersonSocialLink.
-  rpc UpdatePersonSocialLink(UpdatePersonSocialLinkRequest) returns (UpdatePersonSocialLinkResponse);
+  rpc UpdatePersonSocialLink(PersonSocialLinkUpdate) returns (UpdatePersonSocialLinkResponse);
   // Soft-delete PersonSocialLink.
   rpc DeletePersonSocialLink(DeletePersonSocialLinkRequest) returns (DeletePersonSocialLinkResponse);
   // Birthdays and work anniversaries in a date window.
@@ -144,7 +144,7 @@ service QualificationService {
   // Create Qualification.
   rpc CreateQualification(CreateQualificationRequest) returns (CreateQualificationResponse);
   // Update Qualification.
-  rpc UpdateQualification(UpdateQualificationRequest) returns (UpdateQualificationResponse);
+  rpc UpdateQualification(QualificationUpdate) returns (UpdateQualificationResponse);
   // Soft-delete Qualification.
   rpc DeleteQualification(DeleteQualificationRequest) returns (DeleteQualificationResponse);
 }
@@ -158,7 +158,7 @@ service SkillService {
   // Create Skill.
   rpc CreateSkill(CreateSkillRequest) returns (CreateSkillResponse);
   // Update Skill.
-  rpc UpdateSkill(UpdateSkillRequest) returns (UpdateSkillResponse);
+  rpc UpdateSkill(SkillUpdate) returns (UpdateSkillResponse);
   // Soft-delete Skill.
   rpc DeleteSkill(DeleteSkillRequest) returns (DeleteSkillResponse);
 }
@@ -202,13 +202,25 @@ message CreateHonorificResponse {
   Honorific honorific = 1;
 }
 
-message UpdateHonorificRequest {
-  // Resource with id and etag set.
-  Honorific honorific = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateHonorific (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message HonorificUpdate {
+  // Honorific id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Full form, e.g. Doctor.
+  optional string name = 7;
+  // Abbreviation, e.g. Dr.
+  mysms.common.v1.NullableString shortcut = 8;
 }
 message UpdateHonorificResponse {
   Honorific honorific = 1;
@@ -262,13 +274,69 @@ message CreatePersonResponse {
   Person person = 1;
 }
 
-message UpdatePersonRequest {
-  // Resource with id and etag set.
-  Person person = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePerson (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PersonUpdate {
+  // Person id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Name prefix. [UUID]
+  mysms.common.v1.NullableString honorific_id = 4;
+  // Given name.
+  mysms.common.v1.NullableString first_name = 5;
+  // Middle name.
+  mysms.common.v1.NullableString middle_name = 6;
+  // Family name.
+  mysms.common.v1.NullableString last_name = 7;
+  // Full name as displayed.
+  optional string display_name = 8;
+  // Date of birth. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString date_of_birth = 9;
+  // Gender.
+  optional Person.Gender gender = 10;
+  // Blood group.
+  optional Person.BloodGroup blood_group = 11;
+  // Marital status.
+  optional Person.MaritalStatus marital_status = 12;
+  // Place of birth.
+  mysms.common.v1.NullableString birth_place = 13;
+  // Native place / hometown.
+  mysms.common.v1.NullableString native_place = 14;
+  // Nationality. [UUID]
+  mysms.common.v1.NullableString nationality_country_id = 15;
+  // Mother tongue.
+  mysms.common.v1.NullableString mother_tongue = 16;
+  // Religion (optional, for statutory reporting).
+  mysms.common.v1.NullableString religion = 17;
+  // Government social category used for statutory reporting (e.g. GEN, OBC, SC, ST).
+  mysms.common.v1.NullableString social_category = 18;
+  // Sub-category.
+  mysms.common.v1.NullableString social_sub_category = 19;
+  // Type of national id (e.g. AADHAAR, SSN, PASSPORT).
+  mysms.common.v1.NullableString national_id_type = 20;
+  // Plain value, input only: stored encrypted and never returned. National id number, encrypted at rest.
+  optional string national_id = 21;
+  // Visa / residence-permit details.
+  mysms.common.v1.NullableString visa_info = 22;
+  // Personal e-mail.
+  mysms.common.v1.NullableString primary_email = 23;
+  // Personal phone.
+  mysms.common.v1.NullableString primary_phone = 24;
+  // Alternate phone.
+  mysms.common.v1.NullableString alternate_phone = 25;
+  // Profile photo. [UUID]
+  mysms.common.v1.NullableString photo_file_id = 26;
+  // Free-text notes about the person.
+  mysms.common.v1.NullableString remarks = 27;
+  // Office / work phone.
+  mysms.common.v1.NullableString work_phone = 28;
+  // Personal web page.
+  mysms.common.v1.NullableString website_url = 29;
+  // Short self-description shown on the profile.
+  mysms.common.v1.NullableString about_me = 30;
 }
 message UpdatePersonResponse {
   Person person = 1;
@@ -328,15 +396,39 @@ message CreatePersonAddressResponse {
   PersonAddress person_address = 1;
 }
 
-message UpdatePersonAddressRequest {
+// The changes of UpdatePersonAddress (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PersonAddressUpdate {
   // Person id (UUID).
   string person_id = 1;
-  // Resource with id and etag set.
-  PersonAddress person_address = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // PersonAddress id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Purpose of the address.
+  optional PersonAddress.AddressType address_type = 5;
+  // Address line 1.
+  mysms.common.v1.NullableString line1 = 6;
+  // Address line 2.
+  mysms.common.v1.NullableString line2 = 7;
+  // City (from master). [UUID]
+  mysms.common.v1.NullableString city_id = 8;
+  // City as free text when not in the master.
+  mysms.common.v1.NullableString city_name = 9;
+  // State / province. [UUID]
+  mysms.common.v1.NullableString state_province_id = 10;
+  // Country. [UUID]
+  mysms.common.v1.NullableString country_id = 11;
+  // Postal / PIN code.
+  mysms.common.v1.NullableString postal_code = 12;
+  // Primary address of its type.
+  optional bool is_primary = 13;
+  // State / province as free text when not picked from the list.
+  mysms.common.v1.NullableString state_name = 14;
+  // Display order.
+  optional int32 sort_order = 15;
 }
 message UpdatePersonAddressResponse {
   PersonAddress person_address = 1;
@@ -398,15 +490,27 @@ message CreateEmergencyContactResponse {
   EmergencyContact emergency_contact = 1;
 }
 
-message UpdateEmergencyContactRequest {
+// The changes of UpdateEmergencyContact (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message EmergencyContactUpdate {
   // Person id (UUID).
   string person_id = 1;
-  // Resource with id and etag set.
-  EmergencyContact emergency_contact = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // EmergencyContact id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Contact, when recorded as a person. [UUID]
+  mysms.common.v1.NullableString contact_person_id = 5;
+  // Contact name (when not a person record).
+  mysms.common.v1.NullableString contact_name = 6;
+  // Relationship to the person.
+  mysms.common.v1.NullableString relationship = 7;
+  // Contact number (may come from the linked person instead).
+  mysms.common.v1.NullableString phone = 8;
+  // Call order (1 = first).
+  optional int32 priority = 9;
 }
 message UpdateEmergencyContactResponse {
   EmergencyContact emergency_contact = 1;
@@ -462,13 +566,25 @@ message CreateQualificationResponse {
   Qualification qualification = 1;
 }
 
-message UpdateQualificationRequest {
-  // Resource with id and etag set.
-  Qualification qualification = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateQualification (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message QualificationUpdate {
+  // Qualification id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Qualification name.
+  optional string name = 6;
+  // Qualification level.
+  optional Qualification.Level level = 7;
+  // Whether selectable.
+  optional bool is_active = 8;
 }
 message UpdateQualificationResponse {
   Qualification qualification = 1;
@@ -528,15 +644,43 @@ message CreateEducationHistoryResponse {
   EducationHistory education_history = 1;
 }
 
-message UpdateEducationHistoryRequest {
+// The changes of UpdateEducationHistory (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message EducationHistoryUpdate {
   // Person id (UUID).
   string person_id = 1;
-  // Resource with id and etag set.
-  EducationHistory education_history = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // EducationHistory id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Qualification obtained (when in the catalogue). [UUID]
+  mysms.common.v1.NullableString qualification_id = 5;
+  // School / college / university.
+  optional string institution_name = 6;
+  // Location of the institution.
+  optional string location = 7;
+  // Degree / certificate type.
+  mysms.common.v1.NullableString degree_type = 8;
+  // Major / specialisation.
+  mysms.common.v1.NullableString major = 9;
+  // Grading system of the grade.
+  optional EducationHistory.GradeType grade_type = 10;
+  // Grade obtained.
+  mysms.common.v1.NullableString grade = 11;
+  // Start date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString start_date = 12;
+  // End date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString end_date = 13;
+  // Certificate / degree title obtained.
+  mysms.common.v1.NullableString certification = 14;
+  // Minor subject.
+  mysms.common.v1.NullableString minor = 15;
+  // Mode of study.
+  optional EducationHistory.StudyMode study_mode = 16;
+  // Display order.
+  optional int32 sort_order = 17;
 }
 message UpdateEducationHistoryResponse {
   EducationHistory education_history = 1;
@@ -598,15 +742,41 @@ message CreateWorkExperienceResponse {
   WorkExperience work_experience = 1;
 }
 
-message UpdateWorkExperienceRequest {
+// The changes of UpdateWorkExperience (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message WorkExperienceUpdate {
   // Person id (UUID).
   string person_id = 1;
-  // Resource with id and etag set.
-  WorkExperience work_experience = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // WorkExperience id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Job or internship.
+  optional WorkExperience.ExperienceType experience_type = 5;
+  // Job title.
+  optional string title = 6;
+  // Employer.
+  optional string company = 7;
+  // Location.
+  optional string location = 8;
+  // Start date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string from_date = 9;
+  // End date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString to_date = 10;
+  // Currently in this role.
+  optional bool is_current = 11;
+  // Responsibilities / achievements.
+  mysms.common.v1.NullableString description = 12;
+  // Company web site.
+  mysms.common.v1.NullableString company_website = 13;
+  // Industry.
+  mysms.common.v1.NullableString industry = 14;
+  // Responsibilities.
+  mysms.common.v1.NullableString responsibilities = 15;
+  // Display order.
+  optional int32 sort_order = 16;
 }
 message UpdateWorkExperienceResponse {
   WorkExperience work_experience = 1;
@@ -668,15 +838,29 @@ message CreateCertificationResponse {
   Certification certification = 1;
 }
 
-message UpdateCertificationRequest {
+// The changes of UpdateCertification (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CertificationUpdate {
   // Person id (UUID).
   string person_id = 1;
-  // Resource with id and etag set.
-  Certification certification = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // Certification id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Certification name.
+  optional string name = 5;
+  // Issuer.
+  optional string issuing_organization = 6;
+  // Issue date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string issue_date = 7;
+  // Whether it expires.
+  optional bool expires = 8;
+  // Expiry date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString expiration_date = 9;
+  // Details.
+  mysms.common.v1.NullableString description = 10;
 }
 message UpdateCertificationResponse {
   Certification certification = 1;
@@ -732,13 +916,23 @@ message CreateSkillResponse {
   Skill skill = 1;
 }
 
-message UpdateSkillRequest {
-  // Resource with id and etag set.
-  Skill skill = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateSkill (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SkillUpdate {
+  // Skill id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Skill name.
+  optional string name = 7;
 }
 message UpdateSkillResponse {
   Skill skill = 1;
@@ -798,15 +992,19 @@ message CreatePersonSkillResponse {
   PersonSkill person_skill = 1;
 }
 
-message UpdatePersonSkillRequest {
+// The changes of UpdatePersonSkill (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PersonSkillUpdate {
   // Person id (UUID).
   string person_id = 1;
-  // Resource with id and etag set.
-  PersonSkill person_skill = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // PersonSkill id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Skill. [UUID]
+  optional string skill_id = 5;
 }
 message UpdatePersonSkillResponse {
   PersonSkill person_skill = 1;
@@ -868,15 +1066,29 @@ message CreatePersonDocumentResponse {
   PersonDocument person_document = 1;
 }
 
-message UpdatePersonDocumentRequest {
+// The changes of UpdatePersonDocument (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PersonDocumentUpdate {
   // Person id (UUID).
   string person_id = 1;
-  // Resource with id and etag set.
-  PersonDocument person_document = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // PersonDocument id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Institution that holds the document. [UUID]
+  mysms.common.v1.NullableString institution_id = 5;
+  // Document category.
+  optional PersonDocument.DocumentType document_type = 6;
+  // Document title.
+  optional string name = 7;
+  // Stored file. [UUID]
+  optional string file_id = 8;
+  // Version number of this document.
+  optional int32 document_version = 9;
+  // Whether current.
+  optional PersonDocument.Status status = 10;
 }
 message UpdatePersonDocumentResponse {
   PersonDocument person_document = 1;
@@ -916,15 +1128,43 @@ message CreatePublicProfileResponse {
   PublicProfile public_profile = 1;
 }
 
-message UpdatePublicProfileRequest {
+// The changes of UpdatePublicProfile (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PublicProfileUpdate {
   // Person id (UUID).
   string person_id = 1;
-  // Resource with id and etag set.
-  PublicProfile public_profile = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // PublicProfile id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // One-line headline.
+  mysms.common.v1.NullableString headline = 5;
+  // Profession.
+  mysms.common.v1.NullableString profession = 6;
+  // Self-identified persona.
+  optional PublicProfile.PersonaCategory persona_category = 7;
+  // Profile cover image. [UUID]
+  mysms.common.v1.NullableString cover_image_file_id = 8;
+  // City.
+  mysms.common.v1.NullableString city = 9;
+  // Country. [UUID]
+  mysms.common.v1.NullableString country_id = 10;
+  // College.
+  mysms.common.v1.NullableString college = 11;
+  // Branch / stream.
+  mysms.common.v1.NullableString branch = 12;
+  // LinkedIn URL.
+  mysms.common.v1.NullableString linkedin_url = 13;
+  // GitHub URL.
+  mysms.common.v1.NullableString github_url = 14;
+  // X / Twitter URL.
+  mysms.common.v1.NullableString twitter_url = 15;
+  // Medium URL.
+  mysms.common.v1.NullableString medium_url = 16;
+  // Hide contact details from the public profile.
+  optional bool hide_private_info = 17;
 }
 message UpdatePublicProfileResponse {
   PublicProfile public_profile = 1;
@@ -986,15 +1226,23 @@ message CreatePersonSocialLinkResponse {
   PersonSocialLink person_social_link = 1;
 }
 
-message UpdatePersonSocialLinkRequest {
+// The changes of UpdatePersonSocialLink (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PersonSocialLinkUpdate {
   // Person id (UUID).
   string person_id = 1;
-  // Resource with id and etag set.
-  PersonSocialLink person_social_link = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // PersonSocialLink id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Network (from the fixed network catalogue).
+  optional PersonSocialLink.Network network = 5;
+  // Handle, profile URL or number.
+  optional string handle = 6;
+  // Display order.
+  optional int32 sort_order = 7;
 }
 message UpdatePersonSocialLinkResponse {
   PersonSocialLink person_social_link = 1;
@@ -1704,33 +1952,31 @@ message GetMyPersonRequest {
 message GetMyPersonResponse {
   Person person = 1;
 }
-// Fields of their own Person a user may change themselves.
+
+// The changes of UpdateMyPerson (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
 message MyPersonUpdate {
-  // Personal e-mail.
-  optional string primary_email = 1;
-  // Personal phone.
-  optional string primary_phone = 2;
-  // Alternate phone.
-  optional string alternate_phone = 3;
-  // Office / work phone.
-  optional string work_phone = 4;
-  // Personal web page.
-  optional string website_url = 5;
-  // Short self-description shown on the profile.
-  optional string about_me = 6;
-  reserved 7;
+  // Fields 1-8 were the body of the update-mask request (ARC-9: replaced by this message).
+  reserved 1 to 8;
   reserved "photo_file_id";
-  // Mother tongue.
-  optional string mother_tongue = 8;
-}
-message UpdateMyPersonRequest {
-  MyPersonUpdate person = 1;
-  // Current ETag of the person (If-Match).
-  string etag = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ETag from the last read; required (If-Match).
+  string etag = 9;
   // Validate without persisting.
-  bool validate_only = 4;
+  bool validate_only = 10;
+  // Personal e-mail.
+  mysms.common.v1.NullableString primary_email = 11;
+  // Personal phone.
+  mysms.common.v1.NullableString primary_phone = 12;
+  // Alternate phone.
+  mysms.common.v1.NullableString alternate_phone = 13;
+  // Office / work phone.
+  mysms.common.v1.NullableString work_phone = 14;
+  // Personal web page.
+  mysms.common.v1.NullableString website_url = 15;
+  // Short self-description shown on the profile.
+  mysms.common.v1.NullableString about_me = 16;
+  // Mother tongue.
+  mysms.common.v1.NullableString mother_tongue = 17;
 }
 message UpdateMyPersonResponse {
   Person person = 1;

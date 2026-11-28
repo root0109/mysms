@@ -4,12 +4,8 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Rubric;
 import com.mysms.learning.lms.api.model.RubricCell;
-import com.mysms.learning.lms.api.model.RubricCellUpdate;
 import com.mysms.learning.lms.api.model.RubricCriterion;
-import com.mysms.learning.lms.api.model.RubricCriterionUpdate;
 import com.mysms.learning.lms.api.model.RubricLevel;
-import com.mysms.learning.lms.api.model.RubricLevelUpdate;
-import com.mysms.learning.lms.api.model.RubricUpdate;
 import com.mysms.learning.lms.business.RubricService;
 import com.mysms.lms.v1.CreateRubricCellRequest;
 import com.mysms.lms.v1.CreateRubricCellResponse;
@@ -43,14 +39,14 @@ import com.mysms.lms.v1.ListRubricLevelsRequest;
 import com.mysms.lms.v1.ListRubricLevelsResponse;
 import com.mysms.lms.v1.ListRubricsRequest;
 import com.mysms.lms.v1.ListRubricsResponse;
+import com.mysms.lms.v1.RubricCellUpdate;
+import com.mysms.lms.v1.RubricCriterionUpdate;
+import com.mysms.lms.v1.RubricLevelUpdate;
 import com.mysms.lms.v1.RubricServiceGrpc;
-import com.mysms.lms.v1.UpdateRubricCellRequest;
+import com.mysms.lms.v1.RubricUpdate;
 import com.mysms.lms.v1.UpdateRubricCellResponse;
-import com.mysms.lms.v1.UpdateRubricCriterionRequest;
 import com.mysms.lms.v1.UpdateRubricCriterionResponse;
-import com.mysms.lms.v1.UpdateRubricLevelRequest;
 import com.mysms.lms.v1.UpdateRubricLevelResponse;
-import com.mysms.lms.v1.UpdateRubricRequest;
 import com.mysms.lms.v1.UpdateRubricResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -91,10 +87,10 @@ public class RubricResolver extends RubricServiceGrpc.RubricServiceImplBase {
     }
 
     @Override
-    public void updateRubric(UpdateRubricRequest request, StreamObserver<UpdateRubricResponse> out) {
-        Rubric updated = service.updateRubric(bridge.id(request.getRubric().getId(), "id"),
-                bridge.requiredIfMatch(request.getRubric().getEtag()),
-                bridge.changes(request.getRubric(), request.getUpdateMask(), RubricUpdate.class), request.getValidateOnly());
+    public void updateRubric(RubricUpdate request, StreamObserver<UpdateRubricResponse> out) {
+        Rubric updated = service.updateRubric(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                RubricProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRubricResponse.newBuilder(), "rubric", updated).build());
     }
 
@@ -127,11 +123,11 @@ public class RubricResolver extends RubricServiceGrpc.RubricServiceImplBase {
     }
 
     @Override
-    public void updateRubricCriterion(UpdateRubricCriterionRequest request, StreamObserver<UpdateRubricCriterionResponse> out) {
+    public void updateRubricCriterion(RubricCriterionUpdate request, StreamObserver<UpdateRubricCriterionResponse> out) {
         RubricCriterion updated = service.updateRubricCriterion(bridge.id(request.getRubricId(), "rubricId"),
-                bridge.id(request.getRubricCriterion().getId(), "id"),
-                bridge.requiredIfMatch(request.getRubricCriterion().getEtag()),
-                bridge.changes(request.getRubricCriterion(), request.getUpdateMask(), RubricCriterionUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                RubricCriterionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRubricCriterionResponse.newBuilder(), "rubric_criterion", updated).build());
     }
@@ -166,10 +162,10 @@ public class RubricResolver extends RubricServiceGrpc.RubricServiceImplBase {
     }
 
     @Override
-    public void updateRubricLevel(UpdateRubricLevelRequest request, StreamObserver<UpdateRubricLevelResponse> out) {
+    public void updateRubricLevel(RubricLevelUpdate request, StreamObserver<UpdateRubricLevelResponse> out) {
         RubricLevel updated = service.updateRubricLevel(bridge.id(request.getRubricId(), "rubricId"),
-                bridge.id(request.getRubricLevel().getId(), "id"), bridge.requiredIfMatch(request.getRubricLevel().getEtag()),
-                bridge.changes(request.getRubricLevel(), request.getUpdateMask(), RubricLevelUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                RubricLevelProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRubricLevelResponse.newBuilder(), "rubric_level", updated).build());
     }
@@ -204,10 +200,10 @@ public class RubricResolver extends RubricServiceGrpc.RubricServiceImplBase {
     }
 
     @Override
-    public void updateRubricCell(UpdateRubricCellRequest request, StreamObserver<UpdateRubricCellResponse> out) {
+    public void updateRubricCell(RubricCellUpdate request, StreamObserver<UpdateRubricCellResponse> out) {
         RubricCell updated = service.updateRubricCell(bridge.id(request.getRubricId(), "rubricId"),
-                bridge.id(request.getRubricCell().getId(), "id"), bridge.requiredIfMatch(request.getRubricCell().getEtag()),
-                bridge.changes(request.getRubricCell(), request.getUpdateMask(), RubricCellUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                RubricCellProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRubricCellResponse.newBuilder(), "rubric_cell", updated).build());
     }

@@ -24,14 +24,14 @@ import java.util.stream.Stream;
  */
 public final class SourceTree {
 
-    /** Modules that are libraries, the assembly or a tool (the demo seeder), not a domain module. */
+    /** Modules that are libraries or the assembly, not a domain module. */
     public static final Set<String> SHARED =
-            Set.of("core", "auth-client", "privacy-client", "messaging", "app", "demo-seed", "conformance");
+            Set.of("core", "auth-client", "privacy-client", "messaging", "app", "conformance");
 
     private static final Pattern CREATE_TABLE =
             Pattern.compile("(?i)CREATE TABLE ([a-z_]+\\.[a-z_]+) \\((.*?)\\n\\)", Pattern.DOTALL);
     private static final Pattern TENANT_COLUMN = Pattern.compile("(?m)^\\s+tenant_id\\s");
-    private static final Pattern MIGRATION_FOLDER = Pattern.compile("\\$\\{mysms\\.migrations\\.dir\\}/([a-z]+)<");
+    private static final Pattern MIGRATION_FOLDER = Pattern.compile("\\$\\{mysms\\.migrations\\.dir\\}/([a-z_]+)<");
 
     /**
      * One area of a domain module.
@@ -41,9 +41,26 @@ public final class SourceTree {
      */
     public record Area(String module, String name) {
 
-        /** {@code com.mysms.<module>} for the area named like its module, else {@code com.mysms.<module>.<name>}. */
+        /** The area's package segment: its name without underscores ({@code time_attendance} → {@code timeattendance}). */
+        public String packageSegment() {
+            return name.replace("_", "");
+        }
+
+        /**
+         * The area as a type-name prefix: each {@code _}-separated word capitalised
+         * ({@code time_attendance} → {@code TimeAttendance}).
+         */
+        public String typeName() {
+            StringBuilder prefix = new StringBuilder();
+            for (String word : name.split("_")) {
+                prefix.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+            }
+            return prefix.toString();
+        }
+
+        /** {@code com.mysms.<module>} for the area named like its module, else {@code com.mysms.<module>.<segment>}. */
         public String packageName() {
-            return module.equals(name) ? "com.mysms." + module : "com.mysms." + module + "." + name;
+            return module.equals(name) ? "com.mysms." + module : "com.mysms." + module + "." + packageSegment();
         }
 
         /** The package as a path fragment with slashes on both sides ({@code /com/mysms/hrms/hr/}). */

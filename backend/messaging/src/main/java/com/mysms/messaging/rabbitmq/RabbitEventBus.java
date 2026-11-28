@@ -86,7 +86,7 @@ public final class RabbitEventBus implements EventBus {
     public static final String DEFAULT_PUBLISHER_USER = "mysms-{module}";
 
     private static final Logger LOG = LoggerFactory.getLogger(RabbitEventBus.class);
-    private static final Pattern CONSUMER = Pattern.compile("^[a-z]+$");
+    private static final Pattern CONSUMER = Pattern.compile("^[a-z][a-z_]*$");
     private static final Pattern TYPE = Pattern.compile("^[a-z0-9_]+(\\.[a-z0-9_]+)+$");
     private static final String DELIVERY_COUNT = "x-delivery-count";
 

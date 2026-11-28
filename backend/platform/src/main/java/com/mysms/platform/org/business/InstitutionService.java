@@ -168,6 +168,9 @@ public class InstitutionService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -375,6 +378,9 @@ public class InstitutionService extends AppTransactionManager {
             assertValidInstitutionAttribute(entity, false);
             scope.requireWritable(institutionOfInstitutionAttribute(entity));
             assertUniqueInstitutionAttribute(entity);
+            if (fields.isEmpty()) {
+                return institutionAttributeMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return institutionAttributeMapper.toDto(entity);

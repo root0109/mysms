@@ -3,7 +3,6 @@ package com.mysms.platform.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.api.model.ReservedKeyword;
-import com.mysms.platform.api.model.ReservedKeywordUpdate;
 import com.mysms.platform.business.ReservedKeywordService;
 import com.mysms.platform.v1.CreateReservedKeywordRequest;
 import com.mysms.platform.v1.CreateReservedKeywordResponse;
@@ -14,7 +13,7 @@ import com.mysms.platform.v1.GetReservedKeywordResponse;
 import com.mysms.platform.v1.ListReservedKeywordsRequest;
 import com.mysms.platform.v1.ListReservedKeywordsResponse;
 import com.mysms.platform.v1.ReservedKeywordServiceGrpc;
-import com.mysms.platform.v1.UpdateReservedKeywordRequest;
+import com.mysms.platform.v1.ReservedKeywordUpdate;
 import com.mysms.platform.v1.UpdateReservedKeywordResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -59,12 +58,12 @@ public class ReservedKeywordResolver extends ReservedKeywordServiceGrpc.Reserved
     }
 
     @Override
-    public void updateReservedKeyword(UpdateReservedKeywordRequest request,
+    public void updateReservedKeyword(ReservedKeywordUpdate request,
             StreamObserver<UpdateReservedKeywordResponse> out) {
         ReservedKeyword updated = service.updateReservedKeyword(
-                bridge.id(request.getReservedKeyword().getId(), "id"),
-                bridge.requiredIfMatch(request.getReservedKeyword().getEtag()),
-                bridge.changes(request.getReservedKeyword(), request.getUpdateMask(), ReservedKeywordUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ReservedKeywordProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateReservedKeywordResponse.newBuilder(), "reserved_keyword",
                 updated).build());

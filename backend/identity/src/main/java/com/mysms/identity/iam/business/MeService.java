@@ -1,17 +1,18 @@
 package com.mysms.identity.iam.business;
 
 import com.mysms.authclient.AuthContext;
+import com.mysms.authclient.SiblingAccess;
+import com.mysms.core.error.ApiException;
 import com.mysms.identity.iam.api.model.Me;
 import com.mysms.identity.iam.api.model.Person;
 import com.mysms.identity.iam.api.model.RoleGrant;
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.error.ResourceNotFoundException;
-import com.mysms.core.grpc.IntegrationGrpcClientException;
-import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.identity.iam.config.IamDatabaseConfig;
 import com.mysms.identity.iam.domain.MeAccountEntity;
-import com.mysms.identity.iam.integration.PeopleGrpcClient;
+import com.mysms.identity.iam.mapper.MePersonMapper;
+import com.mysms.identity.people.business.MyPersonService;
 import com.mysms.identity.iam.mapper.MeAccountMapper;
 import com.mysms.identity.iam.repository.AccountRepository;
 import com.mysms.identity.iam.repository.ActiveRoleRepository;
@@ -19,7 +20,6 @@ import com.mysms.identity.iam.repository.GrantRepository;
 import com.mysms.identity.iam.repository.MemberRecordRepository;
 import com.mysms.identity.iam.repository.MemberRecordRepository.Kind;
 import com.mysms.identity.iam.repository.SessionStateRepository;
-import com.mysms.people.v1.GetMyPersonRequest;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -35,12 +35,14 @@ import org.springframework.transaction.PlatformTransactionManager;
 /**
  * iam.GetMe: the caller's account, role grants (with scope), effective permissions and own staff and student records
  * (kept from hr's and sis's events, {@code MemberRecordSync}), all as of now, and the linked person record, read
- * with the caller's own identity through people.GetMyPerson (over gRPC: {@link PeopleGrpcClient}). The person is
+ * as the caller from the sibling people area (people.GetMyPerson in process: {@link MyPersonService}). The person is
  * optional in the contract: if people cannot answer, Me is returned without it rather than failing the whole call.
  */
 @Service
 public class MeService extends AppTransactionManager {
 
+    /** people.GetMyPerson's permission. */
+    static final String PERMISSION_READ_MY_PERSON = "people.person.read_mine";
     private static final Logger LOG = LoggerFactory.getLogger(MeService.class);
     private final AccountRepository users;
     private final GrantRepository grants;
@@ -48,15 +50,16 @@ public class MeService extends AppTransactionManager {
     private final SessionStateRepository sessions;
     private final MemberRecordRepository members;
     private final MeAccountMapper userMapper;
-    private final PeopleGrpcClient people;
-    private final ProtoBridge bridge;
+    private final MyPersonService people;
+    private final SiblingAccess sibling;
+    private final MePersonMapper personMapper;
     private final Clock clock;
 
     public MeService(@Qualifier(IamDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(IamDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions, AccountRepository users,
                      GrantRepository grants, ActiveRoleRepository roles,
                      SessionStateRepository sessions, MemberRecordRepository members, MeAccountMapper userMapper,
-                     PeopleGrpcClient people, ProtoBridge bridge, Clock clock) {
+                     MyPersonService people, SiblingAccess sibling, MePersonMapper personMapper, Clock clock) {
 
         super(database, transactions);
         this.users = users;
@@ -66,7 +69,8 @@ public class MeService extends AppTransactionManager {
         this.members = members;
         this.userMapper = userMapper;
         this.people = people;
-        this.bridge = bridge;
+        this.sibling = sibling;
+        this.personMapper = personMapper;
         this.clock = clock;
     }
 
@@ -113,12 +117,22 @@ public class MeService extends AppTransactionManager {
         });
     }
 
+    /**
+     * people.GetMyPerson as the caller: without its permission, or when people refuses or fails in any way, Me is
+     * returned without the person, as when the call went over gRPC.
+     */
     private Optional<Person> person() {
+        if (!sibling.permits(PERMISSION_READ_MY_PERSON)) {
+            LOG.debug("the caller may not read their person; Me is returned without it");
+            return Optional.empty();
+        }
         try {
-            return Optional.of(bridge.answer(people.getMyPerson(GetMyPersonRequest.getDefaultInstance()).getPerson(),
-                    Person.class));
-        } catch (IntegrationGrpcClientException e) {
-            LOG.warn("people.GetMyPerson failed ({}); Me is returned without the person", e.errorCode());
+            return Optional.of(personMapper.toMe(people.get()));
+        } catch (ApiException e) {
+            LOG.warn("people.GetMyPerson failed ({}); Me is returned without the person", e.code());
+            return Optional.empty();
+        } catch (RuntimeException e) {
+            LOG.warn("people.GetMyPerson failed ({}); Me is returned without the person", e.getClass().getSimpleName());
             return Optional.empty();
         }
     }

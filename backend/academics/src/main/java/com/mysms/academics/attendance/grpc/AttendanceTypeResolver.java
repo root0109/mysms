@@ -1,9 +1,9 @@
 package com.mysms.academics.attendance.grpc;
 
 import com.mysms.academics.attendance.api.model.AttendanceType;
-import com.mysms.academics.attendance.api.model.AttendanceTypeUpdate;
 import com.mysms.academics.attendance.business.AttendanceTypeService;
 import com.mysms.attendance.v1.AttendanceTypeServiceGrpc;
+import com.mysms.attendance.v1.AttendanceTypeUpdate;
 import com.mysms.attendance.v1.CreateAttendanceTypeRequest;
 import com.mysms.attendance.v1.CreateAttendanceTypeResponse;
 import com.mysms.attendance.v1.DeleteAttendanceTypeRequest;
@@ -12,7 +12,6 @@ import com.mysms.attendance.v1.GetAttendanceTypeRequest;
 import com.mysms.attendance.v1.GetAttendanceTypeResponse;
 import com.mysms.attendance.v1.ListAttendanceTypesRequest;
 import com.mysms.attendance.v1.ListAttendanceTypesResponse;
-import com.mysms.attendance.v1.UpdateAttendanceTypeRequest;
 import com.mysms.attendance.v1.UpdateAttendanceTypeResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,10 +55,10 @@ public class AttendanceTypeResolver extends AttendanceTypeServiceGrpc.Attendance
     }
 
     @Override
-    public void updateAttendanceType(UpdateAttendanceTypeRequest request, StreamObserver<UpdateAttendanceTypeResponse> out) {
-        AttendanceType updated = service.updateAttendanceType(bridge.id(request.getAttendanceType().getId(), "id"),
-                bridge.requiredIfMatch(request.getAttendanceType().getEtag()),
-                bridge.changes(request.getAttendanceType(), request.getUpdateMask(), AttendanceTypeUpdate.class),
+    public void updateAttendanceType(AttendanceTypeUpdate request, StreamObserver<UpdateAttendanceTypeResponse> out) {
+        AttendanceType updated = service.updateAttendanceType(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AttendanceTypeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAttendanceTypeResponse.newBuilder(), "attendance_type", updated).build());
     }

@@ -30,9 +30,6 @@ public class AttendanceReferenceCleanup implements EventSubscriptions {
     }
 
     static final Map<String, List<Step>> STEPS = Map.ofEntries(
-        Map.entry("hr.leave_application.deleted", List.of(
-            new Step(ReferenceCleanupRepository.CLEAR_STAFF_ATTENDANCE_LEAVE_APPLICATION_ID,
-                    "attendance.staff_attendance", "leaveApplicationId"))),
         Map.entry("sis.student_leave_request.deleted", List.of(
             new Step(ReferenceCleanupRepository.CLEAR_ATTENDANCE_RECORD_LEAVE_REQUEST_ID,
                     "attendance.attendance_record", "leaveRequestId"))),

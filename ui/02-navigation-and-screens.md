@@ -233,7 +233,7 @@ Columns: **ID** · Screen · Web route under `/app` (also the deep link) · Clie
 | ATT-03 | **Take attendance** | `/attendance/attendance-sheets/{attendanceSheetId}` | T W | teacher | `attendance.TakeAttendanceForSession`, `attendance.RecordAttendance`, `attendance.CompleteAttendanceSheet` | Roster grid, one-tap status, reasons; T offline-tolerant queue (05 §7.4) |
 | ATT-04 | Student attendance summary | `/attendance/summary/{studentId}` | W S P T | all | `attendance.SummarizeAttendance`, `attendance.ListAttendanceRecords` | Month heatmap + % |
 | ATT-05 | Class summary & defaulters | `/attendance/summary` | W | admin, teacher | `attendance.SummarizeAttendance` | Threshold filters |
-| ATT-06 | Staff attendance | `/attendance/staff` | W | HR | `attendance.ListStaffAttendances`, `attendance.CreateStaffAttendance`, `attendance.UpdateStaffAttendance`, `hr.ListLeaveBalances` | Day grid per staff; biometric rows read-only |
+| ATT-06 | Staff attendance | `/attendance/staff` | W | HR | `time_attendance.ListStaffAttendances`, `time_attendance.CreateStaffAttendance`, `time_attendance.UpdateStaffAttendance`, `hr.ListLeaveBalances` | Day grid per staff; biometric rows read-only |
 
 ### 3.8 Assessment (homework, assignments, exams, results)
 
@@ -243,7 +243,7 @@ Columns: **ID** · Screen · Web route under `/app` (also the deep link) · Clie
 | ASM-02 | Homework approval | `/assessment/homeworks?status=pending` | W B | head | `assessment.ApproveHomework`, `assessment.RejectHomework` | Queue |
 | ASM-03 | Homework check | `/assessment/homeworks/{homeworkId}` | W T B | teacher | `assessment.ListHomeworkSubmissions`, `assessment.CheckHomeworkSubmission`, `assessment.ReplyToHomeworkFeedback` | Per-student checklist |
 | ASM-04 | Homework submit | (S detail) | W S B | student | `assessment.CreateHomeworkSubmission` + uploads | |
-| ASM-05 | Assignments (official) | `/assessment/assignments` | W T B | teacher | CRUD, `assessment.PublishAssignment`, `assessment.ApproveAssignment`, `assessment.RejectAssignment`, `assessment.FinishAssignment`, `assessment.CancelAssignment`, `assessment.ResetAssignment` | Allocation to students |
+| ASM-05 | Assignments (official) | `/assessment/assignments` | W T B | teacher | CRUD, `assessment.PublishAssignment`, `assessment.RequestAssignmentApproval`, `assessment.ApproveAssignment`, `assessment.RejectAssignment`, `assessment.FinishAssignment`, `assessment.CancelAssignment`, `assessment.ResetAssignment` | Allocation to students |
 | ASM-06 | Assignment grading | `/assessment/assignments/{assignmentId}` | W T B | teacher | `assessment.ListAssignmentSubmissions`, `assessment.GradeAssignmentSubmission`, `assessment.AcceptAssignmentSubmission`, `assessment.RejectAssignmentSubmission`, `assessment.RequestSubmissionChanges` | |
 | ASM-07 | Assignment submit | (S detail) | W S B | student | `assessment.SubmitAssignmentSubmission`, `assessment.ResetAssignmentSubmission` | |
 | ASM-08 | Exam sessions | `/assessment/exam-sessions` | W B | exam cell | CRUD, `assessment.ScheduleExamSession`, `assessment.MarkExamSessionHeld`, `assessment.CompleteExamSession`, `assessment.CancelExamSession`, `assessment.ResetExamSession` | |

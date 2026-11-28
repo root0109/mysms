@@ -2,6 +2,7 @@ package com.mysms.core.config;
 
 import com.mysms.core.crypto.FieldCipher;
 import com.mysms.core.db.IdempotencyLedger;
+import com.mysms.core.db.InProcessIdempotency;
 import com.mysms.core.db.IdempotencyStore;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.db.PartitionMaintenanceJob;
@@ -97,6 +98,12 @@ public class CoreAutoConfiguration {
             cipher.requireConfigured();
         }
         return new IdempotencyLedger(stores, cipher, jsonMapper, clock);
+    }
+
+    /** The request_id rules of a sibling area's operation called in process. */
+    @Bean
+    public InProcessIdempotency inProcessIdempotency(IdempotencyLedger ledger, JsonMapper jsonMapper) {
+        return new InProcessIdempotency(ledger, jsonMapper);
     }
 
     @Bean

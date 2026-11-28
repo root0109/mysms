@@ -3,9 +3,9 @@ package com.mysms.campus.facility.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.facility.api.model.AssetItem;
-import com.mysms.campus.facility.api.model.AssetItemUpdate;
 import com.mysms.campus.facility.business.AssetItemService;
 import com.mysms.facility.v1.AssetItemServiceGrpc;
+import com.mysms.facility.v1.AssetItemUpdate;
 import com.mysms.facility.v1.CreateAssetItemRequest;
 import com.mysms.facility.v1.CreateAssetItemResponse;
 import com.mysms.facility.v1.DeleteAssetItemRequest;
@@ -14,7 +14,6 @@ import com.mysms.facility.v1.GetAssetItemRequest;
 import com.mysms.facility.v1.GetAssetItemResponse;
 import com.mysms.facility.v1.ListAssetItemsRequest;
 import com.mysms.facility.v1.ListAssetItemsResponse;
-import com.mysms.facility.v1.UpdateAssetItemRequest;
 import com.mysms.facility.v1.UpdateAssetItemResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,10 +55,10 @@ public class AssetItemResolver extends AssetItemServiceGrpc.AssetItemServiceImpl
     }
 
     @Override
-    public void updateAssetItem(UpdateAssetItemRequest request, StreamObserver<UpdateAssetItemResponse> out) {
-        AssetItem updated = service.updateAssetItem(bridge.id(request.getAssetItem().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssetItem().getEtag()),
-                bridge.changes(request.getAssetItem(), request.getUpdateMask(), AssetItemUpdate.class),
+    public void updateAssetItem(AssetItemUpdate request, StreamObserver<UpdateAssetItemResponse> out) {
+        AssetItem updated = service.updateAssetItem(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AssetItemProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAssetItemResponse.newBuilder(), "asset_item", updated).build());
     }

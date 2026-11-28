@@ -156,6 +156,9 @@ public class FeePlanService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -341,6 +344,9 @@ public class FeePlanService extends AppTransactionManager {
             assertValidFeePlanInstallment(entity, false);
             scope.requireWritable(institutionOfFeePlanInstallment(entity));
             assertUniqueFeePlanInstallment(entity);
+            if (fields.isEmpty()) {
+                return feePlanInstallmentMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return feePlanInstallmentMapper.toDto(entity);

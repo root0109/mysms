@@ -125,15 +125,6 @@
   "idempotency" : "optional",
   "audience" : "public"
 }, {
-  "operationId" : "assessment.CreateAssignmentApproval",
-  "method" : "POST",
-  "path" : "/v1/assessment/assignments/{assignmentId}/approvals",
-  "permission" : "assessment.assignment_approval.create",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "idempotency" : "optional",
-  "audience" : "public"
-}, {
   "operationId" : "assessment.CreateAssignmentSubject",
   "method" : "POST",
   "path" : "/v1/assessment/assignments/{assignmentId}/subjects",
@@ -272,14 +263,6 @@
   "method" : "DELETE",
   "path" : "/v1/assessment/assignments/{assignmentId}/allocations/{assignmentAllocationId}",
   "permission" : "assessment.assignment_allocation.delete",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "audience" : "public"
-}, {
-  "operationId" : "assessment.DeleteAssignmentApproval",
-  "method" : "DELETE",
-  "path" : "/v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId}",
-  "permission" : "assessment.assignment_approval.delete",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"
@@ -875,6 +858,15 @@
   "idempotency" : "optional",
   "audience" : "public"
 }, {
+  "operationId" : "assessment.RequestAssignmentApproval",
+  "method" : "POST",
+  "path" : "/v1/assessment/assignments/{assignmentId}:requestApproval",
+  "permission" : "assessment.assignment.request_assignment_approval",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
   "operationId" : "assessment.RequestSubmissionChanges",
   "method" : "POST",
   "path" : "/v1/assessment/assignment-submissions/{assignmentSubmissionId}:requestChanges",
@@ -968,14 +960,6 @@
   "method" : "PATCH",
   "path" : "/v1/assessment/assignments/{assignmentId}/allocations/{assignmentAllocationId}",
   "permission" : "assessment.assignment_allocation.update",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "audience" : "public"
-}, {
-  "operationId" : "assessment.UpdateAssignmentApproval",
-  "method" : "PATCH",
-  "path" : "/v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId}",
-  "permission" : "assessment.assignment_approval.update",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"

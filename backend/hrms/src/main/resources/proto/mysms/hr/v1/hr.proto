@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.hr.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "HrProto";
@@ -20,7 +20,7 @@ service DesignationService {
   // Create Designation.
   rpc CreateDesignation(CreateDesignationRequest) returns (CreateDesignationResponse);
   // Update Designation.
-  rpc UpdateDesignation(UpdateDesignationRequest) returns (UpdateDesignationResponse);
+  rpc UpdateDesignation(DesignationUpdate) returns (UpdateDesignationResponse);
   // Soft-delete Designation.
   rpc DeleteDesignation(DeleteDesignationRequest) returns (DeleteDesignationResponse);
 }
@@ -34,7 +34,7 @@ service StaffService {
   // Create Staff.
   rpc CreateStaff(CreateStaffRequest) returns (CreateStaffResponse);
   // Update Staff.
-  rpc UpdateStaff(UpdateStaffRequest) returns (UpdateStaffResponse);
+  rpc UpdateStaff(StaffUpdate) returns (UpdateStaffResponse);
   // Soft-delete Staff.
   rpc DeleteStaff(DeleteStaffRequest) returns (DeleteStaffResponse);
   // List StaffDepartments.
@@ -44,7 +44,7 @@ service StaffService {
   // Create StaffDepartment.
   rpc CreateStaffDepartment(CreateStaffDepartmentRequest) returns (CreateStaffDepartmentResponse);
   // Update StaffDepartment.
-  rpc UpdateStaffDepartment(UpdateStaffDepartmentRequest) returns (UpdateStaffDepartmentResponse);
+  rpc UpdateStaffDepartment(StaffDepartmentUpdate) returns (UpdateStaffDepartmentResponse);
   // Soft-delete StaffDepartment.
   rpc DeleteStaffDepartment(DeleteStaffDepartmentRequest) returns (DeleteStaffDepartmentResponse);
   // Activate, deactivate or exit.
@@ -64,7 +64,7 @@ service LeaveTypeService {
   // Create LeaveType.
   rpc CreateLeaveType(CreateLeaveTypeRequest) returns (CreateLeaveTypeResponse);
   // Update LeaveType.
-  rpc UpdateLeaveType(UpdateLeaveTypeRequest) returns (UpdateLeaveTypeResponse);
+  rpc UpdateLeaveType(LeaveTypeUpdate) returns (UpdateLeaveTypeResponse);
   // Soft-delete LeaveType.
   rpc DeleteLeaveType(DeleteLeaveTypeRequest) returns (DeleteLeaveTypeResponse);
 }
@@ -78,7 +78,7 @@ service LeaveApplicationService {
   // Create LeaveApplication.
   rpc CreateLeaveApplication(CreateLeaveApplicationRequest) returns (CreateLeaveApplicationResponse);
   // Update LeaveApplication.
-  rpc UpdateLeaveApplication(UpdateLeaveApplicationRequest) returns (UpdateLeaveApplicationResponse);
+  rpc UpdateLeaveApplication(LeaveApplicationUpdate) returns (UpdateLeaveApplicationResponse);
   // Soft-delete LeaveApplication.
   rpc DeleteLeaveApplication(DeleteLeaveApplicationRequest) returns (DeleteLeaveApplicationResponse);
   // Approve.
@@ -128,13 +128,25 @@ message CreateDesignationResponse {
   Designation designation = 1;
 }
 
-message UpdateDesignationRequest {
-  // Resource with id and etag set.
-  Designation designation = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateDesignation (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message DesignationUpdate {
+  // Designation id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Display order.
+  optional int32 sort_order = 4;
+  // Whether offered for new picks.
+  optional bool is_active = 5;
+  // Designation code.
+  optional string code = 6;
+  // Designation name.
+  optional string name = 7;
+  // Teaching or non-teaching.
+  optional Designation.StaffCategory staff_category = 8;
 }
 message UpdateDesignationResponse {
   Designation designation = 1;
@@ -188,13 +200,45 @@ message CreateStaffResponse {
   Staff staff = 1;
 }
 
-message UpdateStaffRequest {
-  // Resource with id and etag set.
-  Staff staff = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStaff (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StaffUpdate {
+  // Staff id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Person. [UUID]
+  optional string person_id = 4;
+  // Staff login account. [UUID]
+  mysms.common.v1.NullableString user_id = 5;
+  // Employing institution. [UUID]
+  optional string institution_id = 6;
+  // Employee number.
+  mysms.common.v1.NullableString employee_code = 7;
+  // Designation. [UUID]
+  mysms.common.v1.NullableString designation_id = 8;
+  // Designation detail.
+  mysms.common.v1.NullableString sub_designation = 9;
+  // Employment type.
+  optional Staff.EmploymentType employment_type = 10;
+  // Date of joining. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString joining_date = 11;
+  // Line manager (any user account, staff or administrator). [UUID]
+  mysms.common.v1.NullableString reporting_to_staff_id = 12;
+  // Main department. [UUID]
+  mysms.common.v1.NullableString primary_department_id = 13;
+  // Highest qualification. [UUID]
+  mysms.common.v1.NullableString highest_qualification_id = 14;
+  // Qualification detail.
+  mysms.common.v1.NullableString qualification_detail = 15;
+  // Specialisation.
+  mysms.common.v1.NullableString specialization = 16;
+  // Interests / extra responsibilities.
+  mysms.common.v1.NullableString interests = 17;
+  // Teaching-load ceiling in periods.
+  mysms.common.v1.NullableInt32 max_periods_per_week = 18;
 }
 message UpdateStaffResponse {
   Staff staff = 1;
@@ -254,15 +298,19 @@ message CreateStaffDepartmentResponse {
   StaffDepartment staff_department = 1;
 }
 
-message UpdateStaffDepartmentRequest {
+// The changes of UpdateStaffDepartment (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StaffDepartmentUpdate {
   // Staff id (UUID).
   string staff_id = 1;
-  // Resource with id and etag set.
-  StaffDepartment staff_department = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // StaffDepartment id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Department. [UUID]
+  optional string department_id = 5;
 }
 message UpdateStaffDepartmentResponse {
   StaffDepartment staff_department = 1;
@@ -318,13 +366,31 @@ message CreateLeaveTypeResponse {
   LeaveType leave_type = 1;
 }
 
-message UpdateLeaveTypeRequest {
-  // Resource with id and etag set.
-  LeaveType leave_type = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateLeaveType (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message LeaveTypeUpdate {
+  // LeaveType id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Institution. [UUID]
+  optional string institution_id = 6;
+  // Year the entitlement applies to (NULL = every year). [UUID]
+  mysms.common.v1.NullableString academic_year_id = 7;
+  // Leave type.
+  optional string name = 8;
+  // Entitlement in days. [Decimal string]
+  optional string max_days_per_year = 9;
+  // Whether usable.
+  optional bool is_active = 10;
+  // Whether leave of this type is paid; approved unpaid leave reduces the pay of its period.
+  optional bool is_paid = 11;
 }
 message UpdateLeaveTypeResponse {
   LeaveType leave_type = 1;
@@ -378,13 +444,35 @@ message CreateLeaveApplicationResponse {
   LeaveApplication leave_application = 1;
 }
 
-message UpdateLeaveApplicationRequest {
-  // Resource with id and etag set.
-  LeaveApplication leave_application = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateLeaveApplication (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message LeaveApplicationUpdate {
+  // LeaveApplication id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  optional string academic_year_id = 5;
+  // Applicant. [UUID]
+  optional string staff_id = 6;
+  // Leave type. [UUID]
+  mysms.common.v1.NullableString leave_type_id = 7;
+  // Reason category. [UUID]
+  mysms.common.v1.NullableString absence_reason_id = 8;
+  // Class whose cover is affected. [UUID]
+  mysms.common.v1.NullableString class_section_id = 9;
+  // Leave start.
+  google.protobuf.Timestamp from_at = 10;
+  // Leave end.
+  google.protobuf.Timestamp to_at = 11;
+  // Part of day for single-day leave.
+  optional LeaveApplication.DayPart day_part = 12;
+  // Applicant remarks.
+  mysms.common.v1.NullableString remarks = 13;
 }
 message UpdateLeaveApplicationResponse {
   LeaveApplication leave_application = 1;
@@ -651,6 +739,8 @@ message LeaveType {
   optional string code = 12;
   // Display order.
   optional int32 sort_order = 13;
+  // Whether leave of this type is paid (default true); approved unpaid leave reduces the pay of its period.
+  optional bool is_paid = 14;
 }
 
 // Staff leave request and decision.
@@ -695,6 +785,8 @@ message LeaveApplication {
   optional string updated_by = 19;
   // Entity tag (row version). Output only on reads; send back on update/delete.
   string etag = 20;
+  // Days the approval counted against the leave balance (its working days on the calendar of that moment); cancelling gives back exactly these. Output only. [Decimal string]
+  optional string counted_days = 21;
   // Allowed values of day_part; REST/JSON uses the lowercase value shown in each comment.
   enum DayPart {
     DAY_PART_UNSPECIFIED = 0;
@@ -788,13 +880,25 @@ message CreateLeaveBalanceResponse {
   LeaveBalance leave_balance = 1;
 }
 
-message UpdateLeaveBalanceRequest {
-  // Resource with id and etag set.
-  LeaveBalance leave_balance = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateLeaveBalance (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message LeaveBalanceUpdate {
+  // LeaveBalance id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Staff member. [UUID]
+  optional string staff_id = 4;
+  // Leave type. [UUID]
+  optional string leave_type_id = 5;
+  // Year the balance is tracked for. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 6;
+  // Days granted for the year. [Decimal string]
+  optional string entitled_days = 7;
+  // Days carried in from the previous year. [Decimal string]
+  optional string carried_forward_days = 8;
 }
 message UpdateLeaveBalanceResponse {
   LeaveBalance leave_balance = 1;
@@ -809,5 +913,5 @@ service LeaveBalanceService {
   // Create LeaveBalance.
   rpc CreateLeaveBalance(CreateLeaveBalanceRequest) returns (CreateLeaveBalanceResponse);
   // Update LeaveBalance.
-  rpc UpdateLeaveBalance(UpdateLeaveBalanceRequest) returns (UpdateLeaveBalanceResponse);
+  rpc UpdateLeaveBalance(LeaveBalanceUpdate) returns (UpdateLeaveBalanceResponse);
 }

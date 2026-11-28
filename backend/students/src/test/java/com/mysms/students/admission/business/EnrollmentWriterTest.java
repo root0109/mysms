@@ -3,51 +3,79 @@ package com.mysms.students.admission.business;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.mysms.students.admission.domain.ApplicationEntity;
-import com.mysms.students.admission.integration.PeopleGrpcClient;
-import com.mysms.students.admission.integration.SisGrpcClient;
+import com.mysms.authclient.SiblingAccess;
+import com.mysms.core.db.InProcessIdempotency;
 import com.mysms.core.error.ApiException;
 import com.mysms.core.error.DuplicateResourceException;
 import com.mysms.core.error.FieldError;
+import com.mysms.core.error.NotImplementedException;
 import com.mysms.core.error.PermissionDeniedException;
+import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.UnavailableException;
 import com.mysms.core.error.ValidationFailedException;
+import com.mysms.core.paging.Page;
 import com.mysms.core.testkit.GrpcRefusals;
 import com.mysms.people.v1.CreatePersonRequest;
 import com.mysms.people.v1.CreatePersonResponse;
 import com.mysms.people.v1.Person;
-import com.mysms.sis.v1.CreatePortalAccountRequest;
-import com.mysms.sis.v1.CreatePortalAccountResponse;
-import com.mysms.sis.v1.CreateStudentPortalAccountRequest;
-import com.mysms.sis.v1.CreateStudentPortalAccountResponse;
-import com.mysms.sis.v1.GetStudentRequest;
-import com.mysms.sis.v1.Guardian;
-import com.mysms.sis.v1.ListGuardiansRequest;
-import com.mysms.sis.v1.ListGuardiansResponse;
-import com.mysms.sis.v1.ListRelationshipTypesResponse;
-import com.mysms.sis.v1.RelationshipType;
+import com.mysms.students.admission.domain.ApplicationEntity;
+import com.mysms.students.admission.integration.PeopleGrpcClient;
+import com.mysms.students.sis.api.model.CreatePortalAccountRequest;
+import com.mysms.students.sis.api.model.CreateStudentPortalAccountRequest;
+import com.mysms.students.sis.api.model.Guardian;
+import com.mysms.students.sis.api.model.RelationshipType;
+import com.mysms.students.sis.api.model.Student;
+import com.mysms.students.sis.business.GuardianService;
+import com.mysms.students.sis.business.PortalAccountService;
+import com.mysms.students.sis.business.ProgramEnrollmentService;
+import com.mysms.students.sis.business.RelationshipTypeService;
+import com.mysms.students.sis.business.StudentEnrollmentService;
+import com.mysms.students.sis.business.StudentService;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
 
 /**
- * How the people and sis answers become admission.EnrollApplicant's, over stand-ins of the gRPC clients: what is sent
- * for the applicant, and that a refusal keeps its meaning — 403, 409, 422 with the refused fields — while anything else
- * is 503 and no message of another service reaches the caller.
+ * How the people (gRPC) and sis (in process) answers become admission.EnrollApplicant's, over stand-ins: what is sent
+ * for the applicant, that sis is asked only with the caller's permission and under the step's key, and that a refusal
+ * keeps its meaning — 403, 409, 422 with the refused fields — while anything else is 503 and no message of another
+ * service reaches the caller.
  */
 class EnrollmentWriterTest {
 
     private final PeopleGrpcClient people = mock(PeopleGrpcClient.class);
-    private final SisGrpcClient sis = mock(SisGrpcClient.class);
-    private final EnrollmentWriter writer = new EnrollmentWriter(people, sis);
+    private final StudentService students = mock(StudentService.class);
+    private final GuardianService guardians = mock(GuardianService.class);
+    private final RelationshipTypeService relationshipTypes = mock(RelationshipTypeService.class);
+    private final PortalAccountService portalAccounts = mock(PortalAccountService.class);
+    private final SiblingAccess sibling = mock(SiblingAccess.class);
+    private final InProcessIdempotency idempotency = mock(InProcessIdempotency.class);
+    private final EnrollmentWriter writer = new EnrollmentWriter(people, students,
+            mock(StudentEnrollmentService.class), mock(ProgramEnrollmentService.class), guardians, relationshipTypes,
+            portalAccounts, sibling, idempotency);
     private final UUID key = UUID.randomUUID();
+
+    @BeforeEach
+    void callerMayAndKeysRunOnce() {
+        when(sibling.permits(any())).thenReturn(true);
+        when(idempotency.call(any(), any(), any(), any(), any()))
+                .thenAnswer(call -> ((Supplier<?>) call.getArgument(4)).get());
+    }
 
     private static ApplicationEntity applicant() {
         return ApplicationEntity.builder().institutionId(UUID.randomUUID()).applicationNumber("A-1")
@@ -77,17 +105,32 @@ class EnrollmentWriterTest {
     }
 
     @Test
-    void aStudentThatIsNotThereIsEmptyAndARefusedReadIsTheCallersMissingPermission() {
+    void theStudentIsCreatedInSisUnderTheStepsKey() {
+        UUID person = UUID.randomUUID();
+        UUID created = UUID.randomUUID();
+        ApplicationEntity application = applicant();
+        when(students.createStudent(any(), eq(false))).thenAnswer(call -> ((Student) call.getArgument(0)).id(created));
+
+        EnrollmentWriter.StudentRef student = writer.createStudent(person, application, LocalDate.of(2026, 4, 1), key);
+
+        assertThat(student).isEqualTo(new EnrollmentWriter.StudentRef(created, application.getInstitutionId(), person));
+        ArgumentCaptor<Student> sent = ArgumentCaptor.forClass(Student.class);
+        verify(idempotency).call(eq("sis.CreateStudent"), eq(key), sent.capture(), eq(Student.class), any());
+        assertThat(sent.getValue().getAdmissionNumber()).isEqualTo("A-1");
+        assertThat(sent.getValue().getAdmissionDate()).isEqualTo(LocalDate.of(2026, 4, 1));
+    }
+
+    @Test
+    void aStudentThatIsNotThereIsEmptyAndAReadWithoutThePermissionIsRefused() {
         UUID id = UUID.randomUUID();
-        when(sis.getStudent(GetStudentRequest.newBuilder().setId(id.toString()).build()))
-                .thenThrow(GrpcRefusals.refused("sis", HttpStatus.NOT_FOUND, "NOT_FOUND"));
+        when(students.getStudent(id)).thenThrow(new ResourceNotFoundException("sis.student", id));
         assertThat(writer.findStudent(id)).isEmpty();
 
         UUID hidden = UUID.randomUUID();
-        when(sis.getStudent(GetStudentRequest.newBuilder().setId(hidden.toString()).build()))
-                .thenThrow(GrpcRefusals.refused("sis", HttpStatus.FORBIDDEN, "PERMISSION_DENIED"));
+        when(sibling.permits("sis.student.read")).thenReturn(false);
         assertThatThrownBy(() -> writer.findStudent(hidden)).isInstanceOf(PermissionDeniedException.class)
                 .hasMessageContaining("sis.student.read");
+        verify(students, never()).getStudent(hidden);
     }
 
     @Test
@@ -102,9 +145,18 @@ class EnrollmentWriterTest {
                 });
 
         UUID person = UUID.randomUUID();
-        when(sis.createStudent(any())).thenThrow(GrpcRefusals.refused("sis", HttpStatus.CONFLICT, "DUPLICATE"));
+        when(students.createStudent(any(), anyBoolean())).thenThrow(new DuplicateResourceException("secret"));
         assertThatThrownBy(() -> writer.createStudent(person, applicant(), LocalDate.now(), key))
-                .isInstanceOf(DuplicateResourceException.class);
+                .isInstanceOf(DuplicateResourceException.class).hasMessageNotContaining("secret");
+
+        doThrow(new ValidationFailedException(List.of(new FieldError("admissionNumber", "secret detail", "Size"))))
+                .when(students).createStudent(any(), anyBoolean());
+        assertThatThrownBy(() -> writer.createStudent(person, applicant(), LocalDate.now(), key))
+                .isInstanceOfSatisfying(ValidationFailedException.class, refused -> assertThat(refused.errors())
+                        .singleElement().satisfies(error -> {
+                            assertThat(error.field()).isEqualTo("admissionNumber");
+                            assertThat(error.message()).doesNotContain("secret");
+                        }));
     }
 
     @Test
@@ -115,12 +167,12 @@ class EnrollmentWriterTest {
                 .isInstanceOf(UnavailableException.class).hasMessageNotContaining("own sentence");
 
         UUID id = UUID.randomUUID();
-        when(sis.getStudent(any())).thenThrow(GrpcRefusals.unreachable("sis"));
-        assertThatThrownBy(() -> writer.findStudent(id)).isInstanceOf(UnavailableException.class);
+        when(students.getStudent(id)).thenThrow(new UnavailableException("sis's own sentence"));
+        assertThatThrownBy(() -> writer.findStudent(id)).isInstanceOf(UnavailableException.class)
+                .hasMessage("The sis service could not answer.");
 
         UUID student = UUID.randomUUID();
-        when(sis.createStudentPortalAccount(any())).thenThrow(GrpcRefusals.refused("sis",
-                HttpStatus.NOT_IMPLEMENTED, "NOT_IMPLEMENTED"));
+        when(portalAccounts.createStudentPortalAccount(eq(student), any())).thenThrow(new NotImplementedException());
         assertThatThrownBy(() -> writer.createStudentPortalAccount(student, key))
                 .isInstanceOf(EnrollmentWriter.NotServedException.class)
                 .satisfies(e -> assertThat(((ApiException) e).status()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
@@ -129,14 +181,9 @@ class EnrollmentWriterTest {
     @Test
     void aParentSisKnowsIsFoundByEmailThenByMobile() {
         UUID known = UUID.randomUUID();
-        when(sis.listGuardians(any())).thenAnswer(call -> {
-            ListGuardiansRequest request = call.getArgument(0);
-            ListGuardiansResponse.Builder page = ListGuardiansResponse.newBuilder();
-            if (request.getFilter().equals("mobile = \"+919800000001\"")) {
-                page.addItems(Guardian.newBuilder().setId(known.toString()));
-            }
-            return page.build();
-        });
+        when(guardians.listGuardians(eq(1), eq(1), isNull(), any(), isNull())).thenAnswer(call ->
+                new Page<>("mobile = \"+919800000001\"".equals(call.getArgument(3))
+                        ? List.of(new Guardian(UUID.randomUUID()).id(known)) : List.of(), 1, 1, ""));
         assertThat(writer.findGuardian(" meera@example.com ", "+919800000001")).contains(known);
         assertThat(writer.findGuardian(null, " ")).as("nothing to look a parent up by").isEmpty();
     }
@@ -144,32 +191,27 @@ class EnrollmentWriterTest {
     @Test
     void relationshipTypesAreReadOnceAndNamedByCodeAndName() {
         UUID mother = UUID.randomUUID();
-        when(sis.listRelationshipTypes(any())).thenReturn(ListRelationshipTypesResponse.newBuilder()
-                .addItems(RelationshipType.newBuilder().setId(mother.toString()).setName("Mother").setCode("MOTHER"))
-                .build());
+        when(relationshipTypes.listRelationshipTypes(1, EnrollmentWriter.PAGE_SIZE, null, null, null)).thenReturn(
+                new Page<>(List.of(new RelationshipType("Mother").id(mother).code("MOTHER")), 1, 1, ""));
         assertThat(writer.relationshipTypes()).containsEntry("mother", mother);
-        verify(sis, times(1)).listRelationshipTypes(any());
+        verify(relationshipTypes, times(1)).listRelationshipTypes(any(), any(), any(), any(), any());
     }
 
     @Test
-    void portalAccountsAreAskedForWithoutAnInvitation() {
+    void portalAccountsAreAskedForWithoutAnInvitationUnderTheStepsKey() {
         UUID student = UUID.randomUUID();
-        when(sis.createStudentPortalAccount(any())).thenReturn(CreateStudentPortalAccountResponse.getDefaultInstance());
         writer.createStudentPortalAccount(student, key);
         ArgumentCaptor<CreateStudentPortalAccountRequest> sent =
                 ArgumentCaptor.forClass(CreateStudentPortalAccountRequest.class);
-        verify(sis).createStudentPortalAccount(sent.capture());
-        assertThat(sent.getValue().getStudentId()).isEqualTo(student.toString());
+        verify(portalAccounts).createStudentPortalAccount(eq(student), sent.capture());
         assertThat(sent.getValue().getSendInvite()).isFalse();
-        assertThat(sent.getValue().getRequestId()).isEqualTo(key.toString());
+        verify(idempotency).call(eq("sis.CreateStudentPortalAccount"), eq(key), any(), eq(Student.class), any());
 
         UUID guardian = UUID.randomUUID();
-        when(sis.createPortalAccount(any())).thenReturn(CreatePortalAccountResponse.getDefaultInstance());
         writer.createGuardianPortalAccount(guardian, key);
         ArgumentCaptor<CreatePortalAccountRequest> asked = ArgumentCaptor.forClass(CreatePortalAccountRequest.class);
-        verify(sis).createPortalAccount(asked.capture());
-        assertThat(asked.getValue().getGuardianId()).isEqualTo(guardian.toString());
-        assertThat(asked.getValue().hasSendInvite()).isTrue();
+        verify(portalAccounts).createGuardianPortalAccount(eq(guardian), asked.capture());
         assertThat(asked.getValue().getSendInvite()).isFalse();
+        verify(idempotency).call(eq("sis.CreatePortalAccount"), eq(key), any(), eq(Guardian.class), any());
     }
 }

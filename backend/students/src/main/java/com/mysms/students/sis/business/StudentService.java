@@ -173,6 +173,9 @@ public class StudentService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -388,6 +391,9 @@ public class StudentService extends AppTransactionManager {
             assertValidStudentGuardian(entity, false);
             scope.requireWritable(institutionOfStudentGuardian(entity));
             assertUniqueStudentGuardian(entity);
+            if (fields.isEmpty()) {
+                return studentGuardianMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return studentGuardianMapper.toDto(entity);
@@ -587,6 +593,9 @@ public class StudentService extends AppTransactionManager {
             assertValidStudentSibling(entity, false);
             scope.requireWritable(institutionOfStudentSibling(entity));
             assertUniqueStudentSibling(entity);
+            if (fields.isEmpty()) {
+                return studentSiblingMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return studentSiblingMapper.toDto(entity);

@@ -156,6 +156,9 @@ public class ClassSectionService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -330,6 +333,9 @@ public class ClassSectionService extends AppTransactionManager {
             assertValidClassSubject(entity, false);
             scope.requireWritable(institutionOfClassSubject(entity));
             assertUniqueClassSubject(entity);
+            if (fields.isEmpty()) {
+                return classSubjectMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return classSubjectMapper.toDto(entity);

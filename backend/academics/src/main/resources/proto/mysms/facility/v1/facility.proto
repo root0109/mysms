@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.facility.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "FacilityProto";
@@ -20,7 +20,7 @@ service FacilityService {
   // Create Facility.
   rpc CreateFacility(CreateFacilityRequest) returns (CreateFacilityResponse);
   // Update Facility.
-  rpc UpdateFacility(UpdateFacilityRequest) returns (UpdateFacilityResponse);
+  rpc UpdateFacility(FacilityUpdate) returns (UpdateFacilityResponse);
   // Soft-delete Facility.
   rpc DeleteFacility(DeleteFacilityRequest) returns (DeleteFacilityResponse);
 }
@@ -34,7 +34,7 @@ service RoomService {
   // Create Room.
   rpc CreateRoom(CreateRoomRequest) returns (CreateRoomResponse);
   // Update Room.
-  rpc UpdateRoom(UpdateRoomRequest) returns (UpdateRoomResponse);
+  rpc UpdateRoom(RoomUpdate) returns (UpdateRoomResponse);
   // Soft-delete Room.
   rpc DeleteRoom(DeleteRoomRequest) returns (DeleteRoomResponse);
   // List RoomFacilities.
@@ -44,7 +44,7 @@ service RoomService {
   // Create RoomFacility.
   rpc CreateRoomFacility(CreateRoomFacilityRequest) returns (CreateRoomFacilityResponse);
   // Update RoomFacility.
-  rpc UpdateRoomFacility(UpdateRoomFacilityRequest) returns (UpdateRoomFacilityResponse);
+  rpc UpdateRoomFacility(RoomFacilityUpdate) returns (UpdateRoomFacilityResponse);
   // Soft-delete RoomFacility.
   rpc DeleteRoomFacility(DeleteRoomFacilityRequest) returns (DeleteRoomFacilityResponse);
   // List RoomAssets.
@@ -54,7 +54,7 @@ service RoomService {
   // Create RoomAsset.
   rpc CreateRoomAsset(CreateRoomAssetRequest) returns (CreateRoomAssetResponse);
   // Update RoomAsset.
-  rpc UpdateRoomAsset(UpdateRoomAssetRequest) returns (UpdateRoomAssetResponse);
+  rpc UpdateRoomAsset(RoomAssetUpdate) returns (UpdateRoomAssetResponse);
   // Soft-delete RoomAsset.
   rpc DeleteRoomAsset(DeleteRoomAssetRequest) returns (DeleteRoomAssetResponse);
 }
@@ -68,7 +68,7 @@ service AssetItemService {
   // Create AssetItem.
   rpc CreateAssetItem(CreateAssetItemRequest) returns (CreateAssetItemResponse);
   // Update AssetItem.
-  rpc UpdateAssetItem(UpdateAssetItemRequest) returns (UpdateAssetItemResponse);
+  rpc UpdateAssetItem(AssetItemUpdate) returns (UpdateAssetItemResponse);
   // Soft-delete AssetItem.
   rpc DeleteAssetItem(DeleteAssetItemRequest) returns (DeleteAssetItemResponse);
 }
@@ -112,13 +112,25 @@ message CreateFacilityResponse {
   Facility facility = 1;
 }
 
-message UpdateFacilityRequest {
-  // Resource with id and etag set.
-  Facility facility = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateFacility (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message FacilityUpdate {
+  // Facility id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Display order.
+  optional int32 sort_order = 4;
+  // Institution. [UUID]
+  optional string institution_id = 5;
+  // Facility code.
+  optional string code = 6;
+  // Facility name.
+  optional string name = 7;
+  // Whether in use.
+  optional bool is_active = 8;
 }
 message UpdateFacilityResponse {
   Facility facility = 1;
@@ -172,13 +184,33 @@ message CreateRoomResponse {
   Room room = 1;
 }
 
-message UpdateRoomRequest {
-  // Resource with id and etag set.
-  Room room = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateRoom (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message RoomUpdate {
+  // Room id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Room code.
+  optional string code = 5;
+  // Room name.
+  optional string name = 6;
+  // Room type.
+  optional Room.RoomType room_type = 7;
+  // Seating capacity.
+  optional int32 capacity = 8;
+  // Course the room is normally allotted to. [UUID]
+  mysms.common.v1.NullableString default_course_id = 9;
+  // Batch the room is normally allotted to. [UUID]
+  mysms.common.v1.NullableString default_batch_id = 10;
+  // Class section the room is normally allotted to. [UUID]
+  mysms.common.v1.NullableString default_class_section_id = 11;
+  // Whether usable.
+  optional bool is_active = 12;
 }
 message UpdateRoomResponse {
   Room room = 1;
@@ -238,15 +270,21 @@ message CreateRoomFacilityResponse {
   RoomFacility room_facility = 1;
 }
 
-message UpdateRoomFacilityRequest {
+// The changes of UpdateRoomFacility (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message RoomFacilityUpdate {
   // Room id (UUID).
   string room_id = 1;
-  // Resource with id and etag set.
-  RoomFacility room_facility = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // RoomFacility id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Facility. [UUID]
+  optional string facility_id = 5;
+  // Quantity. [Decimal string]
+  optional string quantity = 6;
 }
 message UpdateRoomFacilityResponse {
   RoomFacility room_facility = 1;
@@ -302,13 +340,27 @@ message CreateAssetItemResponse {
   AssetItem asset_item = 1;
 }
 
-message UpdateAssetItemRequest {
-  // Resource with id and etag set.
-  AssetItem asset_item = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateAssetItem (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AssetItemUpdate {
+  // AssetItem id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Display order.
+  optional int32 sort_order = 4;
+  // Whether offered for new picks.
+  optional bool is_active = 5;
+  // Institution. [UUID]
+  optional string institution_id = 6;
+  // Asset code.
+  mysms.common.v1.NullableString code = 7;
+  // Asset name.
+  optional string name = 8;
+  // Unit.
+  optional string unit_of_measure = 9;
 }
 message UpdateAssetItemResponse {
   AssetItem asset_item = 1;
@@ -368,15 +420,23 @@ message CreateRoomAssetResponse {
   RoomAsset room_asset = 1;
 }
 
-message UpdateRoomAssetRequest {
+// The changes of UpdateRoomAsset (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message RoomAssetUpdate {
   // Room id (UUID).
   string room_id = 1;
-  // Resource with id and etag set.
-  RoomAsset room_asset = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // RoomAsset id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Asset. [UUID]
+  optional string asset_item_id = 5;
+  // Asset tag / serial code.
+  mysms.common.v1.NullableString tag_code = 6;
+  // Quantity. [Decimal string]
+  optional string quantity = 7;
 }
 message UpdateRoomAssetResponse {
   RoomAsset room_asset = 1;

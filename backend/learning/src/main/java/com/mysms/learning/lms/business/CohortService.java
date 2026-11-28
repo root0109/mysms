@@ -347,6 +347,9 @@ public class CohortService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -709,6 +712,9 @@ public class CohortService extends AppTransactionManager {
             assertValidCohortCourse(entity, false);
             scope.requireWritable(institutionOfCohortCourse(entity));
             assertUniqueCohortCourse(entity);
+            if (fields.isEmpty()) {
+                return cohortCourseMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return cohortCourseMapper.toDto(entity);
@@ -869,6 +875,9 @@ public class CohortService extends AppTransactionManager {
             assertValidCohortFeedback(entity, false);
             scope.requireWritable(institutionOfCohortFeedback(entity));
             assertUniqueCohortFeedback(entity);
+            if (fields.isEmpty()) {
+                return cohortFeedbackMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return cohortFeedbackMapper.toDto(entity);
@@ -1028,6 +1037,9 @@ public class CohortService extends AppTransactionManager {
             assertValidCohortGroup(entity, false);
             scope.requireWritable(institutionOfCohortGroup(entity));
             assertUniqueCohortGroup(entity);
+            if (fields.isEmpty()) {
+                return cohortGroupMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return cohortGroupMapper.toDto(entity);
@@ -1187,6 +1199,9 @@ public class CohortService extends AppTransactionManager {
             assertValidCohortHoliday(entity, false);
             scope.requireWritable(institutionOfCohortHoliday(entity));
             assertUniqueCohortHoliday(entity);
+            if (fields.isEmpty()) {
+                return cohortHolidayMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return cohortHolidayMapper.toDto(entity);
@@ -1362,6 +1377,9 @@ public class CohortService extends AppTransactionManager {
             assertValidCohortScheduleSlot(entity, false);
             scope.requireWritable(institutionOfCohortScheduleSlot(entity));
             assertUniqueCohortScheduleSlot(entity);
+            if (fields.isEmpty()) {
+                return cohortScheduleSlotMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return cohortScheduleSlotMapper.toDto(entity);
@@ -1530,6 +1548,9 @@ public class CohortService extends AppTransactionManager {
             assertValidCohortSession(entity, false);
             scope.requireWritable(institutionOfCohortSession(entity));
             assertUniqueCohortSession(entity);
+            if (fields.isEmpty()) {
+                return cohortSessionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return cohortSessionMapper.toDto(entity);
@@ -1688,6 +1709,9 @@ public class CohortService extends AppTransactionManager {
             assertValidCohortTeacher(entity, false);
             scope.requireWritable(institutionOfCohortTeacher(entity));
             assertUniqueCohortTeacher(entity);
+            if (fields.isEmpty()) {
+                return cohortTeacherMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return cohortTeacherMapper.toDto(entity);
@@ -1850,6 +1874,9 @@ public class CohortService extends AppTransactionManager {
             assertValidForum(entity, false);
             scope.requireWritable(institutionOfForum(entity));
             assertUniqueForum(entity);
+            if (fields.isEmpty()) {
+                return forumMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return forumMapper.toDto(entity);
@@ -2008,6 +2035,9 @@ public class CohortService extends AppTransactionManager {
             assertValidPlagiarismCohortLink(entity, false);
             scope.requireWritable(institutionOfPlagiarismCohortLink(entity));
             assertUniquePlagiarismCohortLink(entity);
+            if (fields.isEmpty()) {
+                return plagiarismCohortLinkMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return plagiarismCohortLinkMapper.toDto(entity);
@@ -2383,6 +2413,9 @@ public class CohortService extends AppTransactionManager {
             validator.validate(cohortActivityMapper.toDto(entity));
             assertValidCohortActivity(entity);
             assertUniqueCohortActivity(entity);
+            if (fields.isEmpty()) {
+                return cohortActivityMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return cohortActivityMapper.toDto(entity);

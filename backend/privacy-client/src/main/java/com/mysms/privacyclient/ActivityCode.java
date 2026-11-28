@@ -11,7 +11,8 @@ import java.util.regex.Pattern;
  */
 public record ActivityCode(String value) {
 
-    private static final Pattern FORM = Pattern.compile("[a-z]+\\.[a-z_]+");
+    /** {@code <area>.<activity>}; an area may hold an underscore ({@code time_attendance}). */
+    private static final Pattern FORM = Pattern.compile("[a-z][a-z_]*\\.[a-z_]+");
 
     public ActivityCode {
         if (value == null || !FORM.matcher(value).matches()) {

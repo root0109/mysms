@@ -116,12 +116,16 @@ public class MarksheetService extends AppTransactionManager {
         });
     }
 
-    /** Creates the row; with validateOnly every check runs and nothing is written. */
+    /**
+     * Creates the row in the caller's name (generatedByUserId); the pass/fail totals stay empty until results
+     * generation fills them. With validateOnly every check runs and nothing is written.
+     */
     public Marksheet createMarksheet(Marksheet request, boolean validateOnly) {
         validator.validate(request);
         MarksheetEntity entity = mapper.toEntity(request);
         entity.onCreatingData(Actor.current(), clock);
         entity.setTenantId(CallContextHolder.require().tenantId().orElseThrow());
+        entity.setGeneratedByUserId(Actor.current().orElse(null));
         DataScope scope = DataScope.current(PERMISSION_CREATE);
         return doInWriteTransaction(() -> {
             assertValid(entity, true);
@@ -156,6 +160,9 @@ public class MarksheetService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -359,9 +366,6 @@ public class MarksheetService extends AppTransactionManager {
         patch.apply("resultTemplateId", changes.getResultTemplateId(), entity::setResultTemplateId);
         patch.apply("name", changes.getName(), entity::setName);
         patch.apply("generatedOn", changes.getGeneratedOn(), entity::setGeneratedOn);
-        patch.apply("generatedByUserId", changes.getGeneratedByUserId(), entity::setGeneratedByUserId);
-        patch.apply("totalPassed", changes.getTotalPassed(), entity::setTotalPassed);
-        patch.apply("totalFailed", changes.getTotalFailed(), entity::setTotalFailed);
         return patch.applied();
     }
 

@@ -269,21 +269,21 @@ describe('ADM-11 Records', () => {
 
   it('lists a partitioned record type one date range at a time', async () => {
     const days = fakeRecords({
-      collection: '/v1/attendance/staff-attendance-days',
-      item: '/v1/attendance/staff-attendance-days/{staffAttendanceId}',
+      collection: '/v1/time-attendance/staff-attendance-days',
+      item: '/v1/time-attendance/staff-attendance-days/{staffAttendanceId}',
       required: ['staffId', 'attendanceDate', 'status'],
       rows: [
         { staffId: '01960000-0000-7000-8000-0000000000d1', attendanceDate: '2026-11-02', status: 'present' },
       ],
     });
-    const clerk = { ...schoolAdmin, permissions: [...SELF_SERVICE, 'attendance.staff_attendance.read'] };
+    const clerk = { ...schoolAdmin, permissions: [...SELF_SERVICE, 'time_attendance.staff_attendance.read'] };
     const { api } = await signedIn('/app/admin/records', clerk, days);
     const from = await screen.findByLabelText('From');
     const to = screen.getByLabelText('To');
     await waitFor(() =>
-      expect(api.calls.some((c) => c.path === '/v1/attendance/staff-attendance-days')).toBe(true),
+      expect(api.calls.some((c) => c.path === '/v1/time-attendance/staff-attendance-days')).toBe(true),
     );
-    const listed = api.calls.find((c) => c.path === '/v1/attendance/staff-attendance-days');
+    const listed = api.calls.find((c) => c.path === '/v1/time-attendance/staff-attendance-days');
     const filter = new URLSearchParams(listed?.search).get('filter') ?? '';
     expect(filter).toMatch(
       /^attendanceDate >= "\d{4}-\d{2}-\d{2}" AND attendanceDate <= "\d{4}-\d{2}-\d{2}"$/,
@@ -296,7 +296,7 @@ describe('ADM-11 Records', () => {
     fireEvent.change(from, { target: { value: '2099-01-01' } });
     expect(await screen.findByText(/Choose a range that ends after it starts/)).toBeInTheDocument();
     expect(
-      api.calls.slice(before).filter((c) => c.path === '/v1/attendance/staff-attendance-days'),
+      api.calls.slice(before).filter((c) => c.path === '/v1/time-attendance/staff-attendance-days'),
     ).toHaveLength(0);
   });
 

@@ -3,8 +3,6 @@ package com.mysms.comms.grpc;
 import com.mysms.comms.api.model.TaskAssigneeList;
 import com.mysms.comms.api.model.Task;
 import com.mysms.comms.api.model.TaskAssignee;
-import com.mysms.comms.api.model.TaskAssigneeUpdate;
-import com.mysms.comms.api.model.TaskUpdate;
 import com.mysms.comms.business.TaskService;
 import com.mysms.comms.v1.ClaimTaskRequest;
 import com.mysms.comms.v1.ClaimTaskResponse;
@@ -30,10 +28,10 @@ import com.mysms.comms.v1.ReopenTaskRequest;
 import com.mysms.comms.v1.ReopenTaskResponse;
 import com.mysms.comms.v1.SnoozeTaskRequest;
 import com.mysms.comms.v1.SnoozeTaskResponse;
+import com.mysms.comms.v1.TaskAssigneeUpdate;
 import com.mysms.comms.v1.TaskServiceGrpc;
-import com.mysms.comms.v1.UpdateTaskAssigneeRequest;
+import com.mysms.comms.v1.TaskUpdate;
 import com.mysms.comms.v1.UpdateTaskAssigneeResponse;
-import com.mysms.comms.v1.UpdateTaskRequest;
 import com.mysms.comms.v1.UpdateTaskResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -76,10 +74,10 @@ public class TaskResolver extends TaskServiceGrpc.TaskServiceImplBase {
     }
 
     @Override
-    public void updateTask(UpdateTaskRequest request, StreamObserver<UpdateTaskResponse> out) {
+    public void updateTask(TaskUpdate request, StreamObserver<UpdateTaskResponse> out) {
         Task updated = service.updateTask(
-                bridge.id(request.getTask().getId(), "id"), bridge.requiredIfMatch(request.getTask().getEtag()),
-                bridge.changes(request.getTask(), request.getUpdateMask(), TaskUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                TaskProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateTaskResponse.newBuilder(), "task", updated).build());
     }
 
@@ -113,11 +111,11 @@ public class TaskResolver extends TaskServiceGrpc.TaskServiceImplBase {
     }
 
     @Override
-    public void updateTaskAssignee(UpdateTaskAssigneeRequest request, StreamObserver<UpdateTaskAssigneeResponse> out) {
+    public void updateTaskAssignee(TaskAssigneeUpdate request, StreamObserver<UpdateTaskAssigneeResponse> out) {
         TaskAssignee updated = service.updateTaskAssignee(
-                bridge.id(request.getTaskId(), "taskId"), bridge.id(request.getTaskAssignee().getId(), "id"),
-                bridge.requiredIfMatch(request.getTaskAssignee().getEtag()),
-                bridge.changes(request.getTaskAssignee(), request.getUpdateMask(), TaskAssigneeUpdate.class),
+                bridge.id(request.getTaskId(), "taskId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                TaskAssigneeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateTaskAssigneeResponse.newBuilder(), "task_assignee", updated).build());
     }

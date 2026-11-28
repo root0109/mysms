@@ -188,6 +188,9 @@ public class NotificationTypeService extends AppTransactionManager {
                 assertValid(entity, false);
                 scope.requireWritable(institutionOf(entity));
                 assertUnique(entity);
+                if (fields.isEmpty()) {
+                    return mapper.toDto(entity);
+                }
                 entity.onUpdatingData(Actor.current(), clock);
                 if (validateOnly) {
                     return mapper.toDto(entity);
@@ -370,6 +373,9 @@ public class NotificationTypeService extends AppTransactionManager {
             assertValidNotificationCohortSetting(entity, false);
             scope.requireWritable(institutionOfNotificationCohortSetting(entity));
             assertUniqueNotificationCohortSetting(entity);
+            if (fields.isEmpty()) {
+                return notificationCohortSettingMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return notificationCohortSettingMapper.toDto(entity);
@@ -529,6 +535,9 @@ public class NotificationTypeService extends AppTransactionManager {
             assertValidNotificationRule(entity, false);
             scope.requireWritable(institutionOfNotificationRule(entity));
             assertUniqueNotificationRule(entity);
+            if (fields.isEmpty()) {
+                return notificationRuleMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return notificationRuleMapper.toDto(entity);
@@ -690,6 +699,9 @@ public class NotificationTypeService extends AppTransactionManager {
                 assertValidNotificationTypeProperty(entity, false);
                 scope.requireWritable(institutionOfNotificationTypeProperty(entity));
                 assertUniqueNotificationTypeProperty(entity);
+                if (fields.isEmpty()) {
+                    return notificationTypePropertyMapper.toDto(entity);
+                }
                 entity.onUpdatingData(Actor.current(), clock);
                 if (validateOnly) {
                     return notificationTypePropertyMapper.toDto(entity);

@@ -3,16 +3,15 @@ package com.mysms.hrms.hr.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.hr.api.model.LeaveBalance;
-import com.mysms.hrms.hr.api.model.LeaveBalanceUpdate;
 import com.mysms.hrms.hr.business.LeaveBalanceService;
 import com.mysms.hr.v1.CreateLeaveBalanceRequest;
 import com.mysms.hr.v1.CreateLeaveBalanceResponse;
 import com.mysms.hr.v1.GetLeaveBalanceRequest;
 import com.mysms.hr.v1.GetLeaveBalanceResponse;
 import com.mysms.hr.v1.LeaveBalanceServiceGrpc;
+import com.mysms.hr.v1.LeaveBalanceUpdate;
 import com.mysms.hr.v1.ListLeaveBalancesRequest;
 import com.mysms.hr.v1.ListLeaveBalancesResponse;
-import com.mysms.hr.v1.UpdateLeaveBalanceRequest;
 import com.mysms.hr.v1.UpdateLeaveBalanceResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,12 +55,12 @@ public class LeaveBalanceResolver extends LeaveBalanceServiceGrpc.LeaveBalanceSe
     }
 
     @Override
-    public void updateLeaveBalance(UpdateLeaveBalanceRequest request,
+    public void updateLeaveBalance(LeaveBalanceUpdate request,
             StreamObserver<UpdateLeaveBalanceResponse> out) {
         LeaveBalance updated = leaveBalanceService.updateLeaveBalance(
-                bridge.id(request.getLeaveBalance().getId(), "id"),
-                bridge.requiredIfMatch(request.getLeaveBalance().getEtag()),
-                bridge.changes(request.getLeaveBalance(), request.getUpdateMask(), LeaveBalanceUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LeaveBalanceProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLeaveBalanceResponse.newBuilder(),
                 "leave_balance", updated).build());

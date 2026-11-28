@@ -5,30 +5,20 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.identity.people.api.model.BirthdayEntry;
 import com.mysms.identity.people.api.model.Certification;
-import com.mysms.identity.people.api.model.CertificationUpdate;
 import com.mysms.identity.people.api.model.EducationHistory;
-import com.mysms.identity.people.api.model.EducationHistoryUpdate;
 import com.mysms.identity.people.api.model.EmergencyContact;
-import com.mysms.identity.people.api.model.EmergencyContactUpdate;
-import com.mysms.identity.people.api.model.MyPersonUpdate;
 import com.mysms.identity.people.api.model.Person;
 import com.mysms.identity.people.api.model.PersonAddress;
-import com.mysms.identity.people.api.model.PersonAddressUpdate;
 import com.mysms.identity.people.api.model.PersonDocument;
-import com.mysms.identity.people.api.model.PersonDocumentUpdate;
 import com.mysms.identity.people.api.model.PersonSkill;
-import com.mysms.identity.people.api.model.PersonSkillUpdate;
 import com.mysms.identity.people.api.model.PersonSocialLink;
-import com.mysms.identity.people.api.model.PersonSocialLinkUpdate;
-import com.mysms.identity.people.api.model.PersonUpdate;
 import com.mysms.identity.people.api.model.PublicProfile;
-import com.mysms.identity.people.api.model.PublicProfileUpdate;
 import com.mysms.identity.people.api.model.SendResult;
 import com.mysms.identity.people.api.model.WorkExperience;
-import com.mysms.identity.people.api.model.WorkExperienceUpdate;
 import com.mysms.identity.people.business.GreetingService;
 import com.mysms.identity.people.business.MyPersonService;
 import com.mysms.identity.people.business.PersonService;
+import com.mysms.people.v1.CertificationUpdate;
 import com.mysms.people.v1.CreateCertificationRequest;
 import com.mysms.people.v1.CreateCertificationResponse;
 import com.mysms.people.v1.CreateEducationHistoryRequest;
@@ -69,6 +59,8 @@ import com.mysms.people.v1.DeletePublicProfileRequest;
 import com.mysms.people.v1.DeletePublicProfileResponse;
 import com.mysms.people.v1.DeleteWorkExperienceRequest;
 import com.mysms.people.v1.DeleteWorkExperienceResponse;
+import com.mysms.people.v1.EducationHistoryUpdate;
+import com.mysms.people.v1.EmergencyContactUpdate;
 import com.mysms.people.v1.GetCertificationRequest;
 import com.mysms.people.v1.GetCertificationResponse;
 import com.mysms.people.v1.GetEducationHistoryRequest;
@@ -111,31 +103,28 @@ import com.mysms.people.v1.ListPersonsRequest;
 import com.mysms.people.v1.ListPersonsResponse;
 import com.mysms.people.v1.ListWorkExperiencesRequest;
 import com.mysms.people.v1.ListWorkExperiencesResponse;
+import com.mysms.people.v1.MyPersonUpdate;
+import com.mysms.people.v1.PersonAddressUpdate;
+import com.mysms.people.v1.PersonDocumentUpdate;
 import com.mysms.people.v1.PersonServiceGrpc;
+import com.mysms.people.v1.PersonSkillUpdate;
+import com.mysms.people.v1.PersonSocialLinkUpdate;
+import com.mysms.people.v1.PersonUpdate;
+import com.mysms.people.v1.PublicProfileUpdate;
 import com.mysms.people.v1.SendGreetingsRequest;
 import com.mysms.people.v1.SendGreetingsResponse;
-import com.mysms.people.v1.UpdateCertificationRequest;
 import com.mysms.people.v1.UpdateCertificationResponse;
-import com.mysms.people.v1.UpdateEducationHistoryRequest;
 import com.mysms.people.v1.UpdateEducationHistoryResponse;
-import com.mysms.people.v1.UpdateEmergencyContactRequest;
 import com.mysms.people.v1.UpdateEmergencyContactResponse;
-import com.mysms.people.v1.UpdateMyPersonRequest;
 import com.mysms.people.v1.UpdateMyPersonResponse;
-import com.mysms.people.v1.UpdatePersonAddressRequest;
 import com.mysms.people.v1.UpdatePersonAddressResponse;
-import com.mysms.people.v1.UpdatePersonDocumentRequest;
 import com.mysms.people.v1.UpdatePersonDocumentResponse;
-import com.mysms.people.v1.UpdatePersonRequest;
 import com.mysms.people.v1.UpdatePersonResponse;
-import com.mysms.people.v1.UpdatePersonSkillRequest;
 import com.mysms.people.v1.UpdatePersonSkillResponse;
-import com.mysms.people.v1.UpdatePersonSocialLinkRequest;
 import com.mysms.people.v1.UpdatePersonSocialLinkResponse;
-import com.mysms.people.v1.UpdatePublicProfileRequest;
 import com.mysms.people.v1.UpdatePublicProfileResponse;
-import com.mysms.people.v1.UpdateWorkExperienceRequest;
 import com.mysms.people.v1.UpdateWorkExperienceResponse;
+import com.mysms.people.v1.WorkExperienceUpdate;
 import io.grpc.stub.StreamObserver;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -168,9 +157,9 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updateMyPerson(UpdateMyPersonRequest request, StreamObserver<UpdateMyPersonResponse> out) {
+    public void updateMyPerson(MyPersonUpdate request, StreamObserver<UpdateMyPersonResponse> out) {
         Person updated = myPerson.update(bridge.requiredIfMatch(request.getEtag()),
-                bridge.changes(request.getPerson(), request.getUpdateMask(), MyPersonUpdate.class), request.getValidateOnly());
+                MyPersonProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMyPersonResponse.newBuilder(), "person", updated).build());
     }
 
@@ -195,10 +184,10 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updatePerson(UpdatePersonRequest request, StreamObserver<UpdatePersonResponse> out) {
+    public void updatePerson(PersonUpdate request, StreamObserver<UpdatePersonResponse> out) {
         Person updated = personService.updatePerson(
-                bridge.id(request.getPerson().getId(), "id"), bridge.requiredIfMatch(request.getPerson().getEtag()),
-                bridge.changes(request.getPerson(), request.getUpdateMask(), PersonUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                PersonProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePersonResponse.newBuilder(), "person", updated).build());
     }
 
@@ -233,11 +222,11 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updatePersonAddress(UpdatePersonAddressRequest request, StreamObserver<UpdatePersonAddressResponse> out) {
+    public void updatePersonAddress(PersonAddressUpdate request, StreamObserver<UpdatePersonAddressResponse> out) {
         PersonAddress updated = personService.updatePersonAddress(
-                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getPersonAddress().getId(), "id"),
-                bridge.requiredIfMatch(request.getPersonAddress().getEtag()),
-                bridge.changes(request.getPersonAddress(), request.getUpdateMask(), PersonAddressUpdate.class),
+                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PersonAddressProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePersonAddressResponse.newBuilder(), "person_address", updated).build());
     }
@@ -276,12 +265,12 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updateEmergencyContact(UpdateEmergencyContactRequest request,
+    public void updateEmergencyContact(EmergencyContactUpdate request,
             StreamObserver<UpdateEmergencyContactResponse> out) {
         EmergencyContact updated = personService.updateEmergencyContact(
-                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getEmergencyContact().getId(), "id"),
-                bridge.requiredIfMatch(request.getEmergencyContact().getEtag()),
-                bridge.changes(request.getEmergencyContact(), request.getUpdateMask(), EmergencyContactUpdate.class),
+                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EmergencyContactProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEmergencyContactResponse.newBuilder(), "emergency_contact", updated).build());
     }
@@ -321,12 +310,12 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updateEducationHistory(UpdateEducationHistoryRequest request,
+    public void updateEducationHistory(EducationHistoryUpdate request,
             StreamObserver<UpdateEducationHistoryResponse> out) {
         EducationHistory updated = personService.updateEducationHistory(
-                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getEducationHistory().getId(), "id"),
-                bridge.requiredIfMatch(request.getEducationHistory().getEtag()),
-                bridge.changes(request.getEducationHistory(), request.getUpdateMask(), EducationHistoryUpdate.class),
+                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EducationHistoryProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEducationHistoryResponse.newBuilder(), "education_history", updated).build());
     }
@@ -365,11 +354,11 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updateWorkExperience(UpdateWorkExperienceRequest request, StreamObserver<UpdateWorkExperienceResponse> out) {
+    public void updateWorkExperience(WorkExperienceUpdate request, StreamObserver<UpdateWorkExperienceResponse> out) {
         WorkExperience updated = personService.updateWorkExperience(
-                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getWorkExperience().getId(), "id"),
-                bridge.requiredIfMatch(request.getWorkExperience().getEtag()),
-                bridge.changes(request.getWorkExperience(), request.getUpdateMask(), WorkExperienceUpdate.class),
+                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                WorkExperienceProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateWorkExperienceResponse.newBuilder(), "work_experience", updated).build());
     }
@@ -407,11 +396,11 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updateCertification(UpdateCertificationRequest request, StreamObserver<UpdateCertificationResponse> out) {
+    public void updateCertification(CertificationUpdate request, StreamObserver<UpdateCertificationResponse> out) {
         Certification updated = personService.updateCertification(
-                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getCertification().getId(), "id"),
-                bridge.requiredIfMatch(request.getCertification().getEtag()),
-                bridge.changes(request.getCertification(), request.getUpdateMask(), CertificationUpdate.class),
+                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CertificationProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCertificationResponse.newBuilder(), "certification", updated).build());
     }
@@ -449,11 +438,11 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updatePersonSkill(UpdatePersonSkillRequest request, StreamObserver<UpdatePersonSkillResponse> out) {
+    public void updatePersonSkill(PersonSkillUpdate request, StreamObserver<UpdatePersonSkillResponse> out) {
         PersonSkill updated = personService.updatePersonSkill(
-                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getPersonSkill().getId(), "id"),
-                bridge.requiredIfMatch(request.getPersonSkill().getEtag()),
-                bridge.changes(request.getPersonSkill(), request.getUpdateMask(), PersonSkillUpdate.class),
+                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PersonSkillProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePersonSkillResponse.newBuilder(), "person_skill", updated).build());
     }
@@ -491,11 +480,11 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updatePersonDocument(UpdatePersonDocumentRequest request, StreamObserver<UpdatePersonDocumentResponse> out) {
+    public void updatePersonDocument(PersonDocumentUpdate request, StreamObserver<UpdatePersonDocumentResponse> out) {
         PersonDocument updated = personService.updatePersonDocument(
-                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getPersonDocument().getId(), "id"),
-                bridge.requiredIfMatch(request.getPersonDocument().getEtag()),
-                bridge.changes(request.getPersonDocument(), request.getUpdateMask(), PersonDocumentUpdate.class),
+                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PersonDocumentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePersonDocumentResponse.newBuilder(), "person_document", updated).build());
     }
@@ -524,11 +513,11 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updatePublicProfile(UpdatePublicProfileRequest request, StreamObserver<UpdatePublicProfileResponse> out) {
+    public void updatePublicProfile(PublicProfileUpdate request, StreamObserver<UpdatePublicProfileResponse> out) {
         PublicProfile updated = personService.updatePublicProfile(
-                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getPublicProfile().getId(), "id"),
-                bridge.requiredIfMatch(request.getPublicProfile().getEtag()),
-                bridge.changes(request.getPublicProfile(), request.getUpdateMask(), PublicProfileUpdate.class),
+                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PublicProfileProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePublicProfileResponse.newBuilder(), "public_profile", updated).build());
     }
@@ -567,12 +556,12 @@ public class PersonResolver extends PersonServiceGrpc.PersonServiceImplBase {
     }
 
     @Override
-    public void updatePersonSocialLink(UpdatePersonSocialLinkRequest request,
+    public void updatePersonSocialLink(PersonSocialLinkUpdate request,
             StreamObserver<UpdatePersonSocialLinkResponse> out) {
         PersonSocialLink updated = personService.updatePersonSocialLink(
-                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getPersonSocialLink().getId(), "id"),
-                bridge.requiredIfMatch(request.getPersonSocialLink().getEtag()),
-                bridge.changes(request.getPersonSocialLink(), request.getUpdateMask(), PersonSocialLinkUpdate.class),
+                bridge.id(request.getPersonId(), "personId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PersonSocialLinkProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePersonSocialLinkResponse.newBuilder(), "person_social_link", updated).build());
     }

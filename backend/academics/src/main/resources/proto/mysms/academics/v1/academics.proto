@@ -4,9 +4,9 @@ syntax = "proto3";
 package mysms.academics.v1;
 
 import "google/protobuf/duration.proto";
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "AcademicsProto";
@@ -21,7 +21,7 @@ service ProgramLevelService {
   // Create ProgramLevel.
   rpc CreateProgramLevel(CreateProgramLevelRequest) returns (CreateProgramLevelResponse);
   // Update ProgramLevel.
-  rpc UpdateProgramLevel(UpdateProgramLevelRequest) returns (UpdateProgramLevelResponse);
+  rpc UpdateProgramLevel(ProgramLevelUpdate) returns (UpdateProgramLevelResponse);
   // Soft-delete ProgramLevel.
   rpc DeleteProgramLevel(DeleteProgramLevelRequest) returns (DeleteProgramLevelResponse);
 }
@@ -35,7 +35,7 @@ service ProgramService {
   // Create Program.
   rpc CreateProgram(CreateProgramRequest) returns (CreateProgramResponse);
   // Update Program.
-  rpc UpdateProgram(UpdateProgramRequest) returns (UpdateProgramResponse);
+  rpc UpdateProgram(ProgramUpdate) returns (UpdateProgramResponse);
   // Soft-delete Program.
   rpc DeleteProgram(DeleteProgramRequest) returns (DeleteProgramResponse);
 }
@@ -49,7 +49,7 @@ service CourseService {
   // Create Course.
   rpc CreateCourse(CreateCourseRequest) returns (CreateCourseResponse);
   // Update Course.
-  rpc UpdateCourse(UpdateCourseRequest) returns (UpdateCourseResponse);
+  rpc UpdateCourse(CourseUpdate) returns (UpdateCourseResponse);
   // Soft-delete Course.
   rpc DeleteCourse(DeleteCourseRequest) returns (DeleteCourseResponse);
   // List CourseSubjects.
@@ -59,7 +59,7 @@ service CourseService {
   // Create CourseSubject.
   rpc CreateCourseSubject(CreateCourseSubjectRequest) returns (CreateCourseSubjectResponse);
   // Update CourseSubject.
-  rpc UpdateCourseSubject(UpdateCourseSubjectRequest) returns (UpdateCourseSubjectResponse);
+  rpc UpdateCourseSubject(CourseSubjectUpdate) returns (UpdateCourseSubjectResponse);
   // Soft-delete CourseSubject.
   rpc DeleteCourseSubject(DeleteCourseSubjectRequest) returns (DeleteCourseSubjectResponse);
 }
@@ -73,7 +73,7 @@ service BatchService {
   // Create Batch.
   rpc CreateBatch(CreateBatchRequest) returns (CreateBatchResponse);
   // Update Batch.
-  rpc UpdateBatch(UpdateBatchRequest) returns (UpdateBatchResponse);
+  rpc UpdateBatch(BatchUpdate) returns (UpdateBatchResponse);
   // Soft-delete Batch.
   rpc DeleteBatch(DeleteBatchRequest) returns (DeleteBatchResponse);
 }
@@ -87,7 +87,7 @@ service GradeLevelService {
   // Create GradeLevel.
   rpc CreateGradeLevel(CreateGradeLevelRequest) returns (CreateGradeLevelResponse);
   // Update GradeLevel.
-  rpc UpdateGradeLevel(UpdateGradeLevelRequest) returns (UpdateGradeLevelResponse);
+  rpc UpdateGradeLevel(GradeLevelUpdate) returns (UpdateGradeLevelResponse);
   // Soft-delete GradeLevel.
   rpc DeleteGradeLevel(DeleteGradeLevelRequest) returns (DeleteGradeLevelResponse);
 }
@@ -101,7 +101,7 @@ service SectionService {
   // Create Section.
   rpc CreateSection(CreateSectionRequest) returns (CreateSectionResponse);
   // Update Section.
-  rpc UpdateSection(UpdateSectionRequest) returns (UpdateSectionResponse);
+  rpc UpdateSection(SectionUpdate) returns (UpdateSectionResponse);
   // Soft-delete Section.
   rpc DeleteSection(DeleteSectionRequest) returns (DeleteSectionResponse);
 }
@@ -115,7 +115,7 @@ service ClassSectionService {
   // Create ClassSection.
   rpc CreateClassSection(CreateClassSectionRequest) returns (CreateClassSectionResponse);
   // Update ClassSection.
-  rpc UpdateClassSection(UpdateClassSectionRequest) returns (UpdateClassSectionResponse);
+  rpc UpdateClassSection(ClassSectionUpdate) returns (UpdateClassSectionResponse);
   // Soft-delete ClassSection.
   rpc DeleteClassSection(DeleteClassSectionRequest) returns (DeleteClassSectionResponse);
   // List ClassSubjects.
@@ -125,7 +125,7 @@ service ClassSectionService {
   // Create ClassSubject.
   rpc CreateClassSubject(CreateClassSubjectRequest) returns (CreateClassSubjectResponse);
   // Update ClassSubject.
-  rpc UpdateClassSubject(UpdateClassSubjectRequest) returns (UpdateClassSubjectResponse);
+  rpc UpdateClassSubject(ClassSubjectUpdate) returns (UpdateClassSubjectResponse);
   // Soft-delete ClassSubject.
   rpc DeleteClassSubject(DeleteClassSubjectRequest) returns (DeleteClassSubjectResponse);
 }
@@ -139,7 +139,7 @@ service SubjectService {
   // Create Subject.
   rpc CreateSubject(CreateSubjectRequest) returns (CreateSubjectResponse);
   // Update Subject.
-  rpc UpdateSubject(UpdateSubjectRequest) returns (UpdateSubjectResponse);
+  rpc UpdateSubject(SubjectUpdate) returns (UpdateSubjectResponse);
   // Soft-delete Subject.
   rpc DeleteSubject(DeleteSubjectRequest) returns (DeleteSubjectResponse);
 }
@@ -153,7 +153,7 @@ service TeachingAssignmentService {
   // Create TeachingAssignment.
   rpc CreateTeachingAssignment(CreateTeachingAssignmentRequest) returns (CreateTeachingAssignmentResponse);
   // Update TeachingAssignment.
-  rpc UpdateTeachingAssignment(UpdateTeachingAssignmentRequest) returns (UpdateTeachingAssignmentResponse);
+  rpc UpdateTeachingAssignment(TeachingAssignmentUpdate) returns (UpdateTeachingAssignmentResponse);
   // Soft-delete TeachingAssignment.
   rpc DeleteTeachingAssignment(DeleteTeachingAssignmentRequest) returns (DeleteTeachingAssignmentResponse);
 }
@@ -167,7 +167,7 @@ service TeacherSubjectService {
   // Create TeacherSubject.
   rpc CreateTeacherSubject(CreateTeacherSubjectRequest) returns (CreateTeacherSubjectResponse);
   // Update TeacherSubject.
-  rpc UpdateTeacherSubject(UpdateTeacherSubjectRequest) returns (UpdateTeacherSubjectResponse);
+  rpc UpdateTeacherSubject(TeacherSubjectUpdate) returns (UpdateTeacherSubjectResponse);
   // Soft-delete TeacherSubject.
   rpc DeleteTeacherSubject(DeleteTeacherSubjectRequest) returns (DeleteTeacherSubjectResponse);
 }
@@ -181,7 +181,7 @@ service CurriculumUnitService {
   // Create CurriculumUnit.
   rpc CreateCurriculumUnit(CreateCurriculumUnitRequest) returns (CreateCurriculumUnitResponse);
   // Update CurriculumUnit.
-  rpc UpdateCurriculumUnit(UpdateCurriculumUnitRequest) returns (UpdateCurriculumUnitResponse);
+  rpc UpdateCurriculumUnit(CurriculumUnitUpdate) returns (UpdateCurriculumUnitResponse);
   // Soft-delete CurriculumUnit.
   rpc DeleteCurriculumUnit(DeleteCurriculumUnitRequest) returns (DeleteCurriculumUnitResponse);
 }
@@ -195,7 +195,7 @@ service LessonPlanService {
   // Create LessonPlan.
   rpc CreateLessonPlan(CreateLessonPlanRequest) returns (CreateLessonPlanResponse);
   // Update LessonPlan.
-  rpc UpdateLessonPlan(UpdateLessonPlanRequest) returns (UpdateLessonPlanResponse);
+  rpc UpdateLessonPlan(LessonPlanUpdate) returns (UpdateLessonPlanResponse);
   // Soft-delete LessonPlan.
   rpc DeleteLessonPlan(DeleteLessonPlanRequest) returns (DeleteLessonPlanResponse);
   // List LessonPlanApprovals.
@@ -205,7 +205,7 @@ service LessonPlanService {
   // Create LessonPlanApproval.
   rpc CreateLessonPlanApproval(CreateLessonPlanApprovalRequest) returns (CreateLessonPlanApprovalResponse);
   // Update LessonPlanApproval.
-  rpc UpdateLessonPlanApproval(UpdateLessonPlanApprovalRequest) returns (UpdateLessonPlanApprovalResponse);
+  rpc UpdateLessonPlanApproval(LessonPlanApprovalUpdate) returns (UpdateLessonPlanApprovalResponse);
   // Soft-delete LessonPlanApproval.
   rpc DeleteLessonPlanApproval(DeleteLessonPlanApprovalRequest) returns (DeleteLessonPlanApprovalResponse);
   // Submit for approval.
@@ -259,13 +259,23 @@ message CreateProgramLevelResponse {
   ProgramLevel program_level = 1;
 }
 
-message UpdateProgramLevelRequest {
-  // Resource with id and etag set.
-  ProgramLevel program_level = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateProgramLevel (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ProgramLevelUpdate {
+  // ProgramLevel id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Level name.
+  optional string name = 7;
 }
 message UpdateProgramLevelResponse {
   ProgramLevel program_level = 1;
@@ -319,13 +329,33 @@ message CreateProgramResponse {
   Program program = 1;
 }
 
-message UpdateProgramRequest {
-  // Resource with id and etag set.
-  Program program = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateProgram (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ProgramUpdate {
+  // Program id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Owning department. [UUID]
+  mysms.common.v1.NullableString department_id = 5;
+  // Level. [UUID]
+  optional string program_level_id = 6;
+  // Program code.
+  optional string code = 7;
+  // Program name.
+  optional string name = 8;
+  // Minimum credit load per term. [Decimal string]
+  mysms.common.v1.NullableString min_unit_load = 9;
+  // Maximum credit load per term. [Decimal string]
+  mysms.common.v1.NullableString max_unit_load = 10;
+  // Program image. [UUID]
+  mysms.common.v1.NullableString image_file_id = 11;
+  // Whether offered.
+  optional bool is_active = 12;
 }
 message UpdateProgramResponse {
   Program program = 1;
@@ -379,13 +409,35 @@ message CreateCourseResponse {
   Course course = 1;
 }
 
-message UpdateCourseRequest {
-  // Resource with id and etag set.
-  Course course = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateCourse (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CourseUpdate {
+  // Course id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Program. [UUID]
+  mysms.common.v1.NullableString program_id = 5;
+  // Department. [UUID]
+  mysms.common.v1.NullableString department_id = 6;
+  // Parent course. [UUID]
+  mysms.common.v1.NullableString parent_course_id = 7;
+  // Course code.
+  optional string code = 8;
+  // Course name.
+  optional string name = 9;
+  // Evaluation scheme.
+  optional Course.EvaluationType evaluation_type = 10;
+  // Minimum credit load. [Decimal string]
+  mysms.common.v1.NullableString min_unit_load = 11;
+  // Maximum credit load. [Decimal string]
+  mysms.common.v1.NullableString max_unit_load = 12;
+  // Whether offered.
+  optional bool is_active = 13;
 }
 message UpdateCourseResponse {
   Course course = 1;
@@ -439,13 +491,27 @@ message CreateBatchResponse {
   Batch batch = 1;
 }
 
-message UpdateBatchRequest {
-  // Resource with id and etag set.
-  Batch batch = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateBatch (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message BatchUpdate {
+  // Batch id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Course. [UUID]
+  optional string course_id = 4;
+  // Batch code.
+  optional string code = 5;
+  // Batch name.
+  optional string name = 6;
+  // Start date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string start_date = 7;
+  // End date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string end_date = 8;
+  // Whether running.
+  optional bool is_active = 9;
 }
 message UpdateBatchResponse {
   Batch batch = 1;
@@ -499,13 +565,25 @@ message CreateGradeLevelResponse {
   GradeLevel grade_level = 1;
 }
 
-message UpdateGradeLevelRequest {
-  // Resource with id and etag set.
-  GradeLevel grade_level = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateGradeLevel (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message GradeLevelUpdate {
+  // GradeLevel id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Grade name.
+  optional string name = 5;
+  // Grade key.
+  optional string slug = 6;
+  // Order (lowest grade first).
+  mysms.common.v1.NullableInt32 sort_order = 7;
+  // Whether offered.
+  optional bool is_active = 8;
 }
 message UpdateGradeLevelResponse {
   GradeLevel grade_level = 1;
@@ -559,13 +637,25 @@ message CreateSectionResponse {
   Section section = 1;
 }
 
-message UpdateSectionRequest {
-  // Resource with id and etag set.
-  Section section = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateSection (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SectionUpdate {
+  // Section id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Institution. [UUID]
+  optional string institution_id = 6;
+  // Section name.
+  optional string name = 7;
+  // Whether used.
+  optional bool is_active = 8;
 }
 message UpdateSectionResponse {
   Section section = 1;
@@ -619,13 +709,31 @@ message CreateClassSectionResponse {
   ClassSection class_section = 1;
 }
 
-message UpdateClassSectionRequest {
-  // Resource with id and etag set.
-  ClassSection class_section = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateClassSection (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ClassSectionUpdate {
+  // ClassSection id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  optional string academic_year_id = 5;
+  // Grade. [UUID]
+  optional string grade_level_id = 6;
+  // Section. [UUID]
+  optional string section_id = 7;
+  // Class (homeroom) teacher. [UUID]
+  mysms.common.v1.NullableString class_teacher_staff_id = 8;
+  // Maximum students.
+  mysms.common.v1.NullableInt32 capacity = 9;
+  // Stream for senior grades (Science, Commerce...).
+  mysms.common.v1.NullableString stream = 10;
+  // Whether running.
+  optional bool is_active = 11;
 }
 message UpdateClassSectionResponse {
   ClassSection class_section = 1;
@@ -679,13 +787,31 @@ message CreateSubjectResponse {
   Subject subject = 1;
 }
 
-message UpdateSubjectRequest {
-  // Resource with id and etag set.
-  Subject subject = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateSubject (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SubjectUpdate {
+  // Subject id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Owning department. [UUID]
+  mysms.common.v1.NullableString department_id = 5;
+  // Subject code.
+  optional string code = 6;
+  // Subject name.
+  optional string name = 7;
+  // Theory / practical.
+  optional Subject.DeliveryType delivery_type = 8;
+  // Default category when offered.
+  optional Subject.DefaultCategory default_category = 9;
+  // Weight of the subject in aggregate grades. [Decimal string]
+  mysms.common.v1.NullableString grade_weightage = 10;
+  // Whether offered.
+  optional bool is_active = 11;
 }
 message UpdateSubjectResponse {
   Subject subject = 1;
@@ -745,15 +871,27 @@ message CreateCourseSubjectResponse {
   CourseSubject course_subject = 1;
 }
 
-message UpdateCourseSubjectRequest {
+// The changes of UpdateCourseSubject (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CourseSubjectUpdate {
   // Course id (UUID).
   string course_id = 1;
-  // Resource with id and etag set.
-  CourseSubject course_subject = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // CourseSubject id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Semester/term the subject is taught in.
+  mysms.common.v1.NullableInt32 term_number = 5;
+  // Credit value for higher-ed credit systems. [Decimal string]
+  mysms.common.v1.NullableString credits = 6;
+  // Category in the plan (core, elective, lab, project...).
+  mysms.common.v1.NullableString subject_category = 7;
+  // Maximum marks when marks-based. [Decimal string]
+  mysms.common.v1.NullableString max_marks = 8;
+  // Subject. [UUID]
+  optional string subject_id = 9;
 }
 message UpdateCourseSubjectResponse {
   CourseSubject course_subject = 1;
@@ -815,15 +953,23 @@ message CreateClassSubjectResponse {
   ClassSubject class_subject = 1;
 }
 
-message UpdateClassSubjectRequest {
+// The changes of UpdateClassSubject (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ClassSubjectUpdate {
   // ClassSection id (UUID).
   string class_section_id = 1;
-  // Resource with id and etag set.
-  ClassSubject class_subject = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ClassSubject id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Subject. [UUID]
+  optional string subject_id = 5;
+  // How the subject is offered.
+  optional ClassSubject.OfferingType offering_type = 6;
+  // Whether active.
+  optional bool is_active = 7;
 }
 message UpdateClassSubjectResponse {
   ClassSubject class_subject = 1;
@@ -879,13 +1025,28 @@ message CreateTeachingAssignmentResponse {
   TeachingAssignment teaching_assignment = 1;
 }
 
-message UpdateTeachingAssignmentRequest {
-  // Resource with id and etag set.
-  TeachingAssignment teaching_assignment = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateTeachingAssignment (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message TeachingAssignmentUpdate {
+  // TeachingAssignment id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Class subject taught. [UUID]
+  optional string class_subject_id = 4;
+  // Teacher. [UUID]
+  optional string staff_id = 5;
+  // Periods allotted per week.
+  mysms.common.v1.NullableInt32 periods_per_week = 6;
+  // Role on the subject (main, assistant, lab).
+  mysms.common.v1.NullableString teacher_role = 8;
+  // Whether current.
+  optional bool is_active = 9;
+  // The periods not yet scheduled are kept by the server, never written by an update.
+  reserved 7;
+  reserved "periods_remaining";
 }
 message UpdateTeachingAssignmentResponse {
   TeachingAssignment teaching_assignment = 1;
@@ -931,13 +1092,17 @@ message CreateTeacherSubjectResponse {
   TeacherSubject teacher_subject = 1;
 }
 
-message UpdateTeacherSubjectRequest {
-  // Resource with id and etag set.
-  TeacherSubject teacher_subject = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateTeacherSubject (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message TeacherSubjectUpdate {
+  // TeacherSubject id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Subject. [UUID]
+  optional string subject_id = 4;
 }
 message UpdateTeacherSubjectResponse {
   TeacherSubject teacher_subject = 1;
@@ -991,13 +1156,23 @@ message CreateCurriculumUnitResponse {
   CurriculumUnit curriculum_unit = 1;
 }
 
-message UpdateCurriculumUnitRequest {
-  // Resource with id and etag set.
-  CurriculumUnit curriculum_unit = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateCurriculumUnit (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CurriculumUnitUpdate {
+  // CurriculumUnit id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Class subject. [UUID]
+  optional string class_subject_id = 4;
+  // Unit / chapter name.
+  optional string name = 5;
+  // Order.
+  mysms.common.v1.NullableInt32 sequence = 6;
+  // Whether in use.
+  optional CurriculumUnit.Status status = 7;
 }
 message UpdateCurriculumUnitResponse {
   CurriculumUnit curriculum_unit = 1;
@@ -1051,13 +1226,50 @@ message CreateLessonPlanResponse {
   LessonPlan lesson_plan = 1;
 }
 
-message UpdateLessonPlanRequest {
-  // Resource with id and etag set.
-  LessonPlan lesson_plan = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateLessonPlan (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message LessonPlanUpdate {
+  // LessonPlan id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Teaching assignment it belongs to. [UUID]
+  optional string teaching_assignment_id = 4;
+  // Unit covered (when linked to the syllabus). [UUID]
+  mysms.common.v1.NullableString curriculum_unit_id = 5;
+  // Unit number.
+  optional string unit_no = 6;
+  // Unit name.
+  optional string unit_name = 7;
+  // Plan title.
+  optional string title = 8;
+  // Planned teaching time, a Duration (REST: "<seconds>s") despite the field's name: the name stays because renaming it
+  // would break the published contract.
+  google.protobuf.Duration planned_duration_minutes = 9;
+  // Summary.
+  optional string description = 10;
+  // Learning objectives.
+  mysms.common.v1.NullableString objective = 11;
+  // Materials.
+  mysms.common.v1.NullableString materials_required = 12;
+  // Introduction.
+  mysms.common.v1.NullableString introduction = 13;
+  // Teaching procedure.
+  mysms.common.v1.NullableString procedure_text = 14;
+  // Conclusion.
+  mysms.common.v1.NullableString conclusion = 15;
+  // Assessment approach.
+  mysms.common.v1.NullableString assessment_text = 16;
+  // Adaptations / differentiation.
+  mysms.common.v1.NullableString modification = 17;
+  // Notes.
+  mysms.common.v1.NullableString notes = 18;
+  // Planned start. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString start_date = 19;
+  // Planned end. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString end_date = 20;
 }
 message UpdateLessonPlanResponse {
   LessonPlan lesson_plan = 1;
@@ -1117,15 +1329,25 @@ message CreateLessonPlanApprovalResponse {
   LessonPlanApproval lesson_plan_approval = 1;
 }
 
-message UpdateLessonPlanApprovalRequest {
+// The changes of UpdateLessonPlanApproval (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message LessonPlanApprovalUpdate {
   // LessonPlan id (UUID).
   string lesson_plan_id = 1;
-  // Resource with id and etag set.
-  LessonPlanApproval lesson_plan_approval = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // LessonPlanApproval id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Decision.
+  optional LessonPlanApproval.Decision decision = 5;
+  // Reviewer comments.
+  optional string comments = 6;
+  // Reviewer. [UUID]
+  mysms.common.v1.NullableString decided_by_user_id = 7;
+  // Decision time.
+  mysms.common.v1.NullableTimestamp decided_at = 8;
 }
 message UpdateLessonPlanApprovalResponse {
   LessonPlanApproval lesson_plan_approval = 1;

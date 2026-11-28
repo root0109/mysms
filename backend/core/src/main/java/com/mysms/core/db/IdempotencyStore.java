@@ -15,7 +15,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
  */
 public final class IdempotencyStore extends AppTransactionManager {
 
-    private static final Pattern SCHEMA = Pattern.compile("[a-z]+");
+    private static final Pattern SCHEMA = Pattern.compile("[a-z][a-z_]*");
 
     private final ModuleDatabase database;
     private final Clock clock;

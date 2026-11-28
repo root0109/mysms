@@ -1,16 +1,16 @@
 package com.mysms.students.admission.grpc;
 
+import com.mysms.admission.v1.ApplicationEmergencyContactUpdate;
+import com.mysms.admission.v1.ApplicationGuardianUpdate;
 import com.mysms.students.admission.api.model.Application;
 import com.mysms.students.admission.api.model.ApplicationEmergencyContact;
-import com.mysms.students.admission.api.model.ApplicationEmergencyContactUpdate;
 import com.mysms.students.admission.api.model.ApplicationGuardian;
-import com.mysms.students.admission.api.model.ApplicationGuardianUpdate;
-import com.mysms.students.admission.api.model.ApplicationUpdate;
 import com.mysms.students.admission.api.model.EnrollApplicantResult;
 import com.mysms.students.admission.business.ApplicationEnrollmentService;
 import com.mysms.students.admission.business.ApplicationService;
 import com.mysms.students.admission.business.ApplicationWorkflowService;
 import com.mysms.admission.v1.ApplicationServiceGrpc;
+import com.mysms.admission.v1.ApplicationUpdate;
 import com.mysms.admission.v1.ApproveApplicationRequest;
 import com.mysms.admission.v1.ApproveApplicationResponse;
 import com.mysms.admission.v1.CancelApplicationRequest;
@@ -53,11 +53,8 @@ import com.mysms.admission.v1.ResetApplicationRequest;
 import com.mysms.admission.v1.ResetApplicationResponse;
 import com.mysms.admission.v1.SubmitApplicationRequest;
 import com.mysms.admission.v1.SubmitApplicationResponse;
-import com.mysms.admission.v1.UpdateApplicationEmergencyContactRequest;
 import com.mysms.admission.v1.UpdateApplicationEmergencyContactResponse;
-import com.mysms.admission.v1.UpdateApplicationGuardianRequest;
 import com.mysms.admission.v1.UpdateApplicationGuardianResponse;
-import com.mysms.admission.v1.UpdateApplicationRequest;
 import com.mysms.admission.v1.UpdateApplicationResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -107,10 +104,10 @@ public class ApplicationResolver extends ApplicationServiceGrpc.ApplicationServi
     }
 
     @Override
-    public void updateApplication(UpdateApplicationRequest request, StreamObserver<UpdateApplicationResponse> out) {
+    public void updateApplication(ApplicationUpdate request, StreamObserver<UpdateApplicationResponse> out) {
         Application updated = applicationService.updateApplication(
-                bridge.id(request.getApplication().getId(), "id"), bridge.requiredIfMatch(request.getApplication().getEtag()),
-                bridge.changes(request.getApplication(), request.getUpdateMask(), ApplicationUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                ApplicationProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateApplicationResponse.newBuilder(), "application", updated).build());
     }
@@ -150,13 +147,13 @@ public class ApplicationResolver extends ApplicationServiceGrpc.ApplicationServi
     }
 
     @Override
-    public void updateApplicationGuardian(UpdateApplicationGuardianRequest request,
+    public void updateApplicationGuardian(ApplicationGuardianUpdate request,
             StreamObserver<UpdateApplicationGuardianResponse> out) {
         ApplicationGuardian updated = applicationService.updateApplicationGuardian(
                 bridge.id(request.getApplicationId(), "applicationId"),
-                bridge.id(request.getApplicationGuardian().getId(), "id"),
-                bridge.requiredIfMatch(request.getApplicationGuardian().getEtag()),
-                bridge.changes(request.getApplicationGuardian(), request.getUpdateMask(), ApplicationGuardianUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ApplicationGuardianProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateApplicationGuardianResponse.newBuilder(), "application_guardian", updated).build());
@@ -202,14 +199,13 @@ public class ApplicationResolver extends ApplicationServiceGrpc.ApplicationServi
     }
 
     @Override
-    public void updateApplicationEmergencyContact(UpdateApplicationEmergencyContactRequest request,
+    public void updateApplicationEmergencyContact(ApplicationEmergencyContactUpdate request,
             StreamObserver<UpdateApplicationEmergencyContactResponse> out) {
         ApplicationEmergencyContact updated = applicationService.updateApplicationEmergencyContact(
                 bridge.id(request.getApplicationId(), "applicationId"),
-                bridge.id(request.getApplicationEmergencyContact().getId(), "id"),
-                bridge.requiredIfMatch(request.getApplicationEmergencyContact().getEtag()),
-                bridge.changes(request.getApplicationEmergencyContact(), request.getUpdateMask(),
-                        ApplicationEmergencyContactUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ApplicationEmergencyContactProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateApplicationEmergencyContactResponse.newBuilder(), "application_emergency_contact", updated).build());
     }

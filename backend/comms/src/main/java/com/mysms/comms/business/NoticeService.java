@@ -181,6 +181,9 @@ public class NoticeService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -525,6 +528,9 @@ public class NoticeService extends AppTransactionManager {
             assertValidNoticeAudience(entity, false);
             scope.requireWritable(institutionOfNoticeAudience(entity));
             assertUniqueNoticeAudience(entity);
+            if (fields.isEmpty()) {
+                return noticeAudienceMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return noticeAudienceMapper.toDto(entity);

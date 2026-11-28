@@ -117,6 +117,9 @@ public class PurposeService extends AppTransactionManager {
             TenantPurposeEntity setting = stored.orElseGet(() -> unsetTenantPurpose(id));
             List<String> fields = applyTenantPurpose(setting, changes);
             assertValidTenantPurpose(purpose, setting);
+            if (fields.isEmpty()) {
+                return mapper.toDto(purpose);
+            }
             if (stored.isPresent()) {
                 setting.onUpdatingData(Actor.current(), clock);
             } else {

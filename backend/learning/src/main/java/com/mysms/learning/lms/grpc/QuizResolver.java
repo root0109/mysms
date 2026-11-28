@@ -5,8 +5,6 @@ import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Quiz;
 import com.mysms.learning.lms.api.model.QuizQuestion;
 import com.mysms.learning.lms.api.model.QuizQuestionHistory;
-import com.mysms.learning.lms.api.model.QuizQuestionUpdate;
-import com.mysms.learning.lms.api.model.QuizUpdate;
 import com.mysms.learning.lms.business.QuizAttemptService;
 import com.mysms.learning.lms.business.QuizService;
 import com.mysms.learning.lms.business.QuizWorkflowService;
@@ -32,16 +30,16 @@ import com.mysms.lms.v1.ListQuizQuestionsRequest;
 import com.mysms.lms.v1.ListQuizQuestionsResponse;
 import com.mysms.lms.v1.ListQuizzesRequest;
 import com.mysms.lms.v1.ListQuizzesResponse;
+import com.mysms.lms.v1.QuizQuestionUpdate;
 import com.mysms.lms.v1.QuizServiceGrpc;
+import com.mysms.lms.v1.QuizUpdate;
 import com.mysms.lms.v1.SetQuizQuestionsRequest;
 import com.mysms.lms.v1.SetQuizQuestionsResponse;
 import com.mysms.lms.v1.StartQuizAttemptRequest;
 import com.mysms.lms.v1.StartQuizAttemptResponse;
 import com.mysms.lms.v1.SubmitQuizRequest;
 import com.mysms.lms.v1.SubmitQuizResponse;
-import com.mysms.lms.v1.UpdateQuizQuestionRequest;
 import com.mysms.lms.v1.UpdateQuizQuestionResponse;
-import com.mysms.lms.v1.UpdateQuizRequest;
 import com.mysms.lms.v1.UpdateQuizResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -87,10 +85,10 @@ public class QuizResolver extends QuizServiceGrpc.QuizServiceImplBase {
     }
 
     @Override
-    public void updateQuiz(UpdateQuizRequest request, StreamObserver<UpdateQuizResponse> out) {
-        Quiz updated = service.updateQuiz(bridge.id(request.getQuiz().getId(), "id"),
-                bridge.requiredIfMatch(request.getQuiz().getEtag()),
-                bridge.changes(request.getQuiz(), request.getUpdateMask(), QuizUpdate.class), request.getValidateOnly());
+    public void updateQuiz(QuizUpdate request, StreamObserver<UpdateQuizResponse> out) {
+        Quiz updated = service.updateQuiz(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QuizProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateQuizResponse.newBuilder(), "quiz", updated).build());
     }
 
@@ -122,10 +120,10 @@ public class QuizResolver extends QuizServiceGrpc.QuizServiceImplBase {
     }
 
     @Override
-    public void updateQuizQuestion(UpdateQuizQuestionRequest request, StreamObserver<UpdateQuizQuestionResponse> out) {
+    public void updateQuizQuestion(QuizQuestionUpdate request, StreamObserver<UpdateQuizQuestionResponse> out) {
         QuizQuestion updated = service.updateQuizQuestion(bridge.id(request.getQuizId(), "quizId"),
-                bridge.id(request.getQuizQuestion().getId(), "id"), bridge.requiredIfMatch(request.getQuizQuestion().getEtag()),
-                bridge.changes(request.getQuizQuestion(), request.getUpdateMask(), QuizQuestionUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                QuizQuestionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateQuizQuestionResponse.newBuilder(), "quiz_question", updated).build());
     }

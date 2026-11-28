@@ -2,8 +2,6 @@ package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.NotificationChannel;
 import com.mysms.comms.api.model.NotificationChannelProperty;
-import com.mysms.comms.api.model.NotificationChannelPropertyUpdate;
-import com.mysms.comms.api.model.NotificationChannelUpdate;
 import com.mysms.comms.business.NotificationChannelService;
 import com.mysms.comms.v1.CreateNotificationChannelPropertyRequest;
 import com.mysms.comms.v1.CreateNotificationChannelPropertyResponse;
@@ -21,12 +19,12 @@ import com.mysms.comms.v1.ListNotificationChannelPropertiesRequest;
 import com.mysms.comms.v1.ListNotificationChannelPropertiesResponse;
 import com.mysms.comms.v1.ListNotificationChannelsRequest;
 import com.mysms.comms.v1.ListNotificationChannelsResponse;
+import com.mysms.comms.v1.NotificationChannelPropertyUpdate;
 import com.mysms.comms.v1.NotificationChannelServiceGrpc;
+import com.mysms.comms.v1.NotificationChannelUpdate;
 import com.mysms.comms.v1.SendTestMessageRequest;
 import com.mysms.comms.v1.SendTestMessageResponse;
-import com.mysms.comms.v1.UpdateNotificationChannelPropertyRequest;
 import com.mysms.comms.v1.UpdateNotificationChannelPropertyResponse;
-import com.mysms.comms.v1.UpdateNotificationChannelRequest;
 import com.mysms.comms.v1.UpdateNotificationChannelResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -74,12 +72,12 @@ public class NotificationChannelResolver extends NotificationChannelServiceGrpc.
     }
 
     @Override
-    public void updateNotificationChannel(UpdateNotificationChannelRequest request,
+    public void updateNotificationChannel(NotificationChannelUpdate request,
             StreamObserver<UpdateNotificationChannelResponse> out) {
         NotificationChannel updated = service.updateNotificationChannel(
-                bridge.id(request.getNotificationChannel().getId(), "id"),
-                bridge.requiredIfMatch(request.getNotificationChannel().getEtag()),
-                bridge.changes(request.getNotificationChannel(), request.getUpdateMask(), NotificationChannelUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NotificationChannelProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationChannelResponse.newBuilder(), "notification_channel", updated).build());
@@ -125,14 +123,13 @@ public class NotificationChannelResolver extends NotificationChannelServiceGrpc.
     }
 
     @Override
-    public void updateNotificationChannelProperty(UpdateNotificationChannelPropertyRequest request,
+    public void updateNotificationChannelProperty(NotificationChannelPropertyUpdate request,
             StreamObserver<UpdateNotificationChannelPropertyResponse> out) {
         NotificationChannelProperty updated = service.updateNotificationChannelProperty(
                 bridge.id(request.getNotificationChannelId(), "notificationChannelId"),
-                bridge.id(request.getNotificationChannelProperty().getId(), "id"),
-                bridge.requiredIfMatch(request.getNotificationChannelProperty().getEtag()),
-                bridge.changes(request.getNotificationChannelProperty(), request.getUpdateMask(),
-                NotificationChannelPropertyUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NotificationChannelPropertyProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationChannelPropertyResponse.newBuilder(), "notification_channel_property",
                 updated).build());

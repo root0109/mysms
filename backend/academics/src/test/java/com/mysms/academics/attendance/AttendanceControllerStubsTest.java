@@ -7,7 +7,6 @@ import com.mysms.academics.attendance.controller.AbsenceReasonController;
 import com.mysms.academics.attendance.controller.AttendanceRegisterController;
 import com.mysms.academics.attendance.controller.AttendanceSheetController;
 import com.mysms.academics.attendance.controller.AttendanceTypeController;
-import com.mysms.academics.attendance.controller.StaffAttendanceController;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -22,6 +21,5 @@ class AttendanceControllerStubsTest {
         assertThat(ControllerStubs.count(AttendanceRegisterController.class)).as("AttendanceRegister").isEqualTo(0);
         assertThat(ControllerStubs.count(AttendanceSheetController.class)).as("AttendanceSheet").isEqualTo(0);
         assertThat(ControllerStubs.count(AttendanceTypeController.class)).as("AttendanceType").isEqualTo(0);
-        assertThat(ControllerStubs.count(StaffAttendanceController.class)).as("StaffAttendance").isEqualTo(0);
     }
 }

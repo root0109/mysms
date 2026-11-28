@@ -32,5 +32,8 @@ public interface MarksheetMapper {
     @Mapping(target = "publishedAt", ignore = true)
     @Mapping(target = "publishedByUserId", ignore = true)
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "generatedByUserId", ignore = true)
+    @Mapping(target = "totalPassed", ignore = true)
+    @Mapping(target = "totalFailed", ignore = true)
     MarksheetEntity toEntity(Marksheet dto);
 }

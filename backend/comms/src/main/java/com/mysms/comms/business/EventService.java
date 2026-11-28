@@ -222,6 +222,9 @@ public class EventService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -488,6 +491,9 @@ public class EventService extends AppTransactionManager {
             assertValidEventAttendee(entity, false);
             scope.requireWritable(institutionOfEventAttendee(entity));
             assertUniqueEventAttendee(entity);
+            if (fields.isEmpty()) {
+                return eventAttendeeMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return eventAttendeeMapper.toDto(entity);
@@ -639,6 +645,9 @@ public class EventService extends AppTransactionManager {
             assertValidEventGalleryItem(entity, false);
             scope.requireWritable(institutionOfEventGalleryItem(entity));
             assertUniqueEventGalleryItem(entity);
+            if (fields.isEmpty()) {
+                return eventGalleryItemMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return eventGalleryItemMapper.toDto(entity);
@@ -791,6 +800,9 @@ public class EventService extends AppTransactionManager {
             assertValidEventInstitution(entity, false);
             scope.requireWritable(institutionOfEventInstitution(entity));
             assertUniqueEventInstitution(entity);
+            if (fields.isEmpty()) {
+                return eventInstitutionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return eventInstitutionMapper.toDto(entity);
@@ -944,6 +956,9 @@ public class EventService extends AppTransactionManager {
             assertValidEventOccurrence(entity, false);
             scope.requireWritable(institutionOfEventOccurrence(entity));
             assertUniqueEventOccurrence(entity);
+            if (fields.isEmpty()) {
+                return eventOccurrenceMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return eventOccurrenceMapper.toDto(entity);

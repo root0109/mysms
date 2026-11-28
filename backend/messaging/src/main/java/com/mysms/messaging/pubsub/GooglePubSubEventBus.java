@@ -78,7 +78,7 @@ public final class GooglePubSubEventBus implements EventBus {
                         + "and contain only letters, digits, '.', '_', '~', '+', '%' or '-'");
             }
             sourceModules = Set.copyOf(sourceModules);
-            if (sourceModules.isEmpty() || sourceModules.stream().anyMatch(m -> !m.matches("^[a-z]+$"))) {
+            if (sourceModules.isEmpty() || sourceModules.stream().anyMatch(m -> !m.matches("^[a-z][a-z_]*$"))) {
                 throw new IllegalArgumentException("Pub/Sub source modules must be lowercase module names");
             }
             emulatorHost = emulatorHost == null ? "" : emulatorHost.trim();
@@ -109,7 +109,7 @@ public final class GooglePubSubEventBus implements EventBus {
 
     private static final Logger LOG = LoggerFactory.getLogger(GooglePubSubEventBus.class);
     private static final Pattern TYPE = Pattern.compile("^[a-z0-9_]+(\\.[a-z0-9_]+)+$");
-    private static final Pattern CONSUMER = Pattern.compile("^[a-z]+$");
+    private static final Pattern CONSUMER = Pattern.compile("^[a-z][a-z_]*$");
     private static final long START_TIMEOUT_SECONDS = 30;
 
     private final Settings settings;

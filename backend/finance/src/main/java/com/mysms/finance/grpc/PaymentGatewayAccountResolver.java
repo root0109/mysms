@@ -3,7 +3,6 @@ package com.mysms.finance.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.finance.api.model.PaymentGatewayAccount;
-import com.mysms.finance.api.model.PaymentGatewayAccountUpdate;
 import com.mysms.finance.business.PaymentGatewayAccountService;
 import com.mysms.finance.v1.CreatePaymentGatewayAccountRequest;
 import com.mysms.finance.v1.CreatePaymentGatewayAccountResponse;
@@ -14,7 +13,7 @@ import com.mysms.finance.v1.GetPaymentGatewayAccountResponse;
 import com.mysms.finance.v1.ListPaymentGatewayAccountsRequest;
 import com.mysms.finance.v1.ListPaymentGatewayAccountsResponse;
 import com.mysms.finance.v1.PaymentGatewayAccountServiceGrpc;
-import com.mysms.finance.v1.UpdatePaymentGatewayAccountRequest;
+import com.mysms.finance.v1.PaymentGatewayAccountUpdate;
 import com.mysms.finance.v1.UpdatePaymentGatewayAccountResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -63,13 +62,12 @@ public class PaymentGatewayAccountResolver
     }
 
     @Override
-    public void updatePaymentGatewayAccount(UpdatePaymentGatewayAccountRequest request,
+    public void updatePaymentGatewayAccount(PaymentGatewayAccountUpdate request,
             StreamObserver<UpdatePaymentGatewayAccountResponse> out) {
         PaymentGatewayAccount updated = service.updatePaymentGatewayAccount(
-                bridge.id(request.getPaymentGatewayAccount().getId(), "id"),
-                bridge.requiredIfMatch(request.getPaymentGatewayAccount().getEtag()),
-                bridge.changes(request.getPaymentGatewayAccount(), request.getUpdateMask(),
-                        PaymentGatewayAccountUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PaymentGatewayAccountProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePaymentGatewayAccountResponse.newBuilder(), "payment_gateway_account",
                 updated).build());
     }

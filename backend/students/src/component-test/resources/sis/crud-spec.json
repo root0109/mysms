@@ -184,7 +184,9 @@
     "programEnrollmentId": "cfbf7553-d4b2-517b-8909-afbe889fef8d",
     "subjectId": "5f8052f8-a764-5d11-8311-8fa5cddc397d"
    },
-   "update": {},
+   "update": {
+    "subjectId": "5f8052f8-a764-5d11-8311-8fa5cddc397d"
+   },
    "patch": {
     "keeps": "subjectId"
    },
@@ -692,7 +694,9 @@
     "subjectId": "0210a0ae-3115-5f4d-8f89-6291315e0268",
     "selectionType": "compulsory"
    },
-   "update": {},
+   "update": {
+    "selectionType": "compulsory"
+   },
    "patch": {
     "keeps": "selectionType"
    },

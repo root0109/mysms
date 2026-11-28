@@ -40,6 +40,9 @@ public class LeaveTypeUpdate {
   private @Nullable Optional<@NotNull @Pattern(regexp = "^-?\\d+(\\.\\d+)?$") String> maxDaysPerYear;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable Optional<@NotNull Boolean> isPaid;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private @Nullable Optional<@NotNull Boolean> isActive;
 
   public LeaveTypeUpdate code(@Nullable Optional<String> code) {
@@ -162,6 +165,26 @@ public class LeaveTypeUpdate {
     this.maxDaysPerYear = maxDaysPerYear;
   }
 
+  public LeaveTypeUpdate isPaid(@Nullable Optional<Boolean> isPaid) {
+    this.isPaid = isPaid;
+    return this;
+  }
+
+  /**
+   * Whether leave of this type is paid (default true); approved unpaid leave reduces the pay of its period.
+   * @return isPaid
+   */
+  
+  @JsonProperty("isPaid")
+  public @Nullable Optional<Boolean> getIsPaid() {
+    return isPaid;
+  }
+
+  @JsonProperty("isPaid")
+  public void setIsPaid(@Nullable Optional<Boolean> isPaid) {
+    this.isPaid = isPaid;
+  }
+
   public LeaveTypeUpdate isActive(@Nullable Optional<Boolean> isActive) {
     this.isActive = isActive;
     return this;
@@ -197,12 +220,13 @@ public class LeaveTypeUpdate {
         Objects.equals(this.academicYearId, leaveTypeUpdate.academicYearId) &&
         Objects.equals(this.name, leaveTypeUpdate.name) &&
         Objects.equals(this.maxDaysPerYear, leaveTypeUpdate.maxDaysPerYear) &&
+        Objects.equals(this.isPaid, leaveTypeUpdate.isPaid) &&
         Objects.equals(this.isActive, leaveTypeUpdate.isActive);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(code, sortOrder, institutionId, academicYearId, name, maxDaysPerYear, isActive);
+    return Objects.hash(code, sortOrder, institutionId, academicYearId, name, maxDaysPerYear, isPaid, isActive);
   }
 
   @Override
@@ -215,6 +239,7 @@ public class LeaveTypeUpdate {
     sb.append("    academicYearId: ").append(toIndentedString(academicYearId)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    maxDaysPerYear: ").append(toIndentedString(maxDaysPerYear)).append("\n");
+    sb.append("    isPaid: ").append(toIndentedString(isPaid)).append("\n");
     sb.append("    isActive: ").append(toIndentedString(isActive)).append("\n");
     sb.append("}");
     return sb.toString();

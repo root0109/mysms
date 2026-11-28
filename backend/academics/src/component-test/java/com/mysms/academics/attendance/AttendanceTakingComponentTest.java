@@ -544,11 +544,20 @@ class AttendanceTakingComponentTest {
     }
 
     @Test
-    void attendanceForASessionIsUnavailableWhileTheOtherServicesAreNotConfigured() throws Exception {
+    void attendanceForASessionReadsTimetableInProcessAndIsUnavailableWithoutTheOtherServices() throws Exception {
         School school = new School();
-        Reply unavailable = call("POST", SHEETS + ":forSession", school.admin,
+        Reply unknown = call("POST", SHEETS + ":forSession", school.admin,
                 "{\"timetableSessionId\":\"" + UUID.randomUUID() + "\"}");
-        assertThat(unavailable.status()).as(unavailable.text()).isEqualTo(503);
+        assertThat(unknown.status()).as("the sibling timetable area answers: " + unknown.text()).isEqualTo(422);
+        assertThat(unknown.body().path("errors").path(0).path("field").asString()).isEqualTo("timetableSessionId");
+
+        String session = created(call("POST", "/v1/timetable/sessions", school.admin, "{\"institutionId\":\""
+                + school.institution + "\",\"startAt\":\"2026-03-02T03:30:00Z\",\"endAt\":\"2026-03-02T04:15:00Z\","
+                + "\"classSectionId\":\"" + school.classSection + "\",\"subjectId\":\"" + UUID.randomUUID()
+                + "\",\"staffId\":\"" + UUID.randomUUID() + "\"}"));
+        Reply unavailable = call("POST", SHEETS + ":forSession", school.admin,
+                "{\"timetableSessionId\":\"" + session + "\"}");
+        assertThat(unavailable.status()).as("org is not configured here: " + unavailable.text()).isEqualTo(503);
         assertThat(unavailable.body().path("code").asString()).isEqualTo("UNAVAILABLE");
         assertThat(call("POST", SHEETS + ":forSession", school.admin, "{}").status()).as("the session is required")
                 .isEqualTo(422);

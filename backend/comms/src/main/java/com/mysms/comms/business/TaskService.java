@@ -166,6 +166,9 @@ public class TaskService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -479,6 +482,9 @@ public class TaskService extends AppTransactionManager {
             assertValidTaskAssignee(entity, false);
             scope.requireWritable(institutionOfTaskAssignee(entity));
             assertUniqueTaskAssignee(entity);
+            if (fields.isEmpty()) {
+                return taskAssigneeMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return taskAssigneeMapper.toDto(entity);

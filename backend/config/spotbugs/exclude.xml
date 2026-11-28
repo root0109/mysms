@@ -15,7 +15,7 @@
   <Match>
     <Bug pattern="EI_EXPOSE_REP2"/>
     <Or>
-      <Class name="~com\.mysms\..*(Controller|Service|Repository|Config|Configuration|Filter|Executor|Writer|Store|Checker|Verifier|Factory|Indicator|Handler|Bootstrap|Scopes|Rules|Bus|Relay|Processor|Runtime|Trail|Cleanup|Sync|Lookup|Provider|Publisher|Interceptor|Ledger|Bridge|Server|Status|Statuses|Resolver|Client|Codec|Saga|AppTransactionManager|RoutingDataSource)"/>
+      <Class name="~com\.mysms\..*(Controller|Service|Repository|Config|Configuration|Filter|Executor|Writer|Store|Checker|Verifier|Factory|Indicator|Handler|Bootstrap|Scopes|Rules|Bus|Relay|Processor|Runtime|Trail|Cleanup|Sync|Lookup|Provider|Publisher|Interceptor|Ledger|Bridge|Server|Status|Statuses|Resolver|Client|Codec|Saga|Idempotency|Access|Finder|AppTransactionManager|RoutingDataSource)"/>
       <!-- a module's job schedule keeps the module database the module's configuration created, like InboxProcessor -->
       <Class name="com.mysms.core.jobs.JobSchedule"/>
       <!-- a module's scheduled jobs (core ScheduledJob) are Spring components holding their injected collaborators -->

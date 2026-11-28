@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.admission.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "AdmissionProto";
@@ -20,7 +20,7 @@ service AdmissionCycleService {
   // Create AdmissionCycle.
   rpc CreateAdmissionCycle(CreateAdmissionCycleRequest) returns (CreateAdmissionCycleResponse);
   // Update AdmissionCycle.
-  rpc UpdateAdmissionCycle(UpdateAdmissionCycleRequest) returns (UpdateAdmissionCycleResponse);
+  rpc UpdateAdmissionCycle(AdmissionCycleUpdate) returns (UpdateAdmissionCycleResponse);
   // Soft-delete AdmissionCycle.
   rpc DeleteAdmissionCycle(DeleteAdmissionCycleRequest) returns (DeleteAdmissionCycleResponse);
   // List AdmissionCycleFees.
@@ -30,7 +30,7 @@ service AdmissionCycleService {
   // Create AdmissionCycleFee.
   rpc CreateAdmissionCycleFee(CreateAdmissionCycleFeeRequest) returns (CreateAdmissionCycleFeeResponse);
   // Update AdmissionCycleFee.
-  rpc UpdateAdmissionCycleFee(UpdateAdmissionCycleFeeRequest) returns (UpdateAdmissionCycleFeeResponse);
+  rpc UpdateAdmissionCycleFee(AdmissionCycleFeeUpdate) returns (UpdateAdmissionCycleFeeResponse);
   // Soft-delete AdmissionCycleFee.
   rpc DeleteAdmissionCycleFee(DeleteAdmissionCycleFeeRequest) returns (DeleteAdmissionCycleFeeResponse);
   // Confirm the cycle.
@@ -56,7 +56,7 @@ service ApplicationService {
   // Create Application.
   rpc CreateApplication(CreateApplicationRequest) returns (CreateApplicationResponse);
   // Update Application.
-  rpc UpdateApplication(UpdateApplicationRequest) returns (UpdateApplicationResponse);
+  rpc UpdateApplication(ApplicationUpdate) returns (UpdateApplicationResponse);
   // Soft-delete Application.
   rpc DeleteApplication(DeleteApplicationRequest) returns (DeleteApplicationResponse);
   // List ApplicationGuardians.
@@ -66,7 +66,7 @@ service ApplicationService {
   // Create ApplicationGuardian.
   rpc CreateApplicationGuardian(CreateApplicationGuardianRequest) returns (CreateApplicationGuardianResponse);
   // Update ApplicationGuardian.
-  rpc UpdateApplicationGuardian(UpdateApplicationGuardianRequest) returns (UpdateApplicationGuardianResponse);
+  rpc UpdateApplicationGuardian(ApplicationGuardianUpdate) returns (UpdateApplicationGuardianResponse);
   // Soft-delete ApplicationGuardian.
   rpc DeleteApplicationGuardian(DeleteApplicationGuardianRequest) returns (DeleteApplicationGuardianResponse);
   // List ApplicationEmergencyContacts.
@@ -76,7 +76,7 @@ service ApplicationService {
   // Create ApplicationEmergencyContact.
   rpc CreateApplicationEmergencyContact(CreateApplicationEmergencyContactRequest) returns (CreateApplicationEmergencyContactResponse);
   // Update ApplicationEmergencyContact.
-  rpc UpdateApplicationEmergencyContact(UpdateApplicationEmergencyContactRequest) returns (UpdateApplicationEmergencyContactResponse);
+  rpc UpdateApplicationEmergencyContact(ApplicationEmergencyContactUpdate) returns (UpdateApplicationEmergencyContactResponse);
   // Soft-delete ApplicationEmergencyContact.
   rpc DeleteApplicationEmergencyContact(DeleteApplicationEmergencyContactRequest) returns (DeleteApplicationEmergencyContactResponse);
   // Submit (applicant or office).
@@ -148,13 +148,43 @@ message CreateAdmissionCycleResponse {
   AdmissionCycle admission_cycle = 1;
 }
 
-message UpdateAdmissionCycleRequest {
-  // Resource with id and etag set.
-  AdmissionCycle admission_cycle = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateAdmissionCycle (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AdmissionCycleUpdate {
+  // AdmissionCycle id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Cycle name.
+  optional string name = 5;
+  // What applicants apply for.
+  optional AdmissionCycle.AdmissionBasis admission_basis = 6;
+  // Program (basis = program). [UUID]
+  mysms.common.v1.NullableString program_id = 7;
+  // Course (basis = course). [UUID]
+  optional string course_id = 8;
+  // Grade (basis = grade_level). [UUID]
+  mysms.common.v1.NullableString grade_level_id = 9;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 10;
+  // Term. [UUID]
+  mysms.common.v1.NullableString academic_term_id = 11;
+  // Opens. [ISO-8601 date (YYYY-MM-DD)]
+  optional string start_date = 12;
+  // Closes. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString end_date = 13;
+  // Minimum applications to run the cycle.
+  mysms.common.v1.NullableInt32 min_applications = 14;
+  // Seat / application cap.
+  mysms.common.v1.NullableInt32 max_applications = 15;
+  // Minimum age at admission.
+  mysms.common.v1.NullableInt32 minimum_age_years = 16;
+  // Fee head charged on application. [UUID]
+  mysms.common.v1.NullableString application_fee_head_id = 17;
 }
 message UpdateAdmissionCycleResponse {
   AdmissionCycle admission_cycle = 1;
@@ -214,15 +244,21 @@ message CreateAdmissionCycleFeeResponse {
   AdmissionCycleFee admission_cycle_fee = 1;
 }
 
-message UpdateAdmissionCycleFeeRequest {
+// The changes of UpdateAdmissionCycleFee (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AdmissionCycleFeeUpdate {
   // AdmissionCycle id (UUID).
   string admission_cycle_id = 1;
-  // Resource with id and etag set.
-  AdmissionCycleFee admission_cycle_fee = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // AdmissionCycleFee id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Course. [UUID]
+  optional string course_id = 5;
+  // Fee head. [UUID]
+  mysms.common.v1.NullableString fee_head_id = 6;
 }
 message UpdateAdmissionCycleFeeResponse {
   AdmissionCycleFee admission_cycle_fee = 1;
@@ -278,13 +314,151 @@ message CreateApplicationResponse {
   Application application = 1;
 }
 
-message UpdateApplicationRequest {
-  // Resource with id and etag set.
-  Application application = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateApplication (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ApplicationUpdate {
+  // Application id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Cycle applied in. [UUID]
+  mysms.common.v1.NullableString admission_cycle_id = 5;
+  // Application number.
+  optional string application_number = 6;
+  // Submitted on.
+  google.protobuf.Timestamp application_date = 7;
+  // Date admitted. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString admission_date = 8;
+  // Year applied for. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 9;
+  // Grade applied for. [UUID]
+  mysms.common.v1.NullableString grade_level_id = 10;
+  // Section allotted. [UUID]
+  mysms.common.v1.NullableString section_id = 11;
+  // Program applied for. [UUID]
+  mysms.common.v1.NullableString program_id = 12;
+  // Course applied for. [UUID]
+  mysms.common.v1.NullableString course_id = 13;
+  // Batch applied for. [UUID]
+  mysms.common.v1.NullableString batch_id = 14;
+  // Applicant's person record once created. [UUID]
+  mysms.common.v1.NullableString applicant_person_id = 15;
+  // Student created from this application. [UUID]
+  mysms.common.v1.NullableString student_id = 16;
+  // Applicant is already a student of the tenant.
+  optional bool is_existing_student = 17;
+  // Name prefix. [UUID]
+  mysms.common.v1.NullableString honorific_id = 18;
+  // Applicant full name.
+  optional string full_name = 19;
+  // Given name (required for new applications by the application; NULL when only a full name was captured).
+  mysms.common.v1.NullableString first_name = 20;
+  // Middle name.
+  mysms.common.v1.NullableString middle_name = 21;
+  // Family name.
+  mysms.common.v1.NullableString last_name = 22;
+  // Date of birth. [ISO-8601 date (YYYY-MM-DD)]
+  optional string date_of_birth = 23;
+  // Gender.
+  optional Application.Gender gender = 24;
+  // Place of birth.
+  mysms.common.v1.NullableString birth_place = 25;
+  // Nationality.
+  mysms.common.v1.NullableString nationality = 26;
+  // Religion.
+  mysms.common.v1.NullableString religion = 27;
+  // Social category.
+  mysms.common.v1.NullableString social_category = 28;
+  // Mother tongue.
+  mysms.common.v1.NullableString mother_tongue = 29;
+  // Identification marks.
+  mysms.common.v1.NullableString identification_marks = 30;
+  // Plain value, input only: stored encrypted and never returned. National id, encrypted.
+  optional string national_id = 31;
+  // Blood group.
+  mysms.common.v1.NullableString blood_group = 32;
+  // Height (cm). [Decimal string]
+  mysms.common.v1.NullableString height_cm = 33;
+  // Weight (kg). [Decimal string]
+  mysms.common.v1.NullableString weight_kg = 34;
+  // Applicant photo. [UUID]
+  mysms.common.v1.NullableString photo_file_id = 35;
+  // Applicant / family e-mail.
+  mysms.common.v1.NullableString email = 36;
+  // Phone.
+  mysms.common.v1.NullableString phone = 37;
+  // Mobile.
+  mysms.common.v1.NullableString mobile = 38;
+  // Address line 1.
+  mysms.common.v1.NullableString address_line1 = 39;
+  // Address line 2.
+  mysms.common.v1.NullableString address_line2 = 40;
+  // City.
+  mysms.common.v1.NullableString city_name = 41;
+  // Postal code.
+  mysms.common.v1.NullableString postal_code = 42;
+  // State. [UUID]
+  mysms.common.v1.NullableString state_province_id = 43;
+  // Country. [UUID]
+  optional string country_id = 44;
+  // Permanent address (free text).
+  mysms.common.v1.NullableString permanent_address = 45;
+  // Address for communication (free text).
+  mysms.common.v1.NullableString communication_address = 46;
+  // Last school / institute attended.
+  mysms.common.v1.NullableString previous_institution = 47;
+  // Last course / class studied.
+  mysms.common.v1.NullableString previous_course = 48;
+  // Last result / marks.
+  mysms.common.v1.NullableString previous_result = 49;
+  // Previous examination board.
+  optional Application.PreviousBoard previous_board = 50;
+  // Previous board registration number.
+  mysms.common.v1.NullableString board_registration_number = 51;
+  // Reason for leaving the previous institution.
+  mysms.common.v1.NullableString reason_for_leaving = 52;
+  // Second-language preference.
+  mysms.common.v1.NullableString language_choice = 53;
+  // Subject group / stream preference.
+  mysms.common.v1.NullableString stream_choice = 54;
+  // Has siblings in the institution.
+  mysms.common.v1.NullableBool has_siblings = 55;
+  // Has a medical history to declare.
+  mysms.common.v1.NullableBool has_medical_history = 56;
+  // Medical details.
+  mysms.common.v1.NullableString medical_details = 57;
+  // Has extracurricular activities.
+  mysms.common.v1.NullableBool has_extracurricular = 58;
+  // Activities.
+  mysms.common.v1.NullableString extracurricular_details = 59;
+  // Mode of transport.
+  optional Application.TransportMode transport_mode = 60;
+  // Transport details.
+  mysms.common.v1.NullableString transport_details = 61;
+  // Family business.
+  mysms.common.v1.NullableString family_business = 62;
+  // Family income. [Decimal string]
+  mysms.common.v1.NullableString family_income = 63;
+  // Application / admission fee quoted. [Decimal string]
+  mysms.common.v1.NullableString application_fee = 64;
+  // Discount granted. [Decimal string]
+  mysms.common.v1.NullableString discount_percent = 65;
+  // Fee plan for the admission. [UUID]
+  mysms.common.v1.NullableString fee_plan_id = 66;
+  // Installment start date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString fee_start_date = 67;
+  // Payment due date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString payment_due_date = 68;
+  // Fee payment state.
+  optional Application.PaymentStatus payment_status = 69;
+  // Office remarks.
+  mysms.common.v1.NullableString remarks = 70;
+  // Free-text payment status from the payment desk when it does not fit payment_status.
+  mysms.common.v1.NullableString payment_status_note = 71;
 }
 message UpdateApplicationResponse {
   Application application = 1;
@@ -344,15 +518,39 @@ message CreateApplicationGuardianResponse {
   ApplicationGuardian application_guardian = 1;
 }
 
-message UpdateApplicationGuardianRequest {
+// The changes of UpdateApplicationGuardian (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ApplicationGuardianUpdate {
   // Application id (UUID).
   string application_id = 1;
-  // Resource with id and etag set.
-  ApplicationGuardian application_guardian = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ApplicationGuardian id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Relationship.
+  optional ApplicationGuardian.Relationship relationship = 5;
+  // Name.
+  optional string name = 6;
+  // Qualification. [UUID]
+  mysms.common.v1.NullableString qualification_id = 7;
+  // Designation.
+  mysms.common.v1.NullableString designation = 8;
+  // Occupation.
+  mysms.common.v1.NullableString occupation = 9;
+  // Employer.
+  mysms.common.v1.NullableString organisation = 10;
+  // Annual income. [Decimal string]
+  mysms.common.v1.NullableString annual_income = 11;
+  // Mobile.
+  mysms.common.v1.NullableString mobile = 12;
+  // E-mail.
+  mysms.common.v1.NullableString email = 13;
+  // Plain value, input only: stored encrypted and never returned. National id, encrypted.
+  optional string national_id = 14;
+  // Photo. [UUID]
+  mysms.common.v1.NullableString photo_file_id = 15;
 }
 message UpdateApplicationGuardianResponse {
   ApplicationGuardian application_guardian = 1;
@@ -414,15 +612,23 @@ message CreateApplicationEmergencyContactResponse {
   ApplicationEmergencyContact application_emergency_contact = 1;
 }
 
-message UpdateApplicationEmergencyContactRequest {
+// The changes of UpdateApplicationEmergencyContact (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ApplicationEmergencyContactUpdate {
   // Application id (UUID).
   string application_id = 1;
-  // Resource with id and etag set.
-  ApplicationEmergencyContact application_emergency_contact = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ApplicationEmergencyContact id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Call order.
+  optional int32 priority = 5;
+  // Phone number.
+  optional string contact_number = 6;
+  // Relationship to the applicant.
+  optional string relationship = 7;
 }
 message UpdateApplicationEmergencyContactResponse {
   ApplicationEmergencyContact application_emergency_contact = 1;

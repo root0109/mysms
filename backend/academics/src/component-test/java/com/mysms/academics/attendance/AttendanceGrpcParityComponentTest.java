@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.FieldMask;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
@@ -55,8 +54,8 @@ import tools.jackson.databind.node.ObjectNode;
  * of crud-spec.json the create, get, list, update and delete give the same resource over both transports, and both
  * refuse alike — 403 without the permission, 404 for an absent row and another tenant's row, 409 for a duplicate, 412
  * for a stale etag, 428 without one, 422 for an invalid body; a sheet's steps change it the same way and are refused
- * alike; staff attendance days and a sheet's records, whose lists are read by date range, answer alike; marks are
- * recorded, summarized and the sheet completed alike; a step retried with its request_id answers the first result.
+ * alike; a sheet's records, whose list is read by date range, answer alike; marks are recorded, summarized and the
+ * sheet completed alike; a step retried with its request_id answers the first result.
  */
 @SpringBootTest(classes = AcademicsApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = GrpcParity.IN_PROCESS_SERVER + "=AttendanceGrpcParityComponentTest")
@@ -227,16 +226,6 @@ class AttendanceGrpcParityComponentTest {
                 .setField(type.findFieldByName("size"), size).setField(type.findFieldByName("cursor"), cursor).build();
     }
 
-    /** An update request: the row's id and etag in the resource with the changes, and a mask naming them. */
-    private DynamicMessage updateRequest(MethodDescriptor update, String field, String id, String etag,
-            Map<String, Object> changes, String... masked) {
-        Map<String, Object> resource = new HashMap<>(changes);
-        resource.put("id", id);
-        resource.put("etag", etag);
-        return set(bridge.reply(request(update), field, resource), "update_mask",
-                FieldMask.newBuilder().addAllPaths(List.of(masked)).build()).build();
-    }
-
     // ---- the state transitions of crud-spec.json
 
     @TestFactory
@@ -354,72 +343,6 @@ class AttendanceGrpcParityComponentTest {
     private static String onItsOwnDay(JsonNode resource) {
         ObjectNode body = ((ObjectNode) resource.path("create")).deepCopy();
         return body.put("attendanceDate", LocalDate.of(2027, 1, 1).plusDays(DAYS.getAndIncrement()).toString()).toString();
-    }
-
-    // ---- staff attendance: no delete, a list by date range
-
-    @Test
-    void staffAttendanceDaysAreWrittenAndReadAlike() throws Exception {
-        JsonNode resource = resource("StaffAttendance");
-        String collection = resource.path("collection").asString();
-        ObjectNode body = (ObjectNode) resource.path("create");
-        MethodDescriptor create = rpc("CreateStaffAttendance");
-        DynamicMessage creation = bridge.reply(request(create), "staff_attendance", JSON.convertValue(body, Map.class))
-                .build();
-        Answer created = grpc(create, creation, ADMIN);
-        assertThat(created.status()).as("CreateStaffAttendance: " + created.code()).isEqualTo(200);
-        String id = created.body().path("staffAttendance").path("id").asString();
-        Answer read = rest("GET", collection + "/" + id, ADMIN, null);
-        assertThat(read.status()).as(read.body().toString()).isEqualTo(200);
-        GrpcParity.assertSameResource(read.body(), created.body().path("staffAttendance"));
-        GrpcParityContract.assertSameAnswer(rest("POST", collection, ADMIN, body.toString()), grpc(create, creation, ADMIN));
-        Answer invalid = rest("POST", collection, ADMIN, "{}");
-        assertThat(invalid.status()).isEqualTo(422);
-        GrpcParityContract.assertSameAnswer(invalid, grpc(create, request(create).build(), ADMIN));
-        GrpcParityContract.assertSameAnswer(rest("POST", collection, NOBODY, body.toString()),
-                grpc(create, creation, NOBODY));
-
-        MethodDescriptor get = rpc("GetStaffAttendance");
-        GrpcParity.assertSameResource(read.body(),
-                grpc(get, set(request(get), "id", id).build(), ADMIN).body().path("staffAttendance"));
-        String absent = UUID.randomUUID().toString();
-        GrpcParityContract.assertSameAnswer(rest("GET", collection + "/" + absent, ADMIN, null),
-                grpc(get, set(request(get), "id", absent).build(), ADMIN));
-        GrpcParityContract.assertSameAnswer(rest("GET", collection + "/" + id, NOBODY, null),
-                grpc(get, set(request(get), "id", id).build(), NOBODY));
-        GrpcParityContract.assertSameAnswer(rest("GET", collection + "/" + id, STRANGER, null),
-                grpc(get, set(request(get), "id", id).build(), STRANGER));
-
-        // the list is read by date range: with one both answer the day, without one both refuse
-        MethodDescriptor list = rpc("ListStaffAttendances");
-        String january = "attendanceDate >= \"2026-01-01\" AND attendanceDate < \"2026-02-01\"";
-        Answer listed = rest("GET", collection + "?filter=" + q(january), ADMIN, null);
-        Answer listedGrpc = grpc(list, set(request(list), "filter", january).build(), ADMIN);
-        assertThat(listedGrpc.status()).as("ListStaffAttendances: " + listedGrpc.code()).isEqualTo(200);
-        assertThat(ids(listedGrpc.body().path("items"), "id")).containsExactly(id)
-                .isEqualTo(ids(listed.body().path("data"), "id"));
-        GrpcParity.assertSameResource(listed.body().path("data").get(0), listedGrpc.body().path("items").get(0));
-        Answer unbounded = rest("GET", collection, ADMIN, null);
-        assertThat(unbounded.status()).isEqualTo(400);
-        GrpcParityContract.assertSameAnswer(unbounded, grpc(list, request(list).build(), ADMIN));
-        GrpcParityContract.assertSameAnswer(rest("GET", collection + "?filter=" + q(january), NOBODY, null),
-                grpc(list, set(request(list), "filter", january).build(), NOBODY));
-
-        MethodDescriptor update = rpc("UpdateStaffAttendance");
-        String etag = read.body().path("etag").asString();
-        Map<String, Object> changes = Map.of("remark", "Left early");
-        String patch = "{\"remark\":\"Left early\"}";
-        GrpcParityContract.assertSameAnswer(rest("PATCH", collection + "/" + id, ADMIN, patch, "If-Match", "\"99\""),
-                grpc(update, updateRequest(update, "staff_attendance", id, "99", changes, "remark"), ADMIN));
-        GrpcParityContract.assertSameAnswer(rest("PATCH", collection + "/" + id, ADMIN, patch),
-                grpc(update, updateRequest(update, "staff_attendance", id, "", changes, "remark"), ADMIN));
-        GrpcParityContract.assertSameAnswer(rest("PATCH", collection + "/" + id, NOBODY, patch, "If-Match", etag),
-                grpc(update, updateRequest(update, "staff_attendance", id, etag, changes, "remark"), NOBODY));
-        Answer updated = grpc(update, updateRequest(update, "staff_attendance", id, etag, changes, "remark"), ADMIN);
-        assertThat(updated.status()).as("UpdateStaffAttendance: " + updated.code()).isEqualTo(200);
-        Answer reread = rest("GET", collection + "/" + id, ADMIN, null);
-        assertThat(reread.body().path("remark").asString()).isEqualTo("Left early");
-        GrpcParity.assertSameResource(reread.body(), updated.body().path("staffAttendance"));
     }
 
     // ---- the records of a sheet: read only

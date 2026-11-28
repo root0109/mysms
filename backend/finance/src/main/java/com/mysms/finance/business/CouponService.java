@@ -155,6 +155,9 @@ public class CouponService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -320,6 +323,9 @@ public class CouponService extends AppTransactionManager {
             assertValidCouponScope(entity, false);
             scope.requireWritable(institutionOfCouponScope(entity));
             assertUniqueCouponScope(entity);
+            if (fields.isEmpty()) {
+                return couponScopeMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return couponScopeMapper.toDto(entity);

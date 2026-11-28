@@ -229,6 +229,9 @@ public class LessonService extends AppTransactionManager {
             validator.validate(toDto(entity));
             assertValid(entity);
             scope.requireWritable(repository.institutionOfChapter(entity.getChapterId()));
+            if (fields.isEmpty()) {
+                return toDto(repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return toDto(entity);
@@ -573,6 +576,9 @@ public class LessonService extends AppTransactionManager {
             }
             List<String> fields = applyLessonNote(entity, changes);
             assertValidLessonNote(entity);
+            if (fields.isEmpty()) {
+                return lessonNoteMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return lessonNoteMapper.toDto(entity);
@@ -710,6 +716,9 @@ public class LessonService extends AppTransactionManager {
             assertValidLessonActivity(entity, false);
             scope.requireWritable(institutionOfLessonActivity(entity));
             assertUniqueLessonActivity(entity);
+            if (fields.isEmpty()) {
+                return lessonActivityMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return lessonActivityMapper.toDto(entity);

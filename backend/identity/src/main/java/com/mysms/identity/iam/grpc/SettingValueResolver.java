@@ -3,7 +3,6 @@ package com.mysms.identity.iam.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.identity.iam.api.model.SettingValue;
-import com.mysms.identity.iam.api.model.SettingValueUpdate;
 import com.mysms.identity.iam.business.SettingValueService;
 import com.mysms.iam.v1.CreateSettingValueRequest;
 import com.mysms.iam.v1.CreateSettingValueResponse;
@@ -14,7 +13,7 @@ import com.mysms.iam.v1.GetSettingValueResponse;
 import com.mysms.iam.v1.ListSettingValuesRequest;
 import com.mysms.iam.v1.ListSettingValuesResponse;
 import com.mysms.iam.v1.SettingValueServiceGrpc;
-import com.mysms.iam.v1.UpdateSettingValueRequest;
+import com.mysms.iam.v1.SettingValueUpdate;
 import com.mysms.iam.v1.UpdateSettingValueResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class SettingValueResolver extends SettingValueServiceGrpc.SettingValueSe
     }
 
     @Override
-    public void updateSettingValue(UpdateSettingValueRequest request, StreamObserver<UpdateSettingValueResponse> out) {
+    public void updateSettingValue(SettingValueUpdate request, StreamObserver<UpdateSettingValueResponse> out) {
         SettingValue updated = service.update(
-                bridge.id(request.getSettingValue().getId(), "id"),
-                bridge.requiredIfMatch(request.getSettingValue().getEtag()),
-                bridge.changes(request.getSettingValue(), request.getUpdateMask(), SettingValueUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SettingValueProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSettingValueResponse.newBuilder(), "setting_value", updated).build());
     }

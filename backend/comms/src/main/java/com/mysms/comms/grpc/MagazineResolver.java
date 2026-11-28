@@ -1,7 +1,6 @@
 package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.Magazine;
-import com.mysms.comms.api.model.MagazineUpdate;
 import com.mysms.comms.business.MagazineService;
 import com.mysms.comms.v1.CreateMagazineRequest;
 import com.mysms.comms.v1.CreateMagazineResponse;
@@ -12,7 +11,7 @@ import com.mysms.comms.v1.GetMagazineResponse;
 import com.mysms.comms.v1.ListMagazinesRequest;
 import com.mysms.comms.v1.ListMagazinesResponse;
 import com.mysms.comms.v1.MagazineServiceGrpc;
-import com.mysms.comms.v1.UpdateMagazineRequest;
+import com.mysms.comms.v1.MagazineUpdate;
 import com.mysms.comms.v1.UpdateMagazineResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -55,10 +54,10 @@ public class MagazineResolver extends MagazineServiceGrpc.MagazineServiceImplBas
     }
 
     @Override
-    public void updateMagazine(UpdateMagazineRequest request, StreamObserver<UpdateMagazineResponse> out) {
+    public void updateMagazine(MagazineUpdate request, StreamObserver<UpdateMagazineResponse> out) {
         Magazine updated = service.updateMagazine(
-                bridge.id(request.getMagazine().getId(), "id"), bridge.requiredIfMatch(request.getMagazine().getEtag()),
-                bridge.changes(request.getMagazine(), request.getUpdateMask(), MagazineUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                MagazineProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMagazineResponse.newBuilder(), "magazine", updated).build());
     }
 

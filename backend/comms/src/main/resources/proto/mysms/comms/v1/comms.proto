@@ -3,10 +3,10 @@ syntax = "proto3";
 
 package mysms.comms.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "CommsProto";
@@ -21,7 +21,7 @@ service MessageTemplateService {
   // Create MessageTemplate.
   rpc CreateMessageTemplate(CreateMessageTemplateRequest) returns (CreateMessageTemplateResponse);
   // Update MessageTemplate.
-  rpc UpdateMessageTemplate(UpdateMessageTemplateRequest) returns (UpdateMessageTemplateResponse);
+  rpc UpdateMessageTemplate(MessageTemplateUpdate) returns (UpdateMessageTemplateResponse);
   // Soft-delete MessageTemplate.
   rpc DeleteMessageTemplate(DeleteMessageTemplateRequest) returns (DeleteMessageTemplateResponse);
 }
@@ -77,7 +77,7 @@ service NoticeBackgroundService {
   // Create NoticeBackground.
   rpc CreateNoticeBackground(CreateNoticeBackgroundRequest) returns (CreateNoticeBackgroundResponse);
   // Update NoticeBackground.
-  rpc UpdateNoticeBackground(UpdateNoticeBackgroundRequest) returns (UpdateNoticeBackgroundResponse);
+  rpc UpdateNoticeBackground(NoticeBackgroundUpdate) returns (UpdateNoticeBackgroundResponse);
   // Soft-delete NoticeBackground.
   rpc DeleteNoticeBackground(DeleteNoticeBackgroundRequest) returns (DeleteNoticeBackgroundResponse);
 }
@@ -91,7 +91,7 @@ service NoticeService {
   // Create Notice.
   rpc CreateNotice(CreateNoticeRequest) returns (CreateNoticeResponse);
   // Update Notice.
-  rpc UpdateNotice(UpdateNoticeRequest) returns (UpdateNoticeResponse);
+  rpc UpdateNotice(NoticeUpdate) returns (UpdateNoticeResponse);
   // Soft-delete Notice.
   rpc DeleteNotice(DeleteNoticeRequest) returns (DeleteNoticeResponse);
   // List NoticeAudiences.
@@ -101,7 +101,7 @@ service NoticeService {
   // Create NoticeAudience.
   rpc CreateNoticeAudience(CreateNoticeAudienceRequest) returns (CreateNoticeAudienceResponse);
   // Update NoticeAudience.
-  rpc UpdateNoticeAudience(UpdateNoticeAudienceRequest) returns (UpdateNoticeAudienceResponse);
+  rpc UpdateNoticeAudience(NoticeAudienceUpdate) returns (UpdateNoticeAudienceResponse);
   // Soft-delete NoticeAudience.
   rpc DeleteNoticeAudience(DeleteNoticeAudienceRequest) returns (DeleteNoticeAudienceResponse);
   // List NoticeVersions.
@@ -129,7 +129,7 @@ service EventService {
   // Create Event.
   rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
   // Update Event.
-  rpc UpdateEvent(UpdateEventRequest) returns (UpdateEventResponse);
+  rpc UpdateEvent(EventUpdate) returns (UpdateEventResponse);
   // Soft-delete Event.
   rpc DeleteEvent(DeleteEventRequest) returns (DeleteEventResponse);
   // List EventGalleryItems.
@@ -139,7 +139,7 @@ service EventService {
   // Create EventGalleryItem.
   rpc CreateEventGalleryItem(CreateEventGalleryItemRequest) returns (CreateEventGalleryItemResponse);
   // Update EventGalleryItem.
-  rpc UpdateEventGalleryItem(UpdateEventGalleryItemRequest) returns (UpdateEventGalleryItemResponse);
+  rpc UpdateEventGalleryItem(EventGalleryItemUpdate) returns (UpdateEventGalleryItemResponse);
   // Soft-delete EventGalleryItem.
   rpc DeleteEventGalleryItem(DeleteEventGalleryItemRequest) returns (DeleteEventGalleryItemResponse);
   // List EventInstitutions.
@@ -149,7 +149,7 @@ service EventService {
   // Create EventInstitution.
   rpc CreateEventInstitution(CreateEventInstitutionRequest) returns (CreateEventInstitutionResponse);
   // Update EventInstitution.
-  rpc UpdateEventInstitution(UpdateEventInstitutionRequest) returns (UpdateEventInstitutionResponse);
+  rpc UpdateEventInstitution(EventInstitutionUpdate) returns (UpdateEventInstitutionResponse);
   // Soft-delete EventInstitution.
   rpc DeleteEventInstitution(DeleteEventInstitutionRequest) returns (DeleteEventInstitutionResponse);
   // List EventOccurrences.
@@ -159,7 +159,7 @@ service EventService {
   // Create EventOccurrence.
   rpc CreateEventOccurrence(CreateEventOccurrenceRequest) returns (CreateEventOccurrenceResponse);
   // Update EventOccurrence.
-  rpc UpdateEventOccurrence(UpdateEventOccurrenceRequest) returns (UpdateEventOccurrenceResponse);
+  rpc UpdateEventOccurrence(EventOccurrenceUpdate) returns (UpdateEventOccurrenceResponse);
   // Soft-delete EventOccurrence.
   rpc DeleteEventOccurrence(DeleteEventOccurrenceRequest) returns (DeleteEventOccurrenceResponse);
   // List EventAttendees.
@@ -169,7 +169,7 @@ service EventService {
   // Create EventAttendee.
   rpc CreateEventAttendee(CreateEventAttendeeRequest) returns (CreateEventAttendeeResponse);
   // Update EventAttendee.
-  rpc UpdateEventAttendee(UpdateEventAttendeeRequest) returns (UpdateEventAttendeeResponse);
+  rpc UpdateEventAttendee(EventAttendeeUpdate) returns (UpdateEventAttendeeResponse);
   // Soft-delete EventAttendee.
   rpc DeleteEventAttendee(DeleteEventAttendeeRequest) returns (DeleteEventAttendeeResponse);
   // Approve / show.
@@ -193,7 +193,7 @@ service MagazineService {
   // Create Magazine.
   rpc CreateMagazine(CreateMagazineRequest) returns (CreateMagazineResponse);
   // Update Magazine.
-  rpc UpdateMagazine(UpdateMagazineRequest) returns (UpdateMagazineResponse);
+  rpc UpdateMagazine(MagazineUpdate) returns (UpdateMagazineResponse);
   // Soft-delete Magazine.
   rpc DeleteMagazine(DeleteMagazineRequest) returns (DeleteMagazineResponse);
 }
@@ -207,7 +207,7 @@ service ConversationService {
   // Create Conversation.
   rpc CreateConversation(CreateConversationRequest) returns (CreateConversationResponse);
   // Update Conversation.
-  rpc UpdateConversation(UpdateConversationRequest) returns (UpdateConversationResponse);
+  rpc UpdateConversation(ConversationUpdate) returns (UpdateConversationResponse);
   // Soft-delete Conversation.
   rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse);
   // List ConversationParticipants.
@@ -217,7 +217,7 @@ service ConversationService {
   // Create ConversationParticipant.
   rpc CreateConversationParticipant(CreateConversationParticipantRequest) returns (CreateConversationParticipantResponse);
   // Update ConversationParticipant.
-  rpc UpdateConversationParticipant(UpdateConversationParticipantRequest) returns (UpdateConversationParticipantResponse);
+  rpc UpdateConversationParticipant(ConversationParticipantUpdate) returns (UpdateConversationParticipantResponse);
   // Soft-delete ConversationParticipant.
   rpc DeleteConversationParticipant(DeleteConversationParticipantRequest) returns (DeleteConversationParticipantResponse);
   // List ConversationMessages.
@@ -227,7 +227,7 @@ service ConversationService {
   // Create ConversationMessage.
   rpc CreateConversationMessage(CreateConversationMessageRequest) returns (CreateConversationMessageResponse);
   // Update ConversationMessage.
-  rpc UpdateConversationMessage(UpdateConversationMessageRequest) returns (UpdateConversationMessageResponse);
+  rpc UpdateConversationMessage(ConversationMessageUpdate) returns (UpdateConversationMessageResponse);
   // Soft-delete ConversationMessage.
   rpc DeleteConversationMessage(DeleteConversationMessageRequest) returns (DeleteConversationMessageResponse);
   // Mark all messages read for the caller.
@@ -245,7 +245,7 @@ service FeedbackThreadService {
   // Create FeedbackThread.
   rpc CreateFeedbackThread(CreateFeedbackThreadRequest) returns (CreateFeedbackThreadResponse);
   // Update FeedbackThread.
-  rpc UpdateFeedbackThread(UpdateFeedbackThreadRequest) returns (UpdateFeedbackThreadResponse);
+  rpc UpdateFeedbackThread(FeedbackThreadUpdate) returns (UpdateFeedbackThreadResponse);
   // Soft-delete FeedbackThread.
   rpc DeleteFeedbackThread(DeleteFeedbackThreadRequest) returns (DeleteFeedbackThreadResponse);
   // List FeedbackMessages.
@@ -255,7 +255,7 @@ service FeedbackThreadService {
   // Create FeedbackMessage.
   rpc CreateFeedbackMessage(CreateFeedbackMessageRequest) returns (CreateFeedbackMessageResponse);
   // Update FeedbackMessage.
-  rpc UpdateFeedbackMessage(UpdateFeedbackMessageRequest) returns (UpdateFeedbackMessageResponse);
+  rpc UpdateFeedbackMessage(FeedbackMessageUpdate) returns (UpdateFeedbackMessageResponse);
   // Soft-delete FeedbackMessage.
   rpc DeleteFeedbackMessage(DeleteFeedbackMessageRequest) returns (DeleteFeedbackMessageResponse);
   // Close.
@@ -275,7 +275,7 @@ service AudienceGroupService {
   // Create AudienceGroup.
   rpc CreateAudienceGroup(CreateAudienceGroupRequest) returns (CreateAudienceGroupResponse);
   // Update AudienceGroup.
-  rpc UpdateAudienceGroup(UpdateAudienceGroupRequest) returns (UpdateAudienceGroupResponse);
+  rpc UpdateAudienceGroup(AudienceGroupUpdate) returns (UpdateAudienceGroupResponse);
   // Soft-delete AudienceGroup.
   rpc DeleteAudienceGroup(DeleteAudienceGroupRequest) returns (DeleteAudienceGroupResponse);
   // List AudienceGroupMembers.
@@ -285,7 +285,7 @@ service AudienceGroupService {
   // Create AudienceGroupMember.
   rpc CreateAudienceGroupMember(CreateAudienceGroupMemberRequest) returns (CreateAudienceGroupMemberResponse);
   // Update AudienceGroupMember.
-  rpc UpdateAudienceGroupMember(UpdateAudienceGroupMemberRequest) returns (UpdateAudienceGroupMemberResponse);
+  rpc UpdateAudienceGroupMember(AudienceGroupMemberUpdate) returns (UpdateAudienceGroupMemberResponse);
   // Soft-delete AudienceGroupMember.
   rpc DeleteAudienceGroupMember(DeleteAudienceGroupMemberRequest) returns (DeleteAudienceGroupMemberResponse);
   // Add many members.
@@ -301,7 +301,7 @@ service TaskService {
   // Create Task.
   rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
   // Update Task.
-  rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
+  rpc UpdateTask(TaskUpdate) returns (UpdateTaskResponse);
   // Soft-delete Task.
   rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
   // List TaskAssignees.
@@ -311,7 +311,7 @@ service TaskService {
   // Create TaskAssignee.
   rpc CreateTaskAssignee(CreateTaskAssigneeRequest) returns (CreateTaskAssigneeResponse);
   // Update TaskAssignee.
-  rpc UpdateTaskAssignee(UpdateTaskAssigneeRequest) returns (UpdateTaskAssigneeResponse);
+  rpc UpdateTaskAssignee(TaskAssigneeUpdate) returns (UpdateTaskAssigneeResponse);
   // Soft-delete TaskAssignee.
   rpc DeleteTaskAssignee(DeleteTaskAssigneeRequest) returns (DeleteTaskAssigneeResponse);
   // Complete.
@@ -333,7 +333,7 @@ service ContentViewService {
   // Create ContentView.
   rpc CreateContentView(CreateContentViewRequest) returns (CreateContentViewResponse);
   // Update ContentView.
-  rpc UpdateContentView(UpdateContentViewRequest) returns (UpdateContentViewResponse);
+  rpc UpdateContentView(ContentViewUpdate) returns (UpdateContentViewResponse);
   // Soft-delete ContentView.
   rpc DeleteContentView(DeleteContentViewRequest) returns (DeleteContentViewResponse);
 }
@@ -347,7 +347,7 @@ service PageCategoryService {
   // Create PageCategory.
   rpc CreatePageCategory(CreatePageCategoryRequest) returns (CreatePageCategoryResponse);
   // Update PageCategory.
-  rpc UpdatePageCategory(UpdatePageCategoryRequest) returns (UpdatePageCategoryResponse);
+  rpc UpdatePageCategory(PageCategoryUpdate) returns (UpdatePageCategoryResponse);
   // Soft-delete PageCategory.
   rpc DeletePageCategory(DeletePageCategoryRequest) returns (DeletePageCategoryResponse);
 }
@@ -361,7 +361,7 @@ service ClassPageService {
   // Create ClassPage.
   rpc CreateClassPage(CreateClassPageRequest) returns (CreateClassPageResponse);
   // Update ClassPage.
-  rpc UpdateClassPage(UpdateClassPageRequest) returns (UpdateClassPageResponse);
+  rpc UpdateClassPage(ClassPageUpdate) returns (UpdateClassPageResponse);
   // Soft-delete ClassPage.
   rpc DeleteClassPage(DeleteClassPageRequest) returns (DeleteClassPageResponse);
   // List ClassPageAttachments.
@@ -371,7 +371,7 @@ service ClassPageService {
   // Create ClassPageAttachment.
   rpc CreateClassPageAttachment(CreateClassPageAttachmentRequest) returns (CreateClassPageAttachmentResponse);
   // Update ClassPageAttachment.
-  rpc UpdateClassPageAttachment(UpdateClassPageAttachmentRequest) returns (UpdateClassPageAttachmentResponse);
+  rpc UpdateClassPageAttachment(ClassPageAttachmentUpdate) returns (UpdateClassPageAttachmentResponse);
   // Soft-delete ClassPageAttachment.
   rpc DeleteClassPageAttachment(DeleteClassPageAttachmentRequest) returns (DeleteClassPageAttachmentResponse);
   // List ClassPageMembers.
@@ -381,7 +381,7 @@ service ClassPageService {
   // Create ClassPageMember.
   rpc CreateClassPageMember(CreateClassPageMemberRequest) returns (CreateClassPageMemberResponse);
   // Update ClassPageMember.
-  rpc UpdateClassPageMember(UpdateClassPageMemberRequest) returns (UpdateClassPageMemberResponse);
+  rpc UpdateClassPageMember(ClassPageMemberUpdate) returns (UpdateClassPageMemberResponse);
   // Soft-delete ClassPageMember.
   rpc DeleteClassPageMember(DeleteClassPageMemberRequest) returns (DeleteClassPageMemberResponse);
   // Follow or unfollow.
@@ -397,7 +397,7 @@ service PostService {
   // Create Post.
   rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
   // Update Post.
-  rpc UpdatePost(UpdatePostRequest) returns (UpdatePostResponse);
+  rpc UpdatePost(PostUpdate) returns (UpdatePostResponse);
   // Soft-delete Post.
   rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
   // List PostAudienceClasses.
@@ -407,7 +407,7 @@ service PostService {
   // Create PostAudienceClass.
   rpc CreatePostAudienceClass(CreatePostAudienceClassRequest) returns (CreatePostAudienceClassResponse);
   // Update PostAudienceClass.
-  rpc UpdatePostAudienceClass(UpdatePostAudienceClassRequest) returns (UpdatePostAudienceClassResponse);
+  rpc UpdatePostAudienceClass(PostAudienceClassUpdate) returns (UpdatePostAudienceClassResponse);
   // Soft-delete PostAudienceClass.
   rpc DeletePostAudienceClass(DeletePostAudienceClassRequest) returns (DeletePostAudienceClassResponse);
   // List PostReactions.
@@ -417,7 +417,7 @@ service PostService {
   // Create PostReaction.
   rpc CreatePostReaction(CreatePostReactionRequest) returns (CreatePostReactionResponse);
   // Update PostReaction.
-  rpc UpdatePostReaction(UpdatePostReactionRequest) returns (UpdatePostReactionResponse);
+  rpc UpdatePostReaction(PostReactionUpdate) returns (UpdatePostReactionResponse);
   // Soft-delete PostReaction.
   rpc DeletePostReaction(DeletePostReactionRequest) returns (DeletePostReactionResponse);
   // List PostComments.
@@ -427,7 +427,7 @@ service PostService {
   // Create PostComment.
   rpc CreatePostComment(CreatePostCommentRequest) returns (CreatePostCommentResponse);
   // Update PostComment.
-  rpc UpdatePostComment(UpdatePostCommentRequest) returns (UpdatePostCommentResponse);
+  rpc UpdatePostComment(PostCommentUpdate) returns (UpdatePostCommentResponse);
   // Soft-delete PostComment.
   rpc DeletePostComment(DeletePostCommentRequest) returns (DeletePostCommentResponse);
   // Submit for moderation / publish.
@@ -449,7 +449,7 @@ service CommentReactionService {
   // Create CommentReaction.
   rpc CreateCommentReaction(CreateCommentReactionRequest) returns (CreateCommentReactionResponse);
   // Update CommentReaction.
-  rpc UpdateCommentReaction(UpdateCommentReactionRequest) returns (UpdateCommentReactionResponse);
+  rpc UpdateCommentReaction(CommentReactionUpdate) returns (UpdateCommentReactionResponse);
   // Soft-delete CommentReaction.
   rpc DeleteCommentReaction(DeleteCommentReactionRequest) returns (DeleteCommentReactionResponse);
 }
@@ -475,7 +475,7 @@ service NotificationTypeService {
   // Create NotificationType.
   rpc CreateNotificationType(CreateNotificationTypeRequest) returns (CreateNotificationTypeResponse);
   // Update NotificationType.
-  rpc UpdateNotificationType(UpdateNotificationTypeRequest) returns (UpdateNotificationTypeResponse);
+  rpc UpdateNotificationType(NotificationTypeUpdate) returns (UpdateNotificationTypeResponse);
   // Soft-delete NotificationType.
   rpc DeleteNotificationType(DeleteNotificationTypeRequest) returns (DeleteNotificationTypeResponse);
   // List NotificationTypeProperties.
@@ -485,7 +485,7 @@ service NotificationTypeService {
   // Create NotificationTypeProperty.
   rpc CreateNotificationTypeProperty(CreateNotificationTypePropertyRequest) returns (CreateNotificationTypePropertyResponse);
   // Update NotificationTypeProperty.
-  rpc UpdateNotificationTypeProperty(UpdateNotificationTypePropertyRequest) returns (UpdateNotificationTypePropertyResponse);
+  rpc UpdateNotificationTypeProperty(NotificationTypePropertyUpdate) returns (UpdateNotificationTypePropertyResponse);
   // Soft-delete NotificationTypeProperty.
   rpc DeleteNotificationTypeProperty(DeleteNotificationTypePropertyRequest) returns (DeleteNotificationTypePropertyResponse);
   // List NotificationRules.
@@ -495,7 +495,7 @@ service NotificationTypeService {
   // Create NotificationRule.
   rpc CreateNotificationRule(CreateNotificationRuleRequest) returns (CreateNotificationRuleResponse);
   // Update NotificationRule.
-  rpc UpdateNotificationRule(UpdateNotificationRuleRequest) returns (UpdateNotificationRuleResponse);
+  rpc UpdateNotificationRule(NotificationRuleUpdate) returns (UpdateNotificationRuleResponse);
   // Soft-delete NotificationRule.
   rpc DeleteNotificationRule(DeleteNotificationRuleRequest) returns (DeleteNotificationRuleResponse);
   // List NotificationCohortSettings.
@@ -505,7 +505,7 @@ service NotificationTypeService {
   // Create NotificationCohortSetting.
   rpc CreateNotificationCohortSetting(CreateNotificationCohortSettingRequest) returns (CreateNotificationCohortSettingResponse);
   // Update NotificationCohortSetting.
-  rpc UpdateNotificationCohortSetting(UpdateNotificationCohortSettingRequest) returns (UpdateNotificationCohortSettingResponse);
+  rpc UpdateNotificationCohortSetting(NotificationCohortSettingUpdate) returns (UpdateNotificationCohortSettingResponse);
   // Soft-delete NotificationCohortSetting.
   rpc DeleteNotificationCohortSetting(DeleteNotificationCohortSettingRequest) returns (DeleteNotificationCohortSettingResponse);
 }
@@ -519,7 +519,7 @@ service NotificationChannelService {
   // Create NotificationChannel.
   rpc CreateNotificationChannel(CreateNotificationChannelRequest) returns (CreateNotificationChannelResponse);
   // Update NotificationChannel.
-  rpc UpdateNotificationChannel(UpdateNotificationChannelRequest) returns (UpdateNotificationChannelResponse);
+  rpc UpdateNotificationChannel(NotificationChannelUpdate) returns (UpdateNotificationChannelResponse);
   // Soft-delete NotificationChannel.
   rpc DeleteNotificationChannel(DeleteNotificationChannelRequest) returns (DeleteNotificationChannelResponse);
   // List NotificationChannelProperties.
@@ -529,7 +529,7 @@ service NotificationChannelService {
   // Create NotificationChannelProperty.
   rpc CreateNotificationChannelProperty(CreateNotificationChannelPropertyRequest) returns (CreateNotificationChannelPropertyResponse);
   // Update NotificationChannelProperty.
-  rpc UpdateNotificationChannelProperty(UpdateNotificationChannelPropertyRequest) returns (UpdateNotificationChannelPropertyResponse);
+  rpc UpdateNotificationChannelProperty(NotificationChannelPropertyUpdate) returns (UpdateNotificationChannelPropertyResponse);
   // Soft-delete NotificationChannelProperty.
   rpc DeleteNotificationChannelProperty(DeleteNotificationChannelPropertyRequest) returns (DeleteNotificationChannelPropertyResponse);
   // Send a test message through the channel configuration.
@@ -545,7 +545,7 @@ service NotificationPreferenceSetService {
   // Create NotificationPreferenceSet.
   rpc CreateNotificationPreferenceSet(CreateNotificationPreferenceSetRequest) returns (CreateNotificationPreferenceSetResponse);
   // Update NotificationPreferenceSet.
-  rpc UpdateNotificationPreferenceSet(UpdateNotificationPreferenceSetRequest) returns (UpdateNotificationPreferenceSetResponse);
+  rpc UpdateNotificationPreferenceSet(NotificationPreferenceSetUpdate) returns (UpdateNotificationPreferenceSetResponse);
   // Soft-delete NotificationPreferenceSet.
   rpc DeleteNotificationPreferenceSet(DeleteNotificationPreferenceSetRequest) returns (DeleteNotificationPreferenceSetResponse);
   // List NotificationPreferences.
@@ -555,7 +555,7 @@ service NotificationPreferenceSetService {
   // Create NotificationPreference.
   rpc CreateNotificationPreference(CreateNotificationPreferenceRequest) returns (CreateNotificationPreferenceResponse);
   // Update NotificationPreference.
-  rpc UpdateNotificationPreference(UpdateNotificationPreferenceRequest) returns (UpdateNotificationPreferenceResponse);
+  rpc UpdateNotificationPreference(NotificationPreferenceUpdate) returns (UpdateNotificationPreferenceResponse);
   // Soft-delete NotificationPreference.
   rpc DeleteNotificationPreference(DeleteNotificationPreferenceRequest) returns (DeleteNotificationPreferenceResponse);
 }
@@ -609,13 +609,31 @@ message CreateMessageTemplateResponse {
   MessageTemplate message_template = 1;
 }
 
-message UpdateMessageTemplateRequest {
-  // Resource with id and etag set.
-  MessageTemplate message_template = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateMessageTemplate (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MessageTemplateUpdate {
+  // MessageTemplate id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution (NULL = tenant-wide). [UUID]
+  mysms.common.v1.NullableString institution_id = 4;
+  // Delivery channel.
+  optional MessageTemplate.Channel channel = 5;
+  // Template key used by the application.
+  mysms.common.v1.NullableString code = 6;
+  // Template name.
+  optional string name = 7;
+  // Subject (e-mail).
+  mysms.common.v1.NullableString subject = 8;
+  // Body with placeholders.
+  mysms.common.v1.NullableString body = 9;
+  // External provider-registered template id (e.g. SMS DLT template id).
+  mysms.common.v1.NullableString external_template_id = 10;
+  // Whether usable.
+  optional bool is_active = 11;
 }
 message UpdateMessageTemplateResponse {
   MessageTemplate message_template = 1;
@@ -762,13 +780,21 @@ message CreateNoticeBackgroundResponse {
   NoticeBackground notice_background = 1;
 }
 
-message UpdateNoticeBackgroundRequest {
-  // Resource with id and etag set.
-  NoticeBackground notice_background = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateNoticeBackground (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NoticeBackgroundUpdate {
+  // NoticeBackground id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Where it is used.
+  optional NoticeBackground.Usage usage = 5;
+  // Image. [UUID]
+  mysms.common.v1.NullableString image_file_id = 6;
 }
 message UpdateNoticeBackgroundResponse {
   NoticeBackground notice_background = 1;
@@ -822,13 +848,49 @@ message CreateNoticeResponse {
   Notice notice = 1;
 }
 
-message UpdateNoticeRequest {
-  // Resource with id and etag set.
-  Notice notice = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateNotice (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NoticeUpdate {
+  // Notice id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution (NULL = tenant-wide; audiences in comms.notice_audience). [UUID]
+  mysms.common.v1.NullableString institution_id = 4;
+  // Academic year (NULL = not tied to a year, e.g. cohort or tenant notices). [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Audience.
+  optional Notice.Audience audience = 6;
+  // Class (audience = class). [UUID]
+  mysms.common.v1.NullableString class_section_id = 7;
+  // Background image. [UUID]
+  mysms.common.v1.NullableString background_id = 8;
+  // Title.
+  optional string title = 9;
+  // Body.
+  optional string body = 10;
+  // Attachment. [UUID]
+  mysms.common.v1.NullableString attachment_file_id = 11;
+  // Publish time.
+  mysms.common.v1.NullableTimestamp publish_at = 12;
+  // Expiry time.
+  mysms.common.v1.NullableTimestamp expire_at = 13;
+  // Cohort the notice is posted to (audience = cohort). [UUID]
+  mysms.common.v1.NullableString cohort_id = 14;
+  // Also shown in the calendar.
+  optional bool show_in_calendar = 15;
+  // Readers may reply (through the linked discussion topic).
+  optional bool allow_replies = 16;
+  // Discussion topic holding the replies. [UUID]
+  mysms.common.v1.NullableString discussion_topic_id = 17;
+  // Replies closed.
+  optional bool is_closed = 18;
+  // Withdrawn by the author.
+  optional bool is_deactivated = 19;
+  // Author's note on the latest change.
+  mysms.common.v1.NullableString author_comment = 20;
 }
 message UpdateNoticeResponse {
   Notice notice = 1;
@@ -882,13 +944,65 @@ message CreateEventResponse {
   Event event = 1;
 }
 
-message UpdateEventRequest {
-  // Resource with id and etag set.
-  Event event = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateEvent (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message EventUpdate {
+  // Event id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution (NULL = tenant-wide event, e.g. a live class of a tenant-wide cohort). [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Audience.
+  optional Event.Audience audience = 6;
+  // Class (audience = class). [UUID]
+  mysms.common.v1.NullableString class_section_id = 7;
+  // Free-text audience / batch label.
+  mysms.common.v1.NullableString audience_label = 8;
+  // Title.
+  optional string title = 9;
+  // Description.
+  mysms.common.v1.NullableString description = 10;
+  // Category.
+  optional Event.Category category = 11;
+  // Location.
+  mysms.common.v1.NullableString location = 12;
+  // Organiser(s).
+  mysms.common.v1.NullableString organised_by = 13;
+  // Banner image. [UUID]
+  mysms.common.v1.NullableString image_file_id = 14;
+  // Calendar colour.
+  mysms.common.v1.NullableString color = 15;
+  // Start.
+  google.protobuf.Timestamp start_at = 16;
+  // End.
+  mysms.common.v1.NullableTimestamp end_at = 17;
+  // All-day event.
+  optional bool is_all_day = 18;
+  // Occurrences to repeat (0 = none).
+  optional int32 repeat_count = 19;
+  // Interval between occurrences.
+  optional int32 repeat_interval = 20;
+  // Unit of the interval.
+  optional Event.RepeatUnit repeat_unit = 21;
+  // Related link.
+  mysms.common.v1.NullableString url = 22;
+  // Cohort of a cohort event (audience = cohort). [UUID]
+  mysms.common.v1.NullableString cohort_id = 23;
+  // Owner of a personal event (audience = personal). [UUID]
+  mysms.common.v1.NullableString owner_user_id = 24;
+  // iCalendar RRULE of a recurring event (NULL = not recurring); occurrences are materialised in comms.event_occurrence.
+  mysms.common.v1.NullableString recurrence_rule = 25;
+  // Cohort event for every member (false = invited attendees only).
+  optional bool for_all_members = 26;
+  // Cohort staff may change the event.
+  optional bool staff_can_edit = 27;
+  // Importance of a personal event.
+  optional Event.Importance importance = 28;
 }
 message UpdateEventResponse {
   Event event = 1;
@@ -948,15 +1062,21 @@ message CreateEventGalleryItemResponse {
   EventGalleryItem event_gallery_item = 1;
 }
 
-message UpdateEventGalleryItemRequest {
+// The changes of UpdateEventGalleryItem (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message EventGalleryItemUpdate {
   // Event id (UUID).
   string event_id = 1;
-  // Resource with id and etag set.
-  EventGalleryItem event_gallery_item = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // EventGalleryItem id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Media file. [UUID]
+  optional string file_id = 5;
+  // Order.
+  optional int32 sort_order = 6;
 }
 message UpdateEventGalleryItemResponse {
   EventGalleryItem event_gallery_item = 1;
@@ -1012,13 +1132,27 @@ message CreateMagazineResponse {
   Magazine magazine = 1;
 }
 
-message UpdateMagazineRequest {
-  // Resource with id and etag set.
-  Magazine magazine = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateMagazine (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MagazineUpdate {
+  // Magazine id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  optional string academic_year_id = 5;
+  // Title.
+  mysms.common.v1.NullableString title = 6;
+  // Year.
+  mysms.common.v1.NullableInt32 publication_year = 7;
+  // Cover. [UUID]
+  mysms.common.v1.NullableString cover_image_file_id = 8;
+  // Magazine file. [UUID]
+  mysms.common.v1.NullableString document_file_id = 9;
 }
 message UpdateMagazineResponse {
   Magazine magazine = 1;
@@ -1072,13 +1206,25 @@ message CreateConversationResponse {
   Conversation conversation = 1;
 }
 
-message UpdateConversationRequest {
-  // Resource with id and etag set.
-  Conversation conversation = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateConversation (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ConversationUpdate {
+  // Conversation id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  mysms.common.v1.NullableString institution_id = 4;
+  // Direct or group.
+  optional Conversation.ConversationType conversation_type = 5;
+  // Group title.
+  mysms.common.v1.NullableString title = 6;
+  // Last activity.
+  mysms.common.v1.NullableTimestamp last_message_at = 7;
+  // Open.
+  optional bool is_active = 8;
 }
 message UpdateConversationResponse {
   Conversation conversation = 1;
@@ -1138,15 +1284,21 @@ message CreateConversationParticipantResponse {
   ConversationParticipant conversation_participant = 1;
 }
 
-message UpdateConversationParticipantRequest {
+// The changes of UpdateConversationParticipant (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ConversationParticipantUpdate {
   // Conversation id (UUID).
   string conversation_id = 1;
-  // Resource with id and etag set.
-  ConversationParticipant conversation_participant = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ConversationParticipant id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Participant. [UUID]
+  optional string user_id = 5;
+  // Read up to.
+  mysms.common.v1.NullableTimestamp last_read_at = 6;
 }
 message UpdateConversationParticipantResponse {
   ConversationParticipant conversation_participant = 1;
@@ -1208,15 +1360,21 @@ message CreateConversationMessageResponse {
   ConversationMessage conversation_message = 1;
 }
 
-message UpdateConversationMessageRequest {
+// The changes of UpdateConversationMessage (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ConversationMessageUpdate {
   // Conversation id (UUID).
   string conversation_id = 1;
-  // Resource with id and etag set.
-  ConversationMessage conversation_message = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ConversationMessage id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Message.
+  optional string body = 5;
+  // Hidden for the sender.
+  optional bool deleted_by_sender = 6;
 }
 message UpdateConversationMessageResponse {
   ConversationMessage conversation_message = 1;
@@ -1272,13 +1430,23 @@ message CreateFeedbackThreadResponse {
   FeedbackThread feedback_thread = 1;
 }
 
-message UpdateFeedbackThreadRequest {
-  // Resource with id and etag set.
-  FeedbackThread feedback_thread = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateFeedbackThread (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message FeedbackThreadUpdate {
+  // FeedbackThread id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Guardian. [UUID]
+  optional string guardian_id = 5;
+  // Student concerned. [UUID]
+  optional string student_id = 6;
+  // Staff handling it. [UUID]
+  optional string assigned_to_user_id = 7;
 }
 message UpdateFeedbackThreadResponse {
   FeedbackThread feedback_thread = 1;
@@ -1338,15 +1506,29 @@ message CreateFeedbackMessageResponse {
   FeedbackMessage feedback_message = 1;
 }
 
-message UpdateFeedbackMessageRequest {
+// The changes of UpdateFeedbackMessage (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message FeedbackMessageUpdate {
   // FeedbackThread id (UUID).
   string feedback_thread_id = 1;
-  // Resource with id and etag set.
-  FeedbackMessage feedback_message = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // FeedbackMessage id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Category.
+  optional FeedbackMessage.Category category = 5;
+  // Message.
+  optional string message = 6;
+  // Attachment. [UUID]
+  mysms.common.v1.NullableString attachment_file_id = 7;
+  // Handling state.
+  optional FeedbackMessage.ReviewStatus review_status = 8;
+  // Hidden for the sender.
+  optional bool deleted_by_sender = 9;
+  // Hidden for the receiver.
+  optional bool deleted_by_receiver = 10;
 }
 message UpdateFeedbackMessageResponse {
   FeedbackMessage feedback_message = 1;
@@ -1402,13 +1584,25 @@ message CreateAudienceGroupResponse {
   AudienceGroup audience_group = 1;
 }
 
-message UpdateAudienceGroupRequest {
-  // Resource with id and etag set.
-  AudienceGroup audience_group = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateAudienceGroup (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AudienceGroupUpdate {
+  // AudienceGroup id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution (NULL = tenant-wide group). [UUID]
+  mysms.common.v1.NullableString institution_id = 4;
+  // Class (scope = class). [UUID]
+  mysms.common.v1.NullableString class_section_id = 5;
+  // Group name.
+  optional string name = 6;
+  // Scope.
+  optional AudienceGroup.GroupScope group_scope = 7;
+  // Active.
+  optional bool is_active = 8;
 }
 message UpdateAudienceGroupResponse {
   AudienceGroup audience_group = 1;
@@ -1468,15 +1662,21 @@ message CreateAudienceGroupMemberResponse {
   AudienceGroupMember audience_group_member = 1;
 }
 
-message UpdateAudienceGroupMemberRequest {
+// The changes of UpdateAudienceGroupMember (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AudienceGroupMemberUpdate {
   // AudienceGroup id (UUID).
   string audience_group_id = 1;
-  // Resource with id and etag set.
-  AudienceGroupMember audience_group_member = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // AudienceGroupMember id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Member. [UUID]
+  optional string user_id = 5;
+  // Member type.
+  optional AudienceGroupMember.MemberType member_type = 6;
 }
 message UpdateAudienceGroupMemberResponse {
   AudienceGroupMember audience_group_member = 1;
@@ -1532,13 +1732,37 @@ message CreateTaskResponse {
   Task task = 1;
 }
 
-message UpdateTaskRequest {
-  // Resource with id and etag set.
-  Task task = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateTask (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message TaskUpdate {
+  // Task id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Creator / owner. [UUID]
+  optional string owner_user_id = 6;
+  // Title.
+  optional string title = 7;
+  // Who the task is for.
+  optional Task.TaskCategory task_category = 8;
+  // Due date-time.
+  google.protobuf.Timestamp due_at = 9;
+  // Reminder rule.
+  optional Task.ReminderOption reminder_option = 10;
+  // Reminder time.
+  mysms.common.v1.NullableTimestamp reminder_at = 11;
+  // Checklist / details.
+  optional string checklist = 12;
+  // Priority.
+  optional Task.Priority priority = 13;
+  // Individual, shared or open-to-claim.
+  optional Task.AssignmentMode assignment_mode = 14;
 }
 message UpdateTaskResponse {
   Task task = 1;
@@ -1598,15 +1822,29 @@ message CreateTaskAssigneeResponse {
   TaskAssignee task_assignee = 1;
 }
 
-message UpdateTaskAssigneeRequest {
+// The changes of UpdateTaskAssignee (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message TaskAssigneeUpdate {
   // Task id (UUID).
   string task_id = 1;
-  // Resource with id and etag set.
-  TaskAssignee task_assignee = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // TaskAssignee id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Assignee kind.
+  optional TaskAssignee.AssigneeType assignee_type = 5;
+  // User. [UUID]
+  mysms.common.v1.NullableString user_id = 6;
+  // Class. [UUID]
+  mysms.common.v1.NullableString class_section_id = 7;
+  // Group. [UUID]
+  mysms.common.v1.NullableString group_id = 8;
+  // User who claimed an open task. [UUID]
+  mysms.common.v1.NullableString claimed_by_user_id = 9;
+  // State.
+  optional TaskAssignee.Status status = 10;
 }
 message UpdateTaskAssigneeResponse {
   TaskAssignee task_assignee = 1;
@@ -1662,13 +1900,27 @@ message CreateContentViewResponse {
   ContentView content_view = 1;
 }
 
-message UpdateContentViewRequest {
-  // Resource with id and etag set.
-  ContentView content_view = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateContentView (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ContentViewUpdate {
+  // ContentView id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  mysms.common.v1.NullableString institution_id = 4;
+  // Student. [UUID]
+  optional string student_id = 5;
+  // Guardian who viewed. [UUID]
+  mysms.common.v1.NullableString viewer_user_id = 6;
+  // Content type.
+  optional ContentView.ContentType content_type = 7;
+  // Polymorphic id of the item viewed (table given by content_type). [UUID]
+  optional string content_id = 8;
+  // When viewed.
+  mysms.common.v1.NullableTimestamp viewed_at = 9;
 }
 message UpdateContentViewResponse {
   ContentView content_view = 1;
@@ -1722,13 +1974,27 @@ message CreatePageCategoryResponse {
   PageCategory page_category = 1;
 }
 
-message UpdatePageCategoryRequest {
-  // Resource with id and etag set.
-  PageCategory page_category = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePageCategory (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PageCategoryUpdate {
+  // PageCategory id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Institution. [UUID]
+  optional string institution_id = 6;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 7;
+  // Category.
+  optional string name = 8;
+  // Active.
+  optional bool is_active = 9;
 }
 message UpdatePageCategoryResponse {
   PageCategory page_category = 1;
@@ -1782,13 +2048,31 @@ message CreateClassPageResponse {
   ClassPage class_page = 1;
 }
 
-message UpdateClassPageRequest {
-  // Resource with id and etag set.
-  ClassPage class_page = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateClassPage (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ClassPageUpdate {
+  // ClassPage id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Category. [UUID]
+  optional string page_category_id = 6;
+  // Page name.
+  optional string name = 7;
+  // Description.
+  optional string description = 8;
+  // Cover image. [UUID]
+  mysms.common.v1.NullableString cover_image_file_id = 9;
+  // Page owner. [UUID]
+  mysms.common.v1.NullableString owner_user_id = 10;
+  // Active.
+  optional bool is_active = 11;
 }
 message UpdateClassPageResponse {
   ClassPage class_page = 1;
@@ -1848,15 +2132,21 @@ message CreateClassPageAttachmentResponse {
   ClassPageAttachment class_page_attachment = 1;
 }
 
-message UpdateClassPageAttachmentRequest {
+// The changes of UpdateClassPageAttachment (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ClassPageAttachmentUpdate {
   // ClassPage id (UUID).
   string class_page_id = 1;
-  // Resource with id and etag set.
-  ClassPageAttachment class_page_attachment = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ClassPageAttachment id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // File. [UUID]
+  optional string file_id = 5;
+  // Visible.
+  optional bool is_active = 6;
 }
 message UpdateClassPageAttachmentResponse {
   ClassPageAttachment class_page_attachment = 1;
@@ -1918,15 +2208,25 @@ message CreateClassPageMemberResponse {
   ClassPageMember class_page_member = 1;
 }
 
-message UpdateClassPageMemberRequest {
+// The changes of UpdateClassPageMember (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ClassPageMemberUpdate {
   // ClassPage id (UUID).
   string class_page_id = 1;
-  // Resource with id and etag set.
-  ClassPageMember class_page_member = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ClassPageMember id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // User. [UUID]
+  optional string user_id = 5;
+  // Follows the page.
+  optional bool is_following = 6;
+  // Reaction.
+  optional ClassPageMember.Reaction reaction = 7;
+  // Active.
+  optional bool is_active = 8;
 }
 message UpdateClassPageMemberResponse {
   ClassPageMember class_page_member = 1;
@@ -1982,13 +2282,27 @@ message CreatePostResponse {
   Post post = 1;
 }
 
-message UpdatePostRequest {
-  // Resource with id and etag set.
-  Post post = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePost (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PostUpdate {
+  // Post id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  optional string academic_year_id = 5;
+  // Page posted on. [UUID]
+  mysms.common.v1.NullableString class_page_id = 6;
+  // Post text.
+  optional string body = 7;
+  // Who sees it.
+  optional Post.Visibility visibility = 8;
+  // Scheduled publish time.
+  mysms.common.v1.NullableTimestamp scheduled_for = 9;
 }
 message UpdatePostResponse {
   Post post = 1;
@@ -2048,15 +2362,19 @@ message CreatePostAudienceClassResponse {
   PostAudienceClass post_audience_class = 1;
 }
 
-message UpdatePostAudienceClassRequest {
+// The changes of UpdatePostAudienceClass (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PostAudienceClassUpdate {
   // Post id (UUID).
   string post_id = 1;
-  // Resource with id and etag set.
-  PostAudienceClass post_audience_class = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // PostAudienceClass id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Class. [UUID]
+  optional string class_section_id = 5;
 }
 message UpdatePostAudienceClassResponse {
   PostAudienceClass post_audience_class = 1;
@@ -2118,15 +2436,23 @@ message CreatePostReactionResponse {
   PostReaction post_reaction = 1;
 }
 
-message UpdatePostReactionRequest {
+// The changes of UpdatePostReaction (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PostReactionUpdate {
   // Post id (UUID).
   string post_id = 1;
-  // Resource with id and etag set.
-  PostReaction post_reaction = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // PostReaction id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Reaction.
+  optional PostReaction.Reaction reaction = 5;
+  // Saved / bookmarked.
+  mysms.common.v1.NullableBool is_saved = 6;
+  // Active.
+  mysms.common.v1.NullableBool is_active = 7;
 }
 message UpdatePostReactionResponse {
   PostReaction post_reaction = 1;
@@ -2188,15 +2514,25 @@ message CreatePostCommentResponse {
   PostComment post_comment = 1;
 }
 
-message UpdatePostCommentRequest {
+// The changes of UpdatePostComment (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PostCommentUpdate {
   // Post id (UUID).
   string post_id = 1;
-  // Resource with id and etag set.
-  PostComment post_comment = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // PostComment id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Comment replied to. [UUID]
+  mysms.common.v1.NullableString parent_comment_id = 5;
+  // Comment text.
+  optional string body = 6;
+  // Attachment. [UUID]
+  mysms.common.v1.NullableString attachment_file_id = 7;
+  // Visible.
+  optional bool is_active = 8;
 }
 message UpdatePostCommentResponse {
   PostComment post_comment = 1;
@@ -2252,13 +2588,19 @@ message CreateCommentReactionResponse {
   CommentReaction comment_reaction = 1;
 }
 
-message UpdateCommentReactionRequest {
-  // Resource with id and etag set.
-  CommentReaction comment_reaction = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateCommentReaction (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CommentReactionUpdate {
+  // CommentReaction id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Reaction.
+  optional CommentReaction.Reaction reaction = 4;
+  // Active.
+  mysms.common.v1.NullableBool is_active = 5;
 }
 message UpdateCommentReactionResponse {
   CommentReaction comment_reaction = 1;
@@ -2318,15 +2660,21 @@ message CreateNoticeAudienceResponse {
   NoticeAudience notice_audience = 1;
 }
 
-message UpdateNoticeAudienceRequest {
+// The changes of UpdateNoticeAudience (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NoticeAudienceUpdate {
   // Notice id (UUID).
   string notice_id = 1;
-  // Resource with id and etag set.
-  NoticeAudience notice_audience = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // NoticeAudience id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Institution (NULL = all institutions of the tenant). [UUID]
+  mysms.common.v1.NullableString institution_id = 5;
+  // Role (NULL = every role). [UUID]
+  mysms.common.v1.NullableString role_id = 6;
 }
 message UpdateNoticeAudienceResponse {
   NoticeAudience notice_audience = 1;
@@ -2420,15 +2768,19 @@ message CreateEventInstitutionResponse {
   EventInstitution event_institution = 1;
 }
 
-message UpdateEventInstitutionRequest {
+// The changes of UpdateEventInstitution (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message EventInstitutionUpdate {
   // Event id (UUID).
   string event_id = 1;
-  // Resource with id and etag set.
-  EventInstitution event_institution = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // EventInstitution id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Institution. [UUID]
+  optional string institution_id = 5;
 }
 message UpdateEventInstitutionResponse {
   EventInstitution event_institution = 1;
@@ -2490,15 +2842,37 @@ message CreateEventOccurrenceResponse {
   EventOccurrence event_occurrence = 1;
 }
 
-message UpdateEventOccurrenceRequest {
+// The changes of UpdateEventOccurrence (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message EventOccurrenceUpdate {
   // Event id (UUID).
   string event_id = 1;
-  // Resource with id and etag set.
-  EventOccurrence event_occurrence = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // EventOccurrence id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Attendee whose personal copy this is (personal events shared with several users). [UUID]
+  optional string user_id = 5;
+  // Cohort of a cohort event. [UUID]
+  mysms.common.v1.NullableString cohort_id = 6;
+  // Title override.
+  optional string title = 7;
+  // Colour override.
+  mysms.common.v1.NullableString color = 8;
+  // Description override.
+  mysms.common.v1.NullableString description = 9;
+  // Start.
+  google.protobuf.Timestamp start_at = 10;
+  // End.
+  mysms.common.v1.NullableTimestamp end_at = 11;
+  // Occurrence cancelled.
+  optional bool is_cancelled = 12;
+  // Attendee's response, or completed for a personal to-do event.
+  optional EventOccurrence.ResponseStatus response_status = 13;
+  // Importance (personal events).
+  optional EventOccurrence.Importance importance = 14;
 }
 message UpdateEventOccurrenceResponse {
   EventOccurrence event_occurrence = 1;
@@ -2560,15 +2934,19 @@ message CreateEventAttendeeResponse {
   EventAttendee event_attendee = 1;
 }
 
-message UpdateEventAttendeeRequest {
+// The changes of UpdateEventAttendee (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message EventAttendeeUpdate {
   // Event id (UUID).
   string event_id = 1;
-  // Resource with id and etag set.
-  EventAttendee event_attendee = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // EventAttendee id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Invited user. [UUID]
+  optional string user_id = 5;
 }
 message UpdateEventAttendeeResponse {
   EventAttendee event_attendee = 1;
@@ -2661,13 +3039,31 @@ message CreateNotificationTypeResponse {
   NotificationType notification_type = 1;
 }
 
-message UpdateNotificationTypeRequest {
-  // Resource with id and etag set.
-  NotificationType notification_type = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateNotificationType (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NotificationTypeUpdate {
+  // NotificationType id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Notification code.
+  optional string code = 4;
+  // Default message text with placeholders.
+  optional string description = 5;
+  // Module raising it (see iam.app_module).
+  optional string module_code = 6;
+  // Platform role code it is addressed to by default (resolved to each tenant's role with that code).
+  mysms.common.v1.NullableString role_code = 7;
+  // Enabled by default.
+  optional bool is_enabled = 8;
+  // Shown as an in-app popup to students.
+  optional bool popup_enabled = 9;
+  // Shown as an in-app popup to teachers.
+  optional bool teacher_popup_enabled = 10;
+  // Placeholders the message may use.
+  mysms.common.v1.NullableString valid_parameters = 11;
 }
 message UpdateNotificationTypeResponse {
   NotificationType notification_type = 1;
@@ -2727,15 +3123,21 @@ message CreateNotificationTypePropertyResponse {
   NotificationTypeProperty notification_type_property = 1;
 }
 
-message UpdateNotificationTypePropertyRequest {
+// The changes of UpdateNotificationTypeProperty (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NotificationTypePropertyUpdate {
   // NotificationType id (UUID).
   string notification_type_id = 1;
-  // Resource with id and etag set.
-  NotificationTypeProperty notification_type_property = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // NotificationTypeProperty id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Module.
+  optional string module_code = 5;
+  // Property value.
+  optional string property_value = 6;
 }
 message UpdateNotificationTypePropertyResponse {
   NotificationTypeProperty notification_type_property = 1;
@@ -2797,15 +3199,29 @@ message CreateNotificationRuleResponse {
   NotificationRule notification_rule = 1;
 }
 
-message UpdateNotificationRuleRequest {
+// The changes of UpdateNotificationRule (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NotificationRuleUpdate {
   // NotificationType id (UUID).
   string notification_type_id = 1;
-  // Resource with id and etag set.
-  NotificationRule notification_rule = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // NotificationRule id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Recipient role. [UUID]
+  optional string role_id = 5;
+  // Operation (permission) that triggers it. [UUID]
+  mysms.common.v1.NullableString permission_id = 6;
+  // Rule active.
+  optional bool is_enabled = 7;
+  // E-mail subject template.
+  mysms.common.v1.NullableString email_subject_template = 8;
+  // E-mail body template.
+  mysms.common.v1.NullableString email_body_template = 9;
+  // SMS template.
+  mysms.common.v1.NullableString sms_template = 10;
 }
 message UpdateNotificationRuleResponse {
   NotificationRule notification_rule = 1;
@@ -2867,15 +3283,21 @@ message CreateNotificationCohortSettingResponse {
   NotificationCohortSetting notification_cohort_setting = 1;
 }
 
-message UpdateNotificationCohortSettingRequest {
+// The changes of UpdateNotificationCohortSetting (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NotificationCohortSettingUpdate {
   // NotificationType id (UUID).
   string notification_type_id = 1;
-  // Resource with id and etag set.
-  NotificationCohortSetting notification_cohort_setting = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // NotificationCohortSetting id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Cohort. [UUID]
+  optional string cohort_id = 5;
+  // Show as popup in this cohort.
+  optional bool popup_enabled = 6;
 }
 message UpdateNotificationCohortSettingResponse {
   NotificationCohortSetting notification_cohort_setting = 1;
@@ -2931,13 +3353,23 @@ message CreateNotificationChannelResponse {
   NotificationChannel notification_channel = 1;
 }
 
-message UpdateNotificationChannelRequest {
-  // Resource with id and etag set.
-  NotificationChannel notification_channel = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateNotificationChannel (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NotificationChannelUpdate {
+  // NotificationChannel id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Channel code (notification.email, notification.sms, notification.popup).
+  optional string code = 4;
+  // Description.
+  mysms.common.v1.NullableString description = 5;
+  // Channel enabled.
+  optional bool is_enabled = 6;
+  // Display order.
+  optional int32 sort_order = 7;
 }
 message UpdateNotificationChannelResponse {
   NotificationChannel notification_channel = 1;
@@ -2997,15 +3429,27 @@ message CreateNotificationChannelPropertyResponse {
   NotificationChannelProperty notification_channel_property = 1;
 }
 
-message UpdateNotificationChannelPropertyRequest {
+// The changes of UpdateNotificationChannelProperty (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NotificationChannelPropertyUpdate {
   // NotificationChannel id (UUID).
   string notification_channel_id = 1;
-  // Resource with id and etag set.
-  NotificationChannelProperty notification_channel_property = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // NotificationChannelProperty id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Property key.
+  optional string property_key = 5;
+  // Non-secret value.
+  mysms.common.v1.NullableString property_value = 6;
+  // Plain value, input only: stored encrypted and never returned. Secret value (e.g. SMTP password), encrypted by the application; set instead of property_value.
+  optional string secret_value = 7;
+  // Display order.
+  optional int32 sort_order = 8;
+  // Value must be set for the channel to work.
+  optional bool is_mandatory = 9;
 }
 message UpdateNotificationChannelPropertyResponse {
   NotificationChannelProperty notification_channel_property = 1;
@@ -3061,13 +3505,19 @@ message CreateNotificationPreferenceSetResponse {
   NotificationPreferenceSet notification_preference_set = 1;
 }
 
-message UpdateNotificationPreferenceSetRequest {
-  // Resource with id and etag set.
-  NotificationPreferenceSet notification_preference_set = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateNotificationPreferenceSet (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NotificationPreferenceSetUpdate {
+  // NotificationPreferenceSet id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // User. [UUID]
+  optional string user_id = 4;
+  // Role the preferences apply to (NULL = all roles). [UUID]
+  mysms.common.v1.NullableString role_id = 5;
 }
 message UpdateNotificationPreferenceSetResponse {
   NotificationPreferenceSet notification_preference_set = 1;
@@ -3127,15 +3577,23 @@ message CreateNotificationPreferenceResponse {
   NotificationPreference notification_preference = 1;
 }
 
-message UpdateNotificationPreferenceRequest {
+// The changes of UpdateNotificationPreference (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NotificationPreferenceUpdate {
   // NotificationPreferenceSet id (UUID).
   string notification_preference_set_id = 1;
-  // Resource with id and etag set.
-  NotificationPreference notification_preference = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // NotificationPreference id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Notification type (NULL = all types). [UUID]
+  mysms.common.v1.NullableString notification_type_id = 5;
+  // Property (e.g. notification.email.frequency).
+  optional string property_name = 6;
+  // Value.
+  mysms.common.v1.NullableString property_value = 7;
 }
 message UpdateNotificationPreferenceResponse {
   NotificationPreference notification_preference = 1;

@@ -3,10 +3,10 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ConferencingAccount;
-import com.mysms.learning.lms.api.model.ConferencingAccountUpdate;
 import com.mysms.learning.lms.business.ConferencingAccountService;
 import com.mysms.learning.lms.business.ConferencingWebhookService;
 import com.mysms.lms.v1.ConferencingAccountServiceGrpc;
+import com.mysms.lms.v1.ConferencingAccountUpdate;
 import com.mysms.lms.v1.CreateConferencingAccountRequest;
 import com.mysms.lms.v1.CreateConferencingAccountResponse;
 import com.mysms.lms.v1.DeleteConferencingAccountRequest;
@@ -17,7 +17,6 @@ import com.mysms.lms.v1.ListConferencingAccountsRequest;
 import com.mysms.lms.v1.ListConferencingAccountsResponse;
 import com.mysms.lms.v1.ReceiveConferencingWebhookRequest;
 import com.mysms.lms.v1.ReceiveConferencingWebhookResponse;
-import com.mysms.lms.v1.UpdateConferencingAccountRequest;
 import com.mysms.lms.v1.UpdateConferencingAccountResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -67,11 +66,11 @@ public class ConferencingAccountResolver extends ConferencingAccountServiceGrpc.
     }
 
     @Override
-    public void updateConferencingAccount(UpdateConferencingAccountRequest request,
+    public void updateConferencingAccount(ConferencingAccountUpdate request,
             StreamObserver<UpdateConferencingAccountResponse> out) {
-        ConferencingAccount updated = service.updateConferencingAccount(bridge.id(request.getConferencingAccount().getId(), "id"),
-                bridge.requiredIfMatch(request.getConferencingAccount().getEtag()),
-                bridge.changes(request.getConferencingAccount(), request.getUpdateMask(), ConferencingAccountUpdate.class),
+        ConferencingAccount updated = service.updateConferencingAccount(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ConferencingAccountProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateConferencingAccountResponse.newBuilder(), "conferencing_account", updated).build());

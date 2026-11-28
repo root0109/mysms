@@ -3,13 +3,13 @@ package com.mysms.students.sis.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.DisciplineIncident;
-import com.mysms.students.sis.api.model.DisciplineIncidentUpdate;
 import com.mysms.students.sis.business.DisciplineIncidentService;
 import com.mysms.sis.v1.CreateDisciplineIncidentRequest;
 import com.mysms.sis.v1.CreateDisciplineIncidentResponse;
 import com.mysms.sis.v1.DeleteDisciplineIncidentRequest;
 import com.mysms.sis.v1.DeleteDisciplineIncidentResponse;
 import com.mysms.sis.v1.DisciplineIncidentServiceGrpc;
+import com.mysms.sis.v1.DisciplineIncidentUpdate;
 import com.mysms.sis.v1.GetDisciplineIncidentRequest;
 import com.mysms.sis.v1.GetDisciplineIncidentResponse;
 import com.mysms.sis.v1.ListDisciplineIncidentsRequest;
@@ -18,7 +18,6 @@ import com.mysms.sis.v1.MarkIncidentActionTakenRequest;
 import com.mysms.sis.v1.MarkIncidentActionTakenResponse;
 import com.mysms.sis.v1.MarkIncidentSeenRequest;
 import com.mysms.sis.v1.MarkIncidentSeenResponse;
-import com.mysms.sis.v1.UpdateDisciplineIncidentRequest;
 import com.mysms.sis.v1.UpdateDisciplineIncidentResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -63,12 +62,12 @@ public class DisciplineIncidentResolver extends DisciplineIncidentServiceGrpc.Di
     }
 
     @Override
-    public void updateDisciplineIncident(UpdateDisciplineIncidentRequest request,
+    public void updateDisciplineIncident(DisciplineIncidentUpdate request,
             StreamObserver<UpdateDisciplineIncidentResponse> out) {
         DisciplineIncident updated = service.updateDisciplineIncident(
-                bridge.id(request.getDisciplineIncident().getId(), "id"),
-                bridge.requiredIfMatch(request.getDisciplineIncident().getEtag()),
-                bridge.changes(request.getDisciplineIncident(), request.getUpdateMask(), DisciplineIncidentUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                DisciplineIncidentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateDisciplineIncidentResponse.newBuilder(), "discipline_incident", updated).build());

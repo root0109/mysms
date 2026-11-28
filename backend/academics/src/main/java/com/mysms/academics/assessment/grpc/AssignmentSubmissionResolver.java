@@ -1,11 +1,11 @@
 package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.AssignmentSubmission;
-import com.mysms.academics.assessment.api.model.AssignmentSubmissionUpdate;
 import com.mysms.academics.assessment.business.AssignmentSubmissionService;
 import com.mysms.assessment.v1.AcceptAssignmentSubmissionRequest;
 import com.mysms.assessment.v1.AcceptAssignmentSubmissionResponse;
 import com.mysms.assessment.v1.AssignmentSubmissionServiceGrpc;
+import com.mysms.assessment.v1.AssignmentSubmissionUpdate;
 import com.mysms.assessment.v1.CreateAssignmentSubmissionRequest;
 import com.mysms.assessment.v1.CreateAssignmentSubmissionResponse;
 import com.mysms.assessment.v1.DeleteAssignmentSubmissionRequest;
@@ -24,7 +24,6 @@ import com.mysms.assessment.v1.ResetAssignmentSubmissionRequest;
 import com.mysms.assessment.v1.ResetAssignmentSubmissionResponse;
 import com.mysms.assessment.v1.SubmitAssignmentSubmissionRequest;
 import com.mysms.assessment.v1.SubmitAssignmentSubmissionResponse;
-import com.mysms.assessment.v1.UpdateAssignmentSubmissionRequest;
 import com.mysms.assessment.v1.UpdateAssignmentSubmissionResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -75,13 +74,12 @@ public class AssignmentSubmissionResolver extends AssignmentSubmissionServiceGrp
     }
 
     @Override
-    public void updateAssignmentSubmission(UpdateAssignmentSubmissionRequest request,
+    public void updateAssignmentSubmission(AssignmentSubmissionUpdate request,
             StreamObserver<UpdateAssignmentSubmissionResponse> out) {
         AssignmentSubmission updated = assignmentSubmissionService.updateAssignmentSubmission(
-                bridge.id(request.getAssignmentSubmission().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssignmentSubmission().getEtag()),
-                bridge.changes(request.getAssignmentSubmission(), request.getUpdateMask(),
-                        AssignmentSubmissionUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AssignmentSubmissionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAssignmentSubmissionResponse.newBuilder(),
                 "assignment_submission", updated).build());
     }

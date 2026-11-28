@@ -3,7 +3,6 @@ package com.mysms.hrms.hr.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.hr.api.model.LeaveApplication;
-import com.mysms.hrms.hr.api.model.LeaveApplicationUpdate;
 import com.mysms.hrms.hr.business.LeaveApplicationService;
 import com.mysms.hr.v1.ApproveLeaveRequest;
 import com.mysms.hr.v1.ApproveLeaveResponse;
@@ -16,11 +15,11 @@ import com.mysms.hr.v1.DeleteLeaveApplicationResponse;
 import com.mysms.hr.v1.GetLeaveApplicationRequest;
 import com.mysms.hr.v1.GetLeaveApplicationResponse;
 import com.mysms.hr.v1.LeaveApplicationServiceGrpc;
+import com.mysms.hr.v1.LeaveApplicationUpdate;
 import com.mysms.hr.v1.ListLeaveApplicationsRequest;
 import com.mysms.hr.v1.ListLeaveApplicationsResponse;
 import com.mysms.hr.v1.RejectLeaveRequest;
 import com.mysms.hr.v1.RejectLeaveResponse;
-import com.mysms.hr.v1.UpdateLeaveApplicationRequest;
 import com.mysms.hr.v1.UpdateLeaveApplicationResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -67,12 +66,12 @@ public class LeaveApplicationResolver extends LeaveApplicationServiceGrpc.LeaveA
     }
 
     @Override
-    public void updateLeaveApplication(UpdateLeaveApplicationRequest request,
+    public void updateLeaveApplication(LeaveApplicationUpdate request,
             StreamObserver<UpdateLeaveApplicationResponse> out) {
         LeaveApplication updated = leaveApplicationService.updateLeaveApplication(
-                bridge.id(request.getLeaveApplication().getId(), "id"),
-                bridge.requiredIfMatch(request.getLeaveApplication().getEtag()),
-                bridge.changes(request.getLeaveApplication(), request.getUpdateMask(), LeaveApplicationUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LeaveApplicationProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLeaveApplicationResponse.newBuilder(),
                 "leave_application", updated).build());

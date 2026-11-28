@@ -3,18 +3,17 @@ package com.mysms.platform.master.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.master.api.model.Currency;
-import com.mysms.platform.master.api.model.CurrencyUpdate;
 import com.mysms.platform.master.business.CurrencyService;
 import com.mysms.master.v1.CreateCurrencyRequest;
 import com.mysms.master.v1.CreateCurrencyResponse;
 import com.mysms.master.v1.CurrencyServiceGrpc;
+import com.mysms.master.v1.CurrencyUpdate;
 import com.mysms.master.v1.DeleteCurrencyRequest;
 import com.mysms.master.v1.DeleteCurrencyResponse;
 import com.mysms.master.v1.GetCurrencyRequest;
 import com.mysms.master.v1.GetCurrencyResponse;
 import com.mysms.master.v1.ListCurrenciesRequest;
 import com.mysms.master.v1.ListCurrenciesResponse;
-import com.mysms.master.v1.UpdateCurrencyRequest;
 import com.mysms.master.v1.UpdateCurrencyResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -59,11 +58,11 @@ public class CurrencyResolver extends CurrencyServiceGrpc.CurrencyServiceImplBas
     }
 
     @Override
-    public void updateCurrency(UpdateCurrencyRequest request, StreamObserver<UpdateCurrencyResponse> out) {
+    public void updateCurrency(CurrencyUpdate request, StreamObserver<UpdateCurrencyResponse> out) {
         Currency updated = service.updateCurrency(
-                bridge.id(request.getCurrency().getId(), "id"),
-                bridge.requiredIfMatch(request.getCurrency().getEtag()),
-                bridge.changes(request.getCurrency(), request.getUpdateMask(), CurrencyUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CurrencyProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCurrencyResponse.newBuilder(), "currency", updated).build());
     }
 

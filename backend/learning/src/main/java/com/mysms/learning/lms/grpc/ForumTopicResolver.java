@@ -3,10 +3,8 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ForumPost;
-import com.mysms.learning.lms.api.model.ForumPostUpdate;
 import com.mysms.learning.lms.api.model.ForumReadState;
 import com.mysms.learning.lms.api.model.ForumTopic;
-import com.mysms.learning.lms.api.model.ForumTopicUpdate;
 import com.mysms.learning.lms.business.ForumTopicService;
 import com.mysms.lms.v1.ConfirmPostAbuseRequest;
 import com.mysms.lms.v1.ConfirmPostAbuseResponse;
@@ -20,7 +18,9 @@ import com.mysms.lms.v1.DeleteForumTopicRequest;
 import com.mysms.lms.v1.DeleteForumTopicResponse;
 import com.mysms.lms.v1.FlagForumPostRequest;
 import com.mysms.lms.v1.FlagForumPostResponse;
+import com.mysms.lms.v1.ForumPostUpdate;
 import com.mysms.lms.v1.ForumTopicServiceGrpc;
+import com.mysms.lms.v1.ForumTopicUpdate;
 import com.mysms.lms.v1.GetForumPostRequest;
 import com.mysms.lms.v1.GetForumPostResponse;
 import com.mysms.lms.v1.GetForumTopicRequest;
@@ -43,9 +43,7 @@ import com.mysms.lms.v1.UnhideForumPostRequest;
 import com.mysms.lms.v1.UnhideForumPostResponse;
 import com.mysms.lms.v1.UnhideForumTopicRequest;
 import com.mysms.lms.v1.UnhideForumTopicResponse;
-import com.mysms.lms.v1.UpdateForumPostRequest;
 import com.mysms.lms.v1.UpdateForumPostResponse;
-import com.mysms.lms.v1.UpdateForumTopicRequest;
 import com.mysms.lms.v1.UpdateForumTopicResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -87,11 +85,11 @@ public class ForumTopicResolver extends ForumTopicServiceGrpc.ForumTopicServiceI
     }
 
     @Override
-    public void updateForumTopic(UpdateForumTopicRequest request, StreamObserver<UpdateForumTopicResponse> out) {
+    public void updateForumTopic(ForumTopicUpdate request, StreamObserver<UpdateForumTopicResponse> out) {
         ForumTopic updated = service.updateForumTopic(
-                bridge.id(request.getForumTopic().getId(), "id"),
-                bridge.requiredIfMatch(request.getForumTopic().getEtag()),
-                bridge.changes(request.getForumTopic(), request.getUpdateMask(), ForumTopicUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ForumTopicProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateForumTopicResponse.newBuilder(), "forum_topic", updated).build());
     }
@@ -127,11 +125,11 @@ public class ForumTopicResolver extends ForumTopicServiceGrpc.ForumTopicServiceI
     }
 
     @Override
-    public void updateForumPost(UpdateForumPostRequest request, StreamObserver<UpdateForumPostResponse> out) {
+    public void updateForumPost(ForumPostUpdate request, StreamObserver<UpdateForumPostResponse> out) {
         ForumPost updated = service.updateForumPost(
-                bridge.id(request.getForumTopicId(), "forumTopicId"), bridge.id(request.getForumPost().getId(), "id"),
-                bridge.requiredIfMatch(request.getForumPost().getEtag()),
-                bridge.changes(request.getForumPost(), request.getUpdateMask(), ForumPostUpdate.class),
+                bridge.id(request.getForumTopicId(), "forumTopicId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ForumPostProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateForumPostResponse.newBuilder(), "forum_post", updated).build());
     }

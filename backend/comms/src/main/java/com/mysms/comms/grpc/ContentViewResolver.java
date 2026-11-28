@@ -1,9 +1,9 @@
 package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.ContentView;
-import com.mysms.comms.api.model.ContentViewUpdate;
 import com.mysms.comms.business.ContentViewService;
 import com.mysms.comms.v1.ContentViewServiceGrpc;
+import com.mysms.comms.v1.ContentViewUpdate;
 import com.mysms.comms.v1.CreateContentViewRequest;
 import com.mysms.comms.v1.CreateContentViewResponse;
 import com.mysms.comms.v1.DeleteContentViewRequest;
@@ -12,7 +12,6 @@ import com.mysms.comms.v1.GetContentViewRequest;
 import com.mysms.comms.v1.GetContentViewResponse;
 import com.mysms.comms.v1.ListContentViewsRequest;
 import com.mysms.comms.v1.ListContentViewsResponse;
-import com.mysms.comms.v1.UpdateContentViewRequest;
 import com.mysms.comms.v1.UpdateContentViewResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,10 +55,10 @@ public class ContentViewResolver extends ContentViewServiceGrpc.ContentViewServi
     }
 
     @Override
-    public void updateContentView(UpdateContentViewRequest request, StreamObserver<UpdateContentViewResponse> out) {
+    public void updateContentView(ContentViewUpdate request, StreamObserver<UpdateContentViewResponse> out) {
         ContentView updated = service.updateContentView(
-                bridge.id(request.getContentView().getId(), "id"), bridge.requiredIfMatch(request.getContentView().getEtag()),
-                bridge.changes(request.getContentView(), request.getUpdateMask(), ContentViewUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                ContentViewProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateContentViewResponse.newBuilder(), "content_view", updated).build());
     }

@@ -4,9 +4,9 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Certificate;
 import com.mysms.learning.lms.api.model.CertificateEvaluation;
-import com.mysms.learning.lms.api.model.CertificateEvaluationUpdate;
 import com.mysms.learning.lms.business.CertificateEvaluationService;
 import com.mysms.lms.v1.CertificateEvaluationServiceGrpc;
+import com.mysms.lms.v1.CertificateEvaluationUpdate;
 import com.mysms.lms.v1.CreateCertificateEvaluationRequest;
 import com.mysms.lms.v1.CreateCertificateEvaluationResponse;
 import com.mysms.lms.v1.DeleteCertificateEvaluationRequest;
@@ -17,7 +17,6 @@ import com.mysms.lms.v1.IssueCertificateFromEvaluationRequest;
 import com.mysms.lms.v1.IssueCertificateFromEvaluationResponse;
 import com.mysms.lms.v1.ListCertificateEvaluationsRequest;
 import com.mysms.lms.v1.ListCertificateEvaluationsResponse;
-import com.mysms.lms.v1.UpdateCertificateEvaluationRequest;
 import com.mysms.lms.v1.UpdateCertificateEvaluationResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -64,13 +63,12 @@ public class CertificateEvaluationResolver extends CertificateEvaluationServiceG
     }
 
     @Override
-    public void updateCertificateEvaluation(UpdateCertificateEvaluationRequest request,
+    public void updateCertificateEvaluation(CertificateEvaluationUpdate request,
             StreamObserver<UpdateCertificateEvaluationResponse> out) {
         CertificateEvaluation updated = service.updateCertificateEvaluation(
-                bridge.id(request.getCertificateEvaluation().getId(), "id"),
-                bridge.requiredIfMatch(request.getCertificateEvaluation().getEtag()),
-                bridge.changes(request.getCertificateEvaluation(), request.getUpdateMask(),
-                CertificateEvaluationUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CertificateEvaluationProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCertificateEvaluationResponse.newBuilder(), "certificate_evaluation",
                 updated).build());
     }

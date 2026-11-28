@@ -3,7 +3,6 @@ package com.mysms.platform.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.api.model.SalesEnquiry;
-import com.mysms.platform.api.model.SalesEnquiryUpdate;
 import com.mysms.platform.business.SalesEnquiryService;
 import com.mysms.platform.v1.CreateSalesEnquiryRequest;
 import com.mysms.platform.v1.CreateSalesEnquiryResponse;
@@ -16,7 +15,7 @@ import com.mysms.platform.v1.ListSalesEnquiriesResponse;
 import com.mysms.platform.v1.MarkEnquiryContactedRequest;
 import com.mysms.platform.v1.MarkEnquiryContactedResponse;
 import com.mysms.platform.v1.SalesEnquiryServiceGrpc;
-import com.mysms.platform.v1.UpdateSalesEnquiryRequest;
+import com.mysms.platform.v1.SalesEnquiryUpdate;
 import com.mysms.platform.v1.UpdateSalesEnquiryResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -58,11 +57,11 @@ public class SalesEnquiryResolver extends SalesEnquiryServiceGrpc.SalesEnquirySe
     }
 
     @Override
-    public void updateSalesEnquiry(UpdateSalesEnquiryRequest request, StreamObserver<UpdateSalesEnquiryResponse> out) {
+    public void updateSalesEnquiry(SalesEnquiryUpdate request, StreamObserver<UpdateSalesEnquiryResponse> out) {
         SalesEnquiry updated = service.updateSalesEnquiry(
-                bridge.id(request.getSalesEnquiry().getId(), "id"),
-                bridge.requiredIfMatch(request.getSalesEnquiry().getEtag()),
-                bridge.changes(request.getSalesEnquiry(), request.getUpdateMask(), SalesEnquiryUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SalesEnquiryProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateSalesEnquiryResponse.newBuilder(), "sales_enquiry", updated).build());
     }

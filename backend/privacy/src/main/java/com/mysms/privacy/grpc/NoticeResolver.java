@@ -4,10 +4,7 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.privacy.api.model.Notice;
 import com.mysms.privacy.api.model.NoticeTranslation;
-import com.mysms.privacy.api.model.NoticeTranslationUpdate;
-import com.mysms.privacy.api.model.NoticeUpdate;
 import com.mysms.privacy.api.model.NoticeVersion;
-import com.mysms.privacy.api.model.NoticeVersionUpdate;
 import com.mysms.privacy.business.NoticeService;
 import com.mysms.privacy.v1.CreateNoticeRequest;
 import com.mysms.privacy.v1.CreateNoticeResponse;
@@ -32,13 +29,13 @@ import com.mysms.privacy.v1.ListNoticeVersionsResponse;
 import com.mysms.privacy.v1.ListNoticesRequest;
 import com.mysms.privacy.v1.ListNoticesResponse;
 import com.mysms.privacy.v1.NoticeServiceGrpc;
+import com.mysms.privacy.v1.NoticeTranslationUpdate;
+import com.mysms.privacy.v1.NoticeUpdate;
+import com.mysms.privacy.v1.NoticeVersionUpdate;
 import com.mysms.privacy.v1.PublishNoticeVersionRequest;
 import com.mysms.privacy.v1.PublishNoticeVersionResponse;
-import com.mysms.privacy.v1.UpdateNoticeRequest;
 import com.mysms.privacy.v1.UpdateNoticeResponse;
-import com.mysms.privacy.v1.UpdateNoticeTranslationRequest;
 import com.mysms.privacy.v1.UpdateNoticeTranslationResponse;
-import com.mysms.privacy.v1.UpdateNoticeVersionRequest;
 import com.mysms.privacy.v1.UpdateNoticeVersionResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -83,10 +80,10 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
     }
 
     @Override
-    public void updateNotice(UpdateNoticeRequest request, StreamObserver<UpdateNoticeResponse> out) {
-        Notice updated = service.updateNotice(bridge.id(request.getNotice().getId(), "id"),
-                bridge.requiredIfMatch(request.getNotice().getEtag()),
-                bridge.changes(request.getNotice(), request.getUpdateMask(), NoticeUpdate.class), request.getValidateOnly());
+    public void updateNotice(NoticeUpdate request, StreamObserver<UpdateNoticeResponse> out) {
+        Notice updated = service.updateNotice(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NoticeProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeResponse.newBuilder(), NOTICE, updated).build());
     }
 
@@ -120,12 +117,12 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
     }
 
     @Override
-    public void updateNoticeVersion(UpdateNoticeVersionRequest request,
+    public void updateNoticeVersion(NoticeVersionUpdate request,
             StreamObserver<UpdateNoticeVersionResponse> out) {
         NoticeVersion updated = service.updateNoticeVersion(bridge.id(request.getNoticeId(), "noticeId"),
-                bridge.id(request.getNoticeVersion().getId(), "id"),
-                bridge.requiredIfMatch(request.getNoticeVersion().getEtag()),
-                bridge.changes(request.getNoticeVersion(), request.getUpdateMask(), NoticeVersionUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NoticeVersionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeVersionResponse.newBuilder(), NOTICE_VERSION, updated).build());
     }
@@ -171,13 +168,13 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
     }
 
     @Override
-    public void updateNoticeTranslation(UpdateNoticeTranslationRequest request,
+    public void updateNoticeTranslation(NoticeTranslationUpdate request,
             StreamObserver<UpdateNoticeTranslationResponse> out) {
         NoticeTranslation updated = service.updateNoticeTranslation(bridge.id(request.getNoticeId(), "noticeId"),
                 bridge.id(request.getNoticeVersionId(), "noticeVersionId"),
-                bridge.id(request.getNoticeTranslation().getId(), "id"),
-                bridge.requiredIfMatch(request.getNoticeTranslation().getEtag()),
-                bridge.changes(request.getNoticeTranslation(), request.getUpdateMask(), NoticeTranslationUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NoticeTranslationProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeTranslationResponse.newBuilder(), NOTICE_TRANSLATION, updated)
                 .build());

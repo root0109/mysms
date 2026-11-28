@@ -1,7 +1,6 @@
 package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.GradingBand;
-import com.mysms.academics.assessment.api.model.GradingBandUpdate;
 import com.mysms.academics.assessment.business.GradingBandService;
 import com.mysms.assessment.v1.CreateGradingBandRequest;
 import com.mysms.assessment.v1.CreateGradingBandResponse;
@@ -10,9 +9,9 @@ import com.mysms.assessment.v1.DeleteGradingBandResponse;
 import com.mysms.assessment.v1.GetGradingBandRequest;
 import com.mysms.assessment.v1.GetGradingBandResponse;
 import com.mysms.assessment.v1.GradingBandServiceGrpc;
+import com.mysms.assessment.v1.GradingBandUpdate;
 import com.mysms.assessment.v1.ListGradingBandsRequest;
 import com.mysms.assessment.v1.ListGradingBandsResponse;
-import com.mysms.assessment.v1.UpdateGradingBandRequest;
 import com.mysms.assessment.v1.UpdateGradingBandResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,11 +55,11 @@ public class GradingBandResolver extends GradingBandServiceGrpc.GradingBandServi
     }
 
     @Override
-    public void updateGradingBand(UpdateGradingBandRequest request, StreamObserver<UpdateGradingBandResponse> out) {
+    public void updateGradingBand(GradingBandUpdate request, StreamObserver<UpdateGradingBandResponse> out) {
         GradingBand updated = gradingBandService.updateGradingBand(
-                bridge.id(request.getGradingBand().getId(), "id"),
-                bridge.requiredIfMatch(request.getGradingBand().getEtag()),
-                bridge.changes(request.getGradingBand(), request.getUpdateMask(), GradingBandUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                GradingBandProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateGradingBandResponse.newBuilder(), "grading_band", updated).build());
     }

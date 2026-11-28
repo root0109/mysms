@@ -13,7 +13,7 @@ import tools.jackson.databind.json.JsonMapper;
  */
 public final class OutboxWriter {
 
-    private static final Pattern SCHEMA = Pattern.compile("^[a-z]+$");
+    private static final Pattern SCHEMA = Pattern.compile("^[a-z][a-z_]*$");
     private static final String AUDIT_EVENT_TYPE = AuditWriter.EVENT_TYPE;
 
     private final JdbcClient jdbc;

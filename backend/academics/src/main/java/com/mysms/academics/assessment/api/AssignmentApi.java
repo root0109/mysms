@@ -7,7 +7,6 @@ import com.mysms.academics.assessment.api.model.Assignment;
 import com.mysms.academics.assessment.api.model.AssignmentAllocation;
 import com.mysms.academics.assessment.api.model.AssignmentAllocationUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentApproval;
-import com.mysms.academics.assessment.api.model.AssignmentApprovalUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentSubject;
 import com.mysms.academics.assessment.api.model.AssignmentSubjectUpdate;
 import com.mysms.academics.assessment.api.model.AssignmentUpdate;
@@ -16,6 +15,7 @@ import com.mysms.academics.assessment.api.model.FinishAssignmentRequest;
 import org.springframework.lang.Nullable;
 import com.mysms.academics.assessment.api.model.PublishAssignmentRequest;
 import com.mysms.academics.assessment.api.model.RejectAssignmentRequest;
+import com.mysms.academics.assessment.api.model.RequestAssignmentApprovalRequest;
 import com.mysms.academics.assessment.api.model.ResetAssignmentRequest;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -160,40 +160,6 @@ public interface AssignmentApi {
     );
 
 
-    String PATH_CREATE_ASSIGNMENT_APPROVAL = "/v1/assessment/assignments/{assignmentId}/approvals";
-    /**
-     * POST /v1/assessment/assignments/{assignmentId}/approvals : Create AssignmentApproval
-     * Create a AssignmentApproval. Supports Idempotency-Key and validateOnly.
-     *
-     * @param assignmentId Assignment id. (required)
-     * @param assignmentApproval  (required)
-     * @param idempotencyKey Client-generated UUID; repeating a request with the same key returns the original result for 24 h. (optional)
-     * @param validateOnly Validate the request without persisting. (optional, default to false)
-     * @return validateOnly — every check ran and nothing was persisted; the would-be resource. (status code 200)
-     *         or Created (status code 201)
-     *         or Malformed request. (status code 400)
-     *         or Missing or invalid credentials. (status code 401)
-     *         or Authenticated but not permitted. (status code 403)
-     *         or Resource not found (or not visible to the caller). (status code 404)
-     *         or Conflict with the current state (duplicate, invalid state transition). (status code 409)
-     *         or Validation failed; see errors[]. (status code 422)
-     *         or Rate limit exceeded. (status code 429)
-     *         or Unexpected server error. (status code 500)
-     */
-    @RequestMapping(
-        method = RequestMethod.POST,
-        value = AssignmentApi.PATH_CREATE_ASSIGNMENT_APPROVAL,
-        produces = { "application/json", "application/problem+json" },
-        consumes = { "application/json" }
-    )
-    ResponseEntity<AssignmentApproval> createAssignmentApproval(
-         @PathVariable("assignmentId") UUID assignmentId,
-         @Valid @RequestBody AssignmentApproval assignmentApproval,
-         @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey,
-         @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
-    );
-
-
     String PATH_CREATE_ASSIGNMENT_SUBJECT = "/v1/assessment/assignments/{assignmentId}/subjects";
     /**
      * POST /v1/assessment/assignments/{assignmentId}/subjects : Create AssignmentSubject
@@ -284,37 +250,6 @@ public interface AssignmentApi {
     ResponseEntity<Void> deleteAssignmentAllocation(
          @PathVariable("assignmentId") UUID assignmentId,
          @PathVariable("assignmentAllocationId") UUID assignmentAllocationId,
-        @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch
-    );
-
-
-    String PATH_DELETE_ASSIGNMENT_APPROVAL = "/v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId}";
-    /**
-     * DELETE /v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId} : Delete AssignmentApproval
-     * Soft delete (sets deleted_at).
-     *
-     * @param assignmentId Assignment id. (required)
-     * @param assignmentApprovalId AssignmentApproval id. (required)
-     * @param ifMatch ETag from the last read; required for updates and deletes. (required)
-     * @return Deleted (status code 204)
-     *         or Malformed request. (status code 400)
-     *         or Missing or invalid credentials. (status code 401)
-     *         or Authenticated but not permitted. (status code 403)
-     *         or Resource not found (or not visible to the caller). (status code 404)
-     *         or Conflict with the current state (duplicate, invalid state transition). (status code 409)
-     *         or ETag precondition failed (stale row_version). (status code 412)
-     *         or Precondition required (If-Match missing or &#x60;*&#x60;; send the ETag of the last read). (status code 428)
-     *         or Rate limit exceeded. (status code 429)
-     *         or Unexpected server error. (status code 500)
-     */
-    @RequestMapping(
-        method = RequestMethod.DELETE,
-        value = AssignmentApi.PATH_DELETE_ASSIGNMENT_APPROVAL,
-        produces = { "application/problem+json" }
-    )
-    ResponseEntity<Void> deleteAssignmentApproval(
-         @PathVariable("assignmentId") UUID assignmentId,
-         @PathVariable("assignmentApprovalId") UUID assignmentApprovalId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch
     );
 
@@ -695,6 +630,37 @@ public interface AssignmentApi {
     );
 
 
+    String PATH_REQUEST_ASSIGNMENT_APPROVAL = "/v1/assessment/assignments/{assignmentId}:requestApproval";
+    /**
+     * POST /v1/assessment/assignments/{assignmentId}:requestApproval : Request approval
+     * Send a draft for review: a pending approval is recorded in the caller's name.
+     *
+     * @param assignmentId  (required)
+     * @param requestAssignmentApprovalRequest  (required)
+     * @param idempotencyKey Client-generated UUID; repeating a request with the same key returns the original result for 24 h. (optional)
+     * @return OK (status code 200)
+     *         or Malformed request. (status code 400)
+     *         or Missing or invalid credentials. (status code 401)
+     *         or Authenticated but not permitted. (status code 403)
+     *         or Resource not found (or not visible to the caller). (status code 404)
+     *         or Conflict with the current state (duplicate, invalid state transition). (status code 409)
+     *         or Validation failed; see errors[]. (status code 422)
+     *         or Rate limit exceeded. (status code 429)
+     *         or Unexpected server error. (status code 500)
+     */
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = AssignmentApi.PATH_REQUEST_ASSIGNMENT_APPROVAL,
+        produces = { "application/json", "application/problem+json" },
+        consumes = { "application/json" }
+    )
+    ResponseEntity<Assignment> requestAssignmentApproval(
+         @PathVariable("assignmentId") UUID assignmentId,
+         @Valid @RequestBody RequestAssignmentApprovalRequest requestAssignmentApprovalRequest,
+         @RequestHeader(value = "Idempotency-Key", required = false) @Nullable UUID idempotencyKey
+    );
+
+
     String PATH_RESET_ASSIGNMENT = "/v1/assessment/assignments/{assignmentId}:resetToDraft";
     /**
      * POST /v1/assessment/assignments/{assignmentId}:resetToDraft : Back to draft
@@ -794,43 +760,6 @@ public interface AssignmentApi {
          @PathVariable("assignmentAllocationId") UUID assignmentAllocationId,
         @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
          @Valid @RequestBody AssignmentAllocationUpdate assignmentAllocationUpdate,
-         @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
-    );
-
-
-    String PATH_UPDATE_ASSIGNMENT_APPROVAL = "/v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId}";
-    /**
-     * PATCH /v1/assessment/assignments/{assignmentId}/approvals/{assignmentApprovalId} : Update AssignmentApproval
-     * Partially update a AssignmentApproval (absent fields are kept, null clears a field). Requires If-Match with the current ETag.
-     *
-     * @param assignmentId Assignment id. (required)
-     * @param assignmentApprovalId AssignmentApproval id. (required)
-     * @param ifMatch ETag from the last read; required for updates and deletes. (required)
-     * @param assignmentApprovalUpdate  (required)
-     * @param validateOnly Validate the request without persisting. (optional, default to false)
-     * @return OK (status code 200)
-     *         or Malformed request. (status code 400)
-     *         or Missing or invalid credentials. (status code 401)
-     *         or Authenticated but not permitted. (status code 403)
-     *         or Resource not found (or not visible to the caller). (status code 404)
-     *         or Conflict with the current state (duplicate, invalid state transition). (status code 409)
-     *         or ETag precondition failed (stale row_version). (status code 412)
-     *         or Validation failed; see errors[]. (status code 422)
-     *         or Precondition required (If-Match missing or &#x60;*&#x60;; send the ETag of the last read). (status code 428)
-     *         or Rate limit exceeded. (status code 429)
-     *         or Unexpected server error. (status code 500)
-     */
-    @RequestMapping(
-        method = RequestMethod.PATCH,
-        value = AssignmentApi.PATH_UPDATE_ASSIGNMENT_APPROVAL,
-        produces = { "application/json", "application/problem+json" },
-        consumes = { "application/json" }
-    )
-    ResponseEntity<AssignmentApproval> updateAssignmentApproval(
-         @PathVariable("assignmentId") UUID assignmentId,
-         @PathVariable("assignmentApprovalId") UUID assignmentApprovalId,
-        @NotNull  @RequestHeader(value = "If-Match", required = true) String ifMatch,
-         @Valid @RequestBody AssignmentApprovalUpdate assignmentApprovalUpdate,
          @Valid @RequestParam(value = "validateOnly", required = false, defaultValue = "false") Boolean validateOnly
     );
 

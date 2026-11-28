@@ -205,6 +205,9 @@ public class PostService extends AppTransactionManager {
                 requirePageMember(entity.getClassPageId(), caller);
             }
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -561,6 +564,9 @@ public class PostService extends AppTransactionManager {
             assertValidPostAudienceClass(entity, false);
             scope.requireWritable(institutionOfPostAudienceClass(entity));
             assertUniquePostAudienceClass(entity);
+            if (fields.isEmpty()) {
+                return postAudienceClassMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return postAudienceClassMapper.toDto(entity);
@@ -727,6 +733,9 @@ public class PostService extends AppTransactionManager {
             assertValidPostComment(entity, false);
             scope.requireWritable(institutionOfPostComment(entity));
             assertUniquePostComment(entity);
+            if (fields.isEmpty()) {
+                return postCommentMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return postCommentMapper.toDto(entity);

@@ -3,7 +3,6 @@ package com.mysms.campus.library.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.library.api.model.LibraryCardType;
-import com.mysms.campus.library.api.model.LibraryCardTypeUpdate;
 import com.mysms.campus.library.business.LibraryCardTypeService;
 import com.mysms.library.v1.CreateLibraryCardTypeRequest;
 import com.mysms.library.v1.CreateLibraryCardTypeResponse;
@@ -12,9 +11,9 @@ import com.mysms.library.v1.DeleteLibraryCardTypeResponse;
 import com.mysms.library.v1.GetLibraryCardTypeRequest;
 import com.mysms.library.v1.GetLibraryCardTypeResponse;
 import com.mysms.library.v1.LibraryCardTypeServiceGrpc;
+import com.mysms.library.v1.LibraryCardTypeUpdate;
 import com.mysms.library.v1.ListLibraryCardTypesRequest;
 import com.mysms.library.v1.ListLibraryCardTypesResponse;
-import com.mysms.library.v1.UpdateLibraryCardTypeRequest;
 import com.mysms.library.v1.UpdateLibraryCardTypeResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,11 +56,11 @@ public class LibraryCardTypeResolver extends LibraryCardTypeServiceGrpc.LibraryC
     }
 
     @Override
-    public void updateLibraryCardType(UpdateLibraryCardTypeRequest request, StreamObserver<UpdateLibraryCardTypeResponse> out) {
+    public void updateLibraryCardType(LibraryCardTypeUpdate request, StreamObserver<UpdateLibraryCardTypeResponse> out) {
         LibraryCardType updated = service.updateLibraryCardType(
-                bridge.id(request.getLibraryCardType().getId(), "id"),
-                bridge.requiredIfMatch(request.getLibraryCardType().getEtag()),
-                bridge.changes(request.getLibraryCardType(), request.getUpdateMask(), LibraryCardTypeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LibraryCardTypeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLibraryCardTypeResponse.newBuilder(), "library_card_type", updated).build());
     }

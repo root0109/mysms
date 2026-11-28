@@ -3,11 +3,11 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.AssignmentGroupMember;
-import com.mysms.learning.lms.api.model.AssignmentGroupMemberUpdate;
 import com.mysms.learning.lms.business.AssignmentGroupMemberService;
 import com.mysms.lms.v1.AcceptGroupRequestRequest;
 import com.mysms.lms.v1.AcceptGroupRequestResponse;
 import com.mysms.lms.v1.AssignmentGroupMemberServiceGrpc;
+import com.mysms.lms.v1.AssignmentGroupMemberUpdate;
 import com.mysms.lms.v1.CreateAssignmentGroupMemberRequest;
 import com.mysms.lms.v1.CreateAssignmentGroupMemberResponse;
 import com.mysms.lms.v1.DeleteAssignmentGroupMemberRequest;
@@ -18,7 +18,6 @@ import com.mysms.lms.v1.ListAssignmentGroupMembersRequest;
 import com.mysms.lms.v1.ListAssignmentGroupMembersResponse;
 import com.mysms.lms.v1.RejectGroupRequestRequest;
 import com.mysms.lms.v1.RejectGroupRequestResponse;
-import com.mysms.lms.v1.UpdateAssignmentGroupMemberRequest;
 import com.mysms.lms.v1.UpdateAssignmentGroupMemberResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -65,13 +64,12 @@ public class AssignmentGroupMemberResolver extends AssignmentGroupMemberServiceG
     }
 
     @Override
-    public void updateAssignmentGroupMember(UpdateAssignmentGroupMemberRequest request,
+    public void updateAssignmentGroupMember(AssignmentGroupMemberUpdate request,
             StreamObserver<UpdateAssignmentGroupMemberResponse> out) {
         AssignmentGroupMember updated = service.updateAssignmentGroupMember(
-                bridge.id(request.getAssignmentGroupMember().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssignmentGroupMember().getEtag()),
-                bridge.changes(request.getAssignmentGroupMember(), request.getUpdateMask(),
-                AssignmentGroupMemberUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AssignmentGroupMemberProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAssignmentGroupMemberResponse.newBuilder(), "assignment_group_member",
                 updated).build());
     }

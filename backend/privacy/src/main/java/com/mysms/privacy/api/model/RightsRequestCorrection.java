@@ -44,7 +44,7 @@ public class RightsRequestCorrection {
    * The module that holds the record (people, sis, hr, admission …).
    * @return module
    */
-  @NotNull @Size(max = 30) @Pattern(regexp = "^[a-z]+$") 
+  @NotNull @Size(max = 30) @Pattern(regexp = "^[a-z][a-z_]*$") 
   @JsonProperty("module")
   public String getModule() {
     return module;

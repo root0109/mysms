@@ -1,9 +1,9 @@
 package com.mysms.academics.attendance.grpc;
 
 import com.mysms.academics.attendance.api.model.AttendanceRegister;
-import com.mysms.academics.attendance.api.model.AttendanceRegisterUpdate;
 import com.mysms.academics.attendance.business.AttendanceRegisterService;
 import com.mysms.attendance.v1.AttendanceRegisterServiceGrpc;
+import com.mysms.attendance.v1.AttendanceRegisterUpdate;
 import com.mysms.attendance.v1.CreateAttendanceRegisterRequest;
 import com.mysms.attendance.v1.CreateAttendanceRegisterResponse;
 import com.mysms.attendance.v1.DeleteAttendanceRegisterRequest;
@@ -12,7 +12,6 @@ import com.mysms.attendance.v1.GetAttendanceRegisterRequest;
 import com.mysms.attendance.v1.GetAttendanceRegisterResponse;
 import com.mysms.attendance.v1.ListAttendanceRegistersRequest;
 import com.mysms.attendance.v1.ListAttendanceRegistersResponse;
-import com.mysms.attendance.v1.UpdateAttendanceRegisterRequest;
 import com.mysms.attendance.v1.UpdateAttendanceRegisterResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -59,11 +58,11 @@ public class AttendanceRegisterResolver extends AttendanceRegisterServiceGrpc.At
     }
 
     @Override
-    public void updateAttendanceRegister(UpdateAttendanceRegisterRequest request,
+    public void updateAttendanceRegister(AttendanceRegisterUpdate request,
             StreamObserver<UpdateAttendanceRegisterResponse> out) {
-        AttendanceRegister updated = service.updateAttendanceRegister(bridge.id(request.getAttendanceRegister().getId(), "id"),
-                bridge.requiredIfMatch(request.getAttendanceRegister().getEtag()),
-                bridge.changes(request.getAttendanceRegister(), request.getUpdateMask(), AttendanceRegisterUpdate.class),
+        AttendanceRegister updated = service.updateAttendanceRegister(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AttendanceRegisterProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateAttendanceRegisterResponse.newBuilder(), "attendance_register", updated).build());

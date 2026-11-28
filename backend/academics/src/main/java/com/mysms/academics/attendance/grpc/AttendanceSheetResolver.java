@@ -3,12 +3,12 @@ package com.mysms.academics.attendance.grpc;
 import com.mysms.academics.attendance.api.model.AttendanceRecord;
 import com.mysms.academics.attendance.api.model.AttendanceRecordList;
 import com.mysms.academics.attendance.api.model.AttendanceSheet;
-import com.mysms.academics.attendance.api.model.AttendanceSheetUpdate;
 import com.mysms.academics.attendance.api.model.AttendanceSummary;
 import com.mysms.academics.attendance.business.AttendanceSheetService;
 import com.mysms.academics.attendance.business.AttendanceSummaryService;
 import com.mysms.academics.attendance.business.AttendanceTakingService;
 import com.mysms.attendance.v1.AttendanceSheetServiceGrpc;
+import com.mysms.attendance.v1.AttendanceSheetUpdate;
 import com.mysms.attendance.v1.CancelAttendanceSheetRequest;
 import com.mysms.attendance.v1.CancelAttendanceSheetResponse;
 import com.mysms.attendance.v1.CompleteAttendanceSheetRequest;
@@ -35,7 +35,6 @@ import com.mysms.attendance.v1.SummarizeAttendanceRequest;
 import com.mysms.attendance.v1.SummarizeAttendanceResponse;
 import com.mysms.attendance.v1.TakeAttendanceForSessionRequest;
 import com.mysms.attendance.v1.TakeAttendanceForSessionResponse;
-import com.mysms.attendance.v1.UpdateAttendanceSheetRequest;
 import com.mysms.attendance.v1.UpdateAttendanceSheetResponse;
 import com.mysms.core.error.InvalidArgumentException;
 import com.mysms.core.grpc.ProtoBridge;
@@ -88,10 +87,10 @@ public class AttendanceSheetResolver extends AttendanceSheetServiceGrpc.Attendan
     }
 
     @Override
-    public void updateAttendanceSheet(UpdateAttendanceSheetRequest request, StreamObserver<UpdateAttendanceSheetResponse> out) {
-        AttendanceSheet updated = service.updateAttendanceSheet(bridge.id(request.getAttendanceSheet().getId(), "id"),
-                bridge.requiredIfMatch(request.getAttendanceSheet().getEtag()),
-                bridge.changes(request.getAttendanceSheet(), request.getUpdateMask(), AttendanceSheetUpdate.class),
+    public void updateAttendanceSheet(AttendanceSheetUpdate request, StreamObserver<UpdateAttendanceSheetResponse> out) {
+        AttendanceSheet updated = service.updateAttendanceSheet(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AttendanceSheetProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAttendanceSheetResponse.newBuilder(), "attendance_sheet", updated).build());
     }

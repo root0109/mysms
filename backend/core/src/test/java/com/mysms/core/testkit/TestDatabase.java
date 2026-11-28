@@ -33,7 +33,7 @@ public final class TestDatabase implements AutoCloseable {
      */
     public static final List<String> SERVICES = List.of("academics", "admission", "assessment", "attendance", "careers",
             "comms", "facility", "finance", "frontoffice", "hr", "iam", "library", "lms", "master", "org", "payroll",
-            "people", "platform", "privacy", "sis", "timetable", "transport");
+            "people", "platform", "privacy", "sis", "time_attendance", "timetable", "transport");
 
     private static final String TEST_SECRET_KEY = randomKey();
 
@@ -184,7 +184,7 @@ public final class TestDatabase implements AutoCloseable {
      */
     public void register(DynamicPropertyRegistry registry, String... modules) {
         for (String module : modules) {
-            String prefix = "mysms." + module + ".datasource.";
+            String prefix = "mysms." + module.replace('_', '-') + ".datasource.";
             registry.add(prefix + "url", this::jdbcUrl);
             registry.add(prefix + "username", this::username);
             registry.add(prefix + "password", this::password);

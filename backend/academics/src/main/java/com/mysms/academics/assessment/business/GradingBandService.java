@@ -146,6 +146,9 @@ public class GradingBandService extends AppTransactionManager {
             scope.requireWritable(institutionOf(entity));
             requireSchemeChangeable(entity.getGradingSchemeId());
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);

@@ -10,7 +10,6 @@ import {
   useAssignmentStep,
   useAssignmentSubmissions,
   useAssignmentSubmissionStep,
-  useCreateAssignmentApproval,
   useCreateGradingBand,
   useCreateGradingScheme,
   useCreateHomeworkSubmission,
@@ -26,6 +25,7 @@ import {
   usePopulateExamResults,
   useRecordExamMarks,
   useReplyToHomeworkFeedback,
+  useRequestAssignmentApproval,
   useResultTemplateGenerateResults,
   useStudentResults,
   useUpdateGradingBand,
@@ -166,7 +166,7 @@ describe('assessment hook operations', () => {
         }),
         schemes: useGradingSchemes(),
         bands: useGradingBands('scheme-1'),
-        createApproval: useCreateAssignmentApproval(),
+        requestApproval: useRequestAssignmentApproval(),
         assignmentStep: useAssignmentStep(),
         submissionStep: useAssignmentSubmissionStep(),
         sessionStep: useExamSessionStep(),
@@ -209,7 +209,7 @@ describe('assessment hook operations', () => {
     } as never;
 
     await act(async () => {
-      await result.current.createApproval.mutateAsync('a1');
+      await result.current.requestApproval.mutateAsync({ assignmentId: 'a1', etag: 'v1' });
       for (const [step, reason] of [
         ['publish', undefined],
         ['approve', ' approved '],
@@ -322,7 +322,9 @@ describe('assessment hook operations', () => {
     expect(result.current.myStudents).toEqual(['student-a']);
     const versions = calls
       .filter((entry) =>
-        /Assignment$|AssignmentSubmission$|Exam$|ExamSession$|Marksheet$|Changes$/.test(entry.method),
+        /Assignment$|Approval$|AssignmentSubmission$|Exam$|ExamSession$|Marksheet$|Changes$/.test(
+          entry.method,
+        ),
       )
       .filter((entry) => !entry.method.startsWith('create'))
       .map((entry) => JSON.stringify(entry.args[0]));
@@ -334,7 +336,7 @@ describe('assessment hook operations', () => {
 
     const methods = new Set(calls.map((entry) => entry.method));
     for (const method of [
-      'createAssignmentApproval',
+      'requestAssignmentApproval',
       'publishAssignment',
       'approveAssignment',
       'rejectAssignment',

@@ -1,0 +1,34 @@
+[ {
+  "operationId" : "time_attendance.CreateStaffAttendance",
+  "method" : "POST",
+  "path" : "/v1/time-attendance/staff-attendance-days",
+  "permission" : "time_attendance.staff_attendance.create",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "idempotency" : "optional",
+  "audience" : "public"
+}, {
+  "operationId" : "time_attendance.GetStaffAttendance",
+  "method" : "GET",
+  "path" : "/v1/time-attendance/staff-attendance-days/{staffAttendanceId}",
+  "permission" : "time_attendance.staff_attendance.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "time_attendance.ListStaffAttendances",
+  "method" : "GET",
+  "path" : "/v1/time-attendance/staff-attendance-days",
+  "permission" : "time_attendance.staff_attendance.read",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+}, {
+  "operationId" : "time_attendance.UpdateStaffAttendance",
+  "method" : "PATCH",
+  "path" : "/v1/time-attendance/staff-attendance-days/{staffAttendanceId}",
+  "permission" : "time_attendance.staff_attendance.update",
+  "schemes" : [ "bearerAuth" ],
+  "anonymous" : false,
+  "audience" : "public"
+} ]

@@ -38,17 +38,6 @@ public class ReferenceCleanupRepository {
             RETURNING id
             """;
 
-    /**
-     * attendance.staff_attendance.leave_application_id, on hr.leave_application deletion: null the column.
-     */
-    public static final String CLEAR_STAFF_ATTENDANCE_LEAVE_APPLICATION_ID = """
-            UPDATE attendance.staff_attendance
-               SET leave_application_id = NULL, updated_at = :now, row_version = row_version + 1
-             WHERE tenant_id = :tenantId
-               AND leave_application_id = :ownerId
-            RETURNING id
-            """;
-
     private final JdbcClient jdbc;
 
     public ReferenceCleanupRepository(@Qualifier(AttendanceDatabaseConfig.DATABASE) ModuleDatabase database) {

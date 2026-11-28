@@ -59,8 +59,10 @@ public class ContentItemUpdate {
     EXTERNAL_TOOL("external_tool"),
     
     LIVE_CLASS("live_class"),
-    
-    LINK("link");
+
+    LINK("link"),
+
+    EXERCISE("exercise");
 
     private final String value;
 

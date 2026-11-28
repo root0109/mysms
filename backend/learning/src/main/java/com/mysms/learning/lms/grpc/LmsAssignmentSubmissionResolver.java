@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.LmsAssignmentSubmission;
-import com.mysms.learning.lms.api.model.LmsAssignmentSubmissionUpdate;
 import com.mysms.learning.lms.business.LmsAssignmentSubmissionService;
 import com.mysms.lms.v1.CreateLmsAssignmentSubmissionRequest;
 import com.mysms.lms.v1.CreateLmsAssignmentSubmissionResponse;
@@ -18,7 +17,7 @@ import com.mysms.lms.v1.GradeLearningSubmissionResponse;
 import com.mysms.lms.v1.ListLmsAssignmentSubmissionsRequest;
 import com.mysms.lms.v1.ListLmsAssignmentSubmissionsResponse;
 import com.mysms.lms.v1.LmsAssignmentSubmissionServiceGrpc;
-import com.mysms.lms.v1.UpdateLmsAssignmentSubmissionRequest;
+import com.mysms.lms.v1.LmsAssignmentSubmissionUpdate;
 import com.mysms.lms.v1.UpdateLmsAssignmentSubmissionResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -66,13 +65,12 @@ public class LmsAssignmentSubmissionResolver extends LmsAssignmentSubmissionServ
     }
 
     @Override
-    public void updateLmsAssignmentSubmission(UpdateLmsAssignmentSubmissionRequest request,
+    public void updateLmsAssignmentSubmission(LmsAssignmentSubmissionUpdate request,
             StreamObserver<UpdateLmsAssignmentSubmissionResponse> out) {
         LmsAssignmentSubmission updated = service.updateLmsAssignmentSubmission(
-                bridge.id(request.getAssignmentSubmission().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssignmentSubmission().getEtag()),
-                bridge.changes(request.getAssignmentSubmission(), request.getUpdateMask(),
-                LmsAssignmentSubmissionUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LmsAssignmentSubmissionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateLmsAssignmentSubmissionResponse.newBuilder(), "assignment_submission", updated).build());
     }

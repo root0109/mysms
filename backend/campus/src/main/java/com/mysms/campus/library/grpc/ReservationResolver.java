@@ -3,7 +3,6 @@ package com.mysms.campus.library.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.library.api.model.Reservation;
-import com.mysms.campus.library.api.model.ReservationUpdate;
 import com.mysms.campus.library.business.ReservationService;
 import com.mysms.library.v1.AcceptReservationRequest;
 import com.mysms.library.v1.AcceptReservationResponse;
@@ -20,7 +19,7 @@ import com.mysms.library.v1.RejectReservationResponse;
 import com.mysms.library.v1.RequestReservationAgainRequest;
 import com.mysms.library.v1.RequestReservationAgainResponse;
 import com.mysms.library.v1.ReservationServiceGrpc;
-import com.mysms.library.v1.UpdateReservationRequest;
+import com.mysms.library.v1.ReservationUpdate;
 import com.mysms.library.v1.UpdateReservationResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -63,11 +62,11 @@ public class ReservationResolver extends ReservationServiceGrpc.ReservationServi
     }
 
     @Override
-    public void updateReservation(UpdateReservationRequest request, StreamObserver<UpdateReservationResponse> out) {
+    public void updateReservation(ReservationUpdate request, StreamObserver<UpdateReservationResponse> out) {
         Reservation updated = service.updateReservation(
-                bridge.id(request.getReservation().getId(), "id"),
-                bridge.requiredIfMatch(request.getReservation().getEtag()),
-                bridge.changes(request.getReservation(), request.getUpdateMask(), ReservationUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ReservationProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateReservationResponse.newBuilder(), "reservation", updated).build());
     }

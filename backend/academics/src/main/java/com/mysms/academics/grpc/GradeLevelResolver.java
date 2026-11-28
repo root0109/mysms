@@ -1,7 +1,6 @@
 package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.GradeLevel;
-import com.mysms.academics.api.model.GradeLevelUpdate;
 import com.mysms.academics.business.GradeLevelService;
 import com.mysms.academics.v1.CreateGradeLevelRequest;
 import com.mysms.academics.v1.CreateGradeLevelResponse;
@@ -10,9 +9,9 @@ import com.mysms.academics.v1.DeleteGradeLevelResponse;
 import com.mysms.academics.v1.GetGradeLevelRequest;
 import com.mysms.academics.v1.GetGradeLevelResponse;
 import com.mysms.academics.v1.GradeLevelServiceGrpc;
+import com.mysms.academics.v1.GradeLevelUpdate;
 import com.mysms.academics.v1.ListGradeLevelsRequest;
 import com.mysms.academics.v1.ListGradeLevelsResponse;
-import com.mysms.academics.v1.UpdateGradeLevelRequest;
 import com.mysms.academics.v1.UpdateGradeLevelResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,10 +55,10 @@ public class GradeLevelResolver extends GradeLevelServiceGrpc.GradeLevelServiceI
     }
 
     @Override
-    public void updateGradeLevel(UpdateGradeLevelRequest request, StreamObserver<UpdateGradeLevelResponse> out) {
-        GradeLevel updated = service.updateGradeLevel(bridge.id(request.getGradeLevel().getId(), "id"),
-                bridge.requiredIfMatch(request.getGradeLevel().getEtag()),
-                bridge.changes(request.getGradeLevel(), request.getUpdateMask(), GradeLevelUpdate.class),
+    public void updateGradeLevel(GradeLevelUpdate request, StreamObserver<UpdateGradeLevelResponse> out) {
+        GradeLevel updated = service.updateGradeLevel(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                GradeLevelProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateGradeLevelResponse.newBuilder(), "grade_level", updated).build());
     }

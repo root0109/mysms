@@ -1,13 +1,13 @@
 package com.mysms.students.careers.grpc;
 
 import com.mysms.students.careers.api.model.CandidatePreference;
-import com.mysms.students.careers.api.model.CandidatePreferenceUpdate;
 import com.mysms.students.careers.api.model.CandidatePreferredFunction;
-import com.mysms.students.careers.api.model.CandidatePreferredFunctionUpdate;
 import com.mysms.students.careers.api.model.CandidatePreferredIndustry;
-import com.mysms.students.careers.api.model.CandidatePreferredIndustryUpdate;
 import com.mysms.students.careers.business.CandidatePreferenceService;
 import com.mysms.careers.v1.CandidatePreferenceServiceGrpc;
+import com.mysms.careers.v1.CandidatePreferenceUpdate;
+import com.mysms.careers.v1.CandidatePreferredFunctionUpdate;
+import com.mysms.careers.v1.CandidatePreferredIndustryUpdate;
 import com.mysms.careers.v1.CreateCandidatePreferenceRequest;
 import com.mysms.careers.v1.CreateCandidatePreferenceResponse;
 import com.mysms.careers.v1.CreateCandidatePreferredFunctionRequest;
@@ -32,11 +32,8 @@ import com.mysms.careers.v1.ListCandidatePreferredFunctionsRequest;
 import com.mysms.careers.v1.ListCandidatePreferredFunctionsResponse;
 import com.mysms.careers.v1.ListCandidatePreferredIndustriesRequest;
 import com.mysms.careers.v1.ListCandidatePreferredIndustriesResponse;
-import com.mysms.careers.v1.UpdateCandidatePreferenceRequest;
 import com.mysms.careers.v1.UpdateCandidatePreferenceResponse;
-import com.mysms.careers.v1.UpdateCandidatePreferredFunctionRequest;
 import com.mysms.careers.v1.UpdateCandidatePreferredFunctionResponse;
-import com.mysms.careers.v1.UpdateCandidatePreferredIndustryRequest;
 import com.mysms.careers.v1.UpdateCandidatePreferredIndustryResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -85,12 +82,12 @@ public class CandidatePreferenceResolver extends CandidatePreferenceServiceGrpc.
     }
 
     @Override
-    public void updateCandidatePreference(UpdateCandidatePreferenceRequest request,
+    public void updateCandidatePreference(CandidatePreferenceUpdate request,
             StreamObserver<UpdateCandidatePreferenceResponse> out) {
         CandidatePreference updated = service.updateCandidatePreference(
-                bridge.id(request.getCandidatePreference().getId(), "id"),
-                bridge.requiredIfMatch(request.getCandidatePreference().getEtag()),
-                bridge.changes(request.getCandidatePreference(), request.getUpdateMask(), CandidatePreferenceUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CandidatePreferenceProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCandidatePreferenceResponse.newBuilder(), "candidate_preference",
                 updated).build());
@@ -136,14 +133,13 @@ public class CandidatePreferenceResolver extends CandidatePreferenceServiceGrpc.
     }
 
     @Override
-    public void updateCandidatePreferredFunction(UpdateCandidatePreferredFunctionRequest request,
+    public void updateCandidatePreferredFunction(CandidatePreferredFunctionUpdate request,
             StreamObserver<UpdateCandidatePreferredFunctionResponse> out) {
         CandidatePreferredFunction updated = service.updateCandidatePreferredFunction(
                 bridge.id(request.getCandidatePreferenceId(), "candidatePreferenceId"),
-                bridge.id(request.getCandidatePreferredFunction().getId(), "id"),
-                bridge.requiredIfMatch(request.getCandidatePreferredFunction().getEtag()),
-                bridge.changes(request.getCandidatePreferredFunction(), request.getUpdateMask(),
-                        CandidatePreferredFunctionUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CandidatePreferredFunctionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCandidatePreferredFunctionResponse.newBuilder(), "candidate_preferred_function",
                 updated).build());
     }
@@ -189,14 +185,13 @@ public class CandidatePreferenceResolver extends CandidatePreferenceServiceGrpc.
     }
 
     @Override
-    public void updateCandidatePreferredIndustry(UpdateCandidatePreferredIndustryRequest request,
+    public void updateCandidatePreferredIndustry(CandidatePreferredIndustryUpdate request,
             StreamObserver<UpdateCandidatePreferredIndustryResponse> out) {
         CandidatePreferredIndustry updated = service.updateCandidatePreferredIndustry(
                 bridge.id(request.getCandidatePreferenceId(), "candidatePreferenceId"),
-                bridge.id(request.getCandidatePreferredIndustry().getId(), "id"),
-                bridge.requiredIfMatch(request.getCandidatePreferredIndustry().getEtag()),
-                bridge.changes(request.getCandidatePreferredIndustry(), request.getUpdateMask(),
-                        CandidatePreferredIndustryUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CandidatePreferredIndustryProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCandidatePreferredIndustryResponse.newBuilder(), "candidate_preferred_industry",
                 updated).build());
     }

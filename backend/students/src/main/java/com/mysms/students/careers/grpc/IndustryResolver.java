@@ -1,7 +1,6 @@
 package com.mysms.students.careers.grpc;
 
 import com.mysms.students.careers.api.model.Industry;
-import com.mysms.students.careers.api.model.IndustryUpdate;
 import com.mysms.students.careers.business.IndustryService;
 import com.mysms.careers.v1.CreateIndustryRequest;
 import com.mysms.careers.v1.CreateIndustryResponse;
@@ -10,9 +9,9 @@ import com.mysms.careers.v1.DeleteIndustryResponse;
 import com.mysms.careers.v1.GetIndustryRequest;
 import com.mysms.careers.v1.GetIndustryResponse;
 import com.mysms.careers.v1.IndustryServiceGrpc;
+import com.mysms.careers.v1.IndustryUpdate;
 import com.mysms.careers.v1.ListIndustriesRequest;
 import com.mysms.careers.v1.ListIndustriesResponse;
-import com.mysms.careers.v1.UpdateIndustryRequest;
 import com.mysms.careers.v1.UpdateIndustryResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -57,11 +56,11 @@ public class IndustryResolver extends IndustryServiceGrpc.IndustryServiceImplBas
     }
 
     @Override
-    public void updateIndustry(UpdateIndustryRequest request, StreamObserver<UpdateIndustryResponse> out) {
+    public void updateIndustry(IndustryUpdate request, StreamObserver<UpdateIndustryResponse> out) {
         Industry updated = service.updateIndustry(
-                bridge.id(request.getIndustry().getId(), "id"),
-                bridge.requiredIfMatch(request.getIndustry().getEtag()),
-                bridge.changes(request.getIndustry(), request.getUpdateMask(), IndustryUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                IndustryProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateIndustryResponse.newBuilder(), "industry", updated).build());
     }
 

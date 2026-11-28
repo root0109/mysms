@@ -73,19 +73,10 @@ class PlatformAuditTrailComponentTest {
                 () -> TestTransactions.of(database).read(work::get));
     }
 
-    private void tenant(UUID tenant) {
-        CallContextHolder.callAs(CallContext.anonymous(TRACE).withIdentity(tenant, null),
-                () -> TestTransactions.of(database).write(() -> database.jdbc()
-                        .sql("INSERT INTO platform.tenant (id, code, name) VALUES (:tenant, "
-                                + "'t' || substr(md5(CAST(:tenant AS text)), 1, 12), 'Test tenant') "
-                                + "ON CONFLICT (id) DO NOTHING")
-                        .param("tenant", tenant).update()));
-    }
-
     @Test
     void anAuditEventBecomesOneRowOfItsTenantsTrail() {
-        tenant(TENANT);
-        tenant(OTHER);
+        PlatformTenants.register(database, TENANT);
+        PlatformTenants.register(database, OTHER);
         UUID actor = UUID.randomUUID();
         UUID subject = UUID.randomUUID();
         EventEnvelope event = new EventEnvelope(UUID.randomUUID(), "sis", "audit.recorded", Optional.of(TENANT),

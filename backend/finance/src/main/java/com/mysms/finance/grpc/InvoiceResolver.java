@@ -5,7 +5,6 @@ import com.mysms.core.paging.Page;
 import com.mysms.finance.api.model.FeeStatement;
 import com.mysms.finance.api.model.Invoice;
 import com.mysms.finance.api.model.InvoiceLine;
-import com.mysms.finance.api.model.InvoiceUpdate;
 import com.mysms.finance.api.model.SendResult;
 import com.mysms.finance.business.InvoiceService;
 import com.mysms.finance.v1.CancelInvoiceRequest;
@@ -21,6 +20,7 @@ import com.mysms.finance.v1.GetInvoiceLineResponse;
 import com.mysms.finance.v1.GetInvoiceRequest;
 import com.mysms.finance.v1.GetInvoiceResponse;
 import com.mysms.finance.v1.InvoiceServiceGrpc;
+import com.mysms.finance.v1.InvoiceUpdate;
 import com.mysms.finance.v1.ListInvoiceLinesRequest;
 import com.mysms.finance.v1.ListInvoiceLinesResponse;
 import com.mysms.finance.v1.ListInvoicesRequest;
@@ -31,7 +31,6 @@ import com.mysms.finance.v1.RaiseChargeInvoiceResponse;
 import com.mysms.finance.v1.PostInvoiceResponse;
 import com.mysms.finance.v1.SendFeeRemindersRequest;
 import com.mysms.finance.v1.SendFeeRemindersResponse;
-import com.mysms.finance.v1.UpdateInvoiceRequest;
 import com.mysms.finance.v1.UpdateInvoiceResponse;
 import io.grpc.stub.StreamObserver;
 import java.util.UUID;
@@ -75,11 +74,11 @@ public class InvoiceResolver extends InvoiceServiceGrpc.InvoiceServiceImplBase {
     }
 
     @Override
-    public void updateInvoice(UpdateInvoiceRequest request, StreamObserver<UpdateInvoiceResponse> out) {
+    public void updateInvoice(InvoiceUpdate request, StreamObserver<UpdateInvoiceResponse> out) {
         Invoice updated = service.updateInvoice(
-                bridge.id(request.getInvoice().getId(), "id"),
-                bridge.requiredIfMatch(request.getInvoice().getEtag()),
-                bridge.changes(request.getInvoice(), request.getUpdateMask(), InvoiceUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                InvoiceProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateInvoiceResponse.newBuilder(), "invoice", updated).build());
     }
 

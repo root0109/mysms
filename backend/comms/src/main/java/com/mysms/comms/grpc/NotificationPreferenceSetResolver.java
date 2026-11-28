@@ -2,8 +2,6 @@ package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.NotificationPreference;
 import com.mysms.comms.api.model.NotificationPreferenceSet;
-import com.mysms.comms.api.model.NotificationPreferenceSetUpdate;
-import com.mysms.comms.api.model.NotificationPreferenceUpdate;
 import com.mysms.comms.business.NotificationPreferenceSetService;
 import com.mysms.comms.v1.CreateNotificationPreferenceRequest;
 import com.mysms.comms.v1.CreateNotificationPreferenceResponse;
@@ -22,9 +20,9 @@ import com.mysms.comms.v1.ListNotificationPreferenceSetsResponse;
 import com.mysms.comms.v1.ListNotificationPreferencesRequest;
 import com.mysms.comms.v1.ListNotificationPreferencesResponse;
 import com.mysms.comms.v1.NotificationPreferenceSetServiceGrpc;
-import com.mysms.comms.v1.UpdateNotificationPreferenceRequest;
+import com.mysms.comms.v1.NotificationPreferenceSetUpdate;
+import com.mysms.comms.v1.NotificationPreferenceUpdate;
 import com.mysms.comms.v1.UpdateNotificationPreferenceResponse;
-import com.mysms.comms.v1.UpdateNotificationPreferenceSetRequest;
 import com.mysms.comms.v1.UpdateNotificationPreferenceSetResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -75,13 +73,12 @@ public class NotificationPreferenceSetResolver
     }
 
     @Override
-    public void updateNotificationPreferenceSet(UpdateNotificationPreferenceSetRequest request,
+    public void updateNotificationPreferenceSet(NotificationPreferenceSetUpdate request,
             StreamObserver<UpdateNotificationPreferenceSetResponse> out) {
         NotificationPreferenceSet updated = service.updateNotificationPreferenceSet(
-                bridge.id(request.getNotificationPreferenceSet().getId(), "id"),
-                bridge.requiredIfMatch(request.getNotificationPreferenceSet().getEtag()),
-                bridge.changes(request.getNotificationPreferenceSet(), request.getUpdateMask(),
-                NotificationPreferenceSetUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NotificationPreferenceSetProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationPreferenceSetResponse.newBuilder(), "notification_preference_set",
                 updated).build());
@@ -125,14 +122,13 @@ public class NotificationPreferenceSetResolver
     }
 
     @Override
-    public void updateNotificationPreference(UpdateNotificationPreferenceRequest request,
+    public void updateNotificationPreference(NotificationPreferenceUpdate request,
             StreamObserver<UpdateNotificationPreferenceResponse> out) {
         NotificationPreference updated = service.updateNotificationPreference(
                 bridge.id(request.getNotificationPreferenceSetId(), "notificationPreferenceSetId"),
-                bridge.id(request.getNotificationPreference().getId(), "id"),
-                bridge.requiredIfMatch(request.getNotificationPreference().getEtag()),
-                bridge.changes(request.getNotificationPreference(), request.getUpdateMask(),
-                NotificationPreferenceUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NotificationPreferenceProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationPreferenceResponse.newBuilder(), "notification_preference", updated).build());
     }

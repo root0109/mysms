@@ -4,8 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.payroll.api.model.StaffSalary;
 import com.mysms.hrms.payroll.api.model.StaffSalaryComponent;
-import com.mysms.hrms.payroll.api.model.StaffSalaryComponentUpdate;
-import com.mysms.hrms.payroll.api.model.StaffSalaryUpdate;
 import com.mysms.hrms.payroll.business.StaffSalaryService;
 import com.mysms.payroll.v1.CreateStaffSalaryComponentRequest;
 import com.mysms.payroll.v1.CreateStaffSalaryComponentResponse;
@@ -23,10 +21,10 @@ import com.mysms.payroll.v1.ListStaffSalariesRequest;
 import com.mysms.payroll.v1.ListStaffSalariesResponse;
 import com.mysms.payroll.v1.ListStaffSalaryComponentsRequest;
 import com.mysms.payroll.v1.ListStaffSalaryComponentsResponse;
+import com.mysms.payroll.v1.StaffSalaryComponentUpdate;
 import com.mysms.payroll.v1.StaffSalaryServiceGrpc;
-import com.mysms.payroll.v1.UpdateStaffSalaryComponentRequest;
+import com.mysms.payroll.v1.StaffSalaryUpdate;
 import com.mysms.payroll.v1.UpdateStaffSalaryComponentResponse;
-import com.mysms.payroll.v1.UpdateStaffSalaryRequest;
 import com.mysms.payroll.v1.UpdateStaffSalaryResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -68,11 +66,11 @@ public class StaffSalaryResolver extends StaffSalaryServiceGrpc.StaffSalaryServi
     }
 
     @Override
-    public void updateStaffSalary(UpdateStaffSalaryRequest request, StreamObserver<UpdateStaffSalaryResponse> out) {
+    public void updateStaffSalary(StaffSalaryUpdate request, StreamObserver<UpdateStaffSalaryResponse> out) {
         StaffSalary updated = staffSalaryService.updateStaffSalary(
-                bridge.id(request.getStaffSalary().getId(), "id"),
-                bridge.requiredIfMatch(request.getStaffSalary().getEtag()),
-                bridge.changes(request.getStaffSalary(), request.getUpdateMask(), StaffSalaryUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StaffSalaryProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStaffSalaryResponse.newBuilder(), "staff_salary", updated).build());
     }
@@ -115,14 +113,13 @@ public class StaffSalaryResolver extends StaffSalaryServiceGrpc.StaffSalaryServi
     }
 
     @Override
-    public void updateStaffSalaryComponent(UpdateStaffSalaryComponentRequest request,
+    public void updateStaffSalaryComponent(StaffSalaryComponentUpdate request,
             StreamObserver<UpdateStaffSalaryComponentResponse> out) {
         StaffSalaryComponent updated = staffSalaryService.updateStaffSalaryComponent(
                 bridge.id(request.getStaffSalaryId(), "staffSalaryId"),
-                bridge.id(request.getStaffSalaryComponent().getId(), "id"),
-                bridge.requiredIfMatch(request.getStaffSalaryComponent().getEtag()),
-                bridge.changes(request.getStaffSalaryComponent(), request.getUpdateMask(),
-                        StaffSalaryComponentUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StaffSalaryComponentProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStaffSalaryComponentResponse.newBuilder(),
                 "staff_salary_component", updated).build());
     }

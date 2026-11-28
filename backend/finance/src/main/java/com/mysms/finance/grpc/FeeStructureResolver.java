@@ -3,7 +3,6 @@ package com.mysms.finance.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.finance.api.model.FeeStructure;
-import com.mysms.finance.api.model.FeeStructureUpdate;
 import com.mysms.finance.api.model.Operation;
 import com.mysms.finance.business.FeeStructureService;
 import com.mysms.finance.v1.ArchiveFeeStructureRequest;
@@ -13,13 +12,13 @@ import com.mysms.finance.v1.CreateFeeStructureResponse;
 import com.mysms.finance.v1.DeleteFeeStructureRequest;
 import com.mysms.finance.v1.DeleteFeeStructureResponse;
 import com.mysms.finance.v1.FeeStructureServiceGrpc;
+import com.mysms.finance.v1.FeeStructureUpdate;
 import com.mysms.finance.v1.GetFeeStructureRequest;
 import com.mysms.finance.v1.GetFeeStructureResponse;
 import com.mysms.finance.v1.ListFeeStructuresRequest;
 import com.mysms.finance.v1.ListFeeStructuresResponse;
 import com.mysms.finance.v1.PublishFeeStructureRequest;
 import com.mysms.finance.v1.PublishFeeStructureResponse;
-import com.mysms.finance.v1.UpdateFeeStructureRequest;
 import com.mysms.finance.v1.UpdateFeeStructureResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -61,11 +60,11 @@ public class FeeStructureResolver extends FeeStructureServiceGrpc.FeeStructureSe
     }
 
     @Override
-    public void updateFeeStructure(UpdateFeeStructureRequest request, StreamObserver<UpdateFeeStructureResponse> out) {
+    public void updateFeeStructure(FeeStructureUpdate request, StreamObserver<UpdateFeeStructureResponse> out) {
         FeeStructure updated = service.updateFeeStructure(
-                bridge.id(request.getFeeStructure().getId(), "id"),
-                bridge.requiredIfMatch(request.getFeeStructure().getEtag()),
-                bridge.changes(request.getFeeStructure(), request.getUpdateMask(), FeeStructureUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                FeeStructureProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeeStructureResponse.newBuilder(), "fee_structure", updated).build());
     }

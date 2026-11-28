@@ -25,10 +25,10 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * attendance's part in privacy's erasure and export requests and its retention policy (design
  * PRIVACY-AND-CONSENT-CENTRE §9.1, §10). The registers are kept under attendance.after_leaving: an erasure changes
- * nothing and answers the subject's student and staff attendance as kept, counted with the policy code. The
+ * nothing and answers the subject's student attendance as kept, counted with the policy code. The
  * attendance.after_leaving sweep anonymises the student attendance of the students not marked since the cutoff (the
  * mark stays for the register's counts, the student, remark and leave request go); rows a legal hold covers are kept
- * and counted. Staff attendance is not swept: payroll's wage records (payroll.after_leaving) outlive it.
+ * and counted. Staff attendance lives in hrms (time_attendance) and is answered there.
  */
 @Component
 public class AttendancePrivacyTaskHandler extends PrivacyTaskHandler {
@@ -38,8 +38,6 @@ public class AttendancePrivacyTaskHandler extends PrivacyTaskHandler {
     /** The registers kept under {@link #RETENTION_POLICY}. */
     static final List<KeptRows> KEPT = List.of(
             new KeptRows("attendance.attendance_record", PrivacyErasureRepository.ATTENDANCE_RECORD_KEPT,
-                    RETENTION_POLICY),
-            new KeptRows("attendance.staff_attendance", PrivacyErasureRepository.STAFF_ATTENDANCE_KEPT,
                     RETENTION_POLICY));
 
     static final Map<String, RetentionSweep> RETENTION = Map.of(RETENTION_POLICY,

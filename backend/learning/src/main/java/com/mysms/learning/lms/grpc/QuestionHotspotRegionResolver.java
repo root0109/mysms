@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.QuestionHotspotRegion;
-import com.mysms.learning.lms.api.model.QuestionHotspotRegionUpdate;
 import com.mysms.learning.lms.business.QuestionHotspotRegionService;
 import com.mysms.lms.v1.CreateQuestionHotspotRegionRequest;
 import com.mysms.lms.v1.CreateQuestionHotspotRegionResponse;
@@ -14,7 +13,7 @@ import com.mysms.lms.v1.GetQuestionHotspotRegionResponse;
 import com.mysms.lms.v1.ListQuestionHotspotRegionsRequest;
 import com.mysms.lms.v1.ListQuestionHotspotRegionsResponse;
 import com.mysms.lms.v1.QuestionHotspotRegionServiceGrpc;
-import com.mysms.lms.v1.UpdateQuestionHotspotRegionRequest;
+import com.mysms.lms.v1.QuestionHotspotRegionUpdate;
 import com.mysms.lms.v1.UpdateQuestionHotspotRegionResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -62,13 +61,12 @@ public class QuestionHotspotRegionResolver extends QuestionHotspotRegionServiceG
     }
 
     @Override
-    public void updateQuestionHotspotRegion(UpdateQuestionHotspotRegionRequest request,
+    public void updateQuestionHotspotRegion(QuestionHotspotRegionUpdate request,
             StreamObserver<UpdateQuestionHotspotRegionResponse> out) {
         QuestionHotspotRegion updated = service.updateQuestionHotspotRegion(
-                bridge.id(request.getQuestionHotspotRegion().getId(), "id"),
-                bridge.requiredIfMatch(request.getQuestionHotspotRegion().getEtag()),
-                bridge.changes(request.getQuestionHotspotRegion(), request.getUpdateMask(),
-                        QuestionHotspotRegionUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                QuestionHotspotRegionProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateQuestionHotspotRegionResponse.newBuilder(), "question_hotspot_region", updated).build());
     }

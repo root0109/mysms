@@ -8,7 +8,6 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Descriptors.ServiceDescriptor;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.FieldMask;
 import com.mysms.authclient.testing.TestTokens;
 import com.mysms.core.context.CallContext;
 import com.mysms.core.context.CallContextHolder;
@@ -57,7 +56,8 @@ import tools.jackson.databind.node.ObjectNode;
  * tenant's row, 409 for a duplicate, 412 for a stale etag, 428 without one, 422 for an invalid body — and a standard
  * operation the release does not serve is 501 on both. Every RPC of these services is also called with a request for
  * nothing (unknown ids, an empty body) and must answer as REST does; the enrollment request's reject transition is
- * driven through its guard, its refusals and a request_id replay.
+ * driven through its guard, its refusals and a request_id replay. The updates of resources outside crud-spec.json (a
+ * cohort's activity, a lesson note, the tenant's settings) are compared by hand, with the kit's three PATCH states.
  */
 @SpringBootTest(classes = LearningApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = GrpcParity.IN_PROCESS_SERVER + "=LmsGrpcParityPart1ComponentTest")
@@ -269,7 +269,8 @@ class LmsGrpcParityPart1ComponentTest {
         MethodDescriptor update = own.getService().findMethodByName("Update" + name);
         MethodDescriptor delete = own.getService().findMethodByName("Delete" + name);
         MethodDescriptor list = listRpc(own);
-        String field = update != null ? resourceField(update) : create != null ? resourceField(create)
+        String field = update != null ? update.getOutputType().getFields().get(0).getName()
+                : create != null ? resourceField(create)
                 : get.getOutputType().getFields().get(0).getName();
         ObjectNode body = resource.create();
         ObjectNode path = body.deepCopy();
@@ -348,22 +349,22 @@ class LmsGrpcParityPart1ComponentTest {
             String item = collection + "/" + id;
             if (ops.contains("Update")) {
                 same(rest("PATCH", item, admin, changes.toString(), "If-Match", "\"99\""),
-                        grpc(update, updateRequest(update, field, path, id, changes, "99"), admin));
+                        grpc(update, updateRequest(update, path, id, changes, "99"), admin));
                 same(rest("PATCH", item, admin, changes.toString()),
-                        grpc(update, updateRequest(update, field, path, id, changes, ""), admin));
+                        grpc(update, updateRequest(update, path, id, changes, ""), admin));
                 same(rest("PATCH", item, NOBODY, changes.toString(), "If-Match", etag),
-                        grpc(update, updateRequest(update, field, path, id, changes, etag), NOBODY));
-                Answer updated = grpc(update, updateRequest(update, field, path, id, changes, etag), admin);
+                        grpc(update, updateRequest(update, path, id, changes, etag), NOBODY));
+                Answer updated = grpc(update, updateRequest(update, path, id, changes, etag), admin);
                 assertThat(updated.status()).as("%s update: %s", name, updated.code()).isEqualTo(200);
                 JsonNode row = updated.body().path(json(update.getOutputType(), field));
-                etag = row.path("etag").asString();
                 if (ops.contains("Get")) {
                     GrpcParity.assertSameResource(rest("GET", item, admin, null).body(), row);
                 }
+                etag = contract(admin).patchStates(resource, id, row.path("etag").asString());
             } else {
                 Answer unserved = rest("PATCH", item, admin, changes.toString(), "If-Match", etag);
                 assertThat(unserved.status()).as("%s is not updated through the API", name).isEqualTo(501);
-                same(unserved, grpc(update, updateRequest(update, field, path, id, changes, etag), admin));
+                same(unserved, grpc(update, updateRequest(update, path, id, changes, etag), admin));
             }
         }
 
@@ -435,19 +436,15 @@ class LmsGrpcParityPart1ComponentTest {
                 headers.toArray(String[]::new));
 
         DynamicMessage.Builder request = request(method);
+        boolean patch = method.getInputType().getName().endsWith("Update"); // its optional ids are changes, not keys
         for (FieldDescriptor field : request.getDescriptorForType().getFields()) {
             if (field.getJavaType() == FieldDescriptor.JavaType.STRING && !field.isRepeated()
+                    && !(patch && field.hasPresence())
                     && ("id".equals(field.getName()) || field.getName().endsWith("_id"))
                     && (keyed || !"request_id".equals(field.getName()))) {
                 request.setField(field, UUID.randomUUID().toString());
             } else if ("etag".equals(field.getName())) {
                 request.setField(field, "\"1\"");
-            } else if (method.getName().startsWith("Update") && field.getJavaType() == FieldDescriptor.JavaType.MESSAGE
-                    && field.getMessageType().getFile().equals(LmsProto.getDescriptor())) {
-                Descriptor resource = field.getMessageType();
-                request.setField(field, DynamicMessage.newBuilder(resource)
-                        .setField(resource.findFieldByName("id"), UUID.randomUUID().toString())
-                        .setField(resource.findFieldByName("etag"), "\"1\"").build());
             }
         }
         Answer overGrpc = grpc(method, request.build(), ADMIN);
@@ -463,6 +460,151 @@ class LmsGrpcParityPart1ComponentTest {
         } else {
             same(overRest, overGrpc);
         }
+    }
+
+    // ---- updates of resources outside crud-spec.json (ARC-9 review T1)
+
+    private static final String INSTITUTION = "0196f000-0000-7000-8000-00000000a001";
+
+    /** A cohort's activity points at another quiz alike over both, and passes the three PATCH states over gRPC. */
+    @Test
+    void aCohortActivityIsUpdatedAlikeOverBoth() throws Exception {
+        String cohort = UUID.randomUUID().toString();
+        String quiz = UUID.randomUUID().toString();
+        String other = UUID.randomUUID().toString();
+        fixtures(TENANT, List.of("INSERT INTO lms.cohort (tenant_id, institution_id, title, start_date, end_date, "
+                + "timezone, row_version, id) VALUES (:tenant, '" + INSTITUTION + "', 'Parity cohort', '2026-01-10', "
+                + "'2026-01-20', 'UTC', 1, '" + cohort + "')", quiz(quiz), quiz(other)));
+        String collection = "/v1/lms/cohorts/" + cohort + "/activities";
+        Answer created = rest("POST", collection, ADMIN, "{\"quizId\":\"" + quiz + "\"}");
+        assertThat(created.status()).as(created.body().toString()).isEqualTo(201);
+        GrpcParityContract.Resource resource = handled("CohortActivity", collection,
+                "{\"quizId\":\"" + other + "\"}", null, "assignmentId");
+        String id = created.body().path("id").asString();
+        String etag = updatedAlike(resource, id, created.body().path("etag").asString());
+        contract(ADMIN).patchStates(resource, id, etag);
+    }
+
+    /**
+     * A note is changed by its writer alike over both; a required color sent UNSPECIFIED is refused like REST's
+     * null, and clearing the highlight keeps the note.
+     */
+    @Test
+    void aLessonNoteIsUpdatedAlikeOverBoth() throws Exception {
+        String course = UUID.randomUUID().toString();
+        String chapter = UUID.randomUUID().toString();
+        String lesson = UUID.randomUUID().toString();
+        fixtures(TENANT, List.of("INSERT INTO lms.course (tenant_id, institution_id, title, row_version, id) VALUES "
+                + "(:tenant, '" + INSTITUTION + "', 'Notes course', 1, '" + course + "')",
+                "INSERT INTO lms.chapter (tenant_id, course_id, title, sort_order, row_version, id) VALUES (:tenant, '"
+                        + course + "', 'Notes chapter', 1, 1, '" + chapter + "')",
+                "INSERT INTO lms.lesson (tenant_id, chapter_id, title, sort_order, row_version, id) VALUES (:tenant, '"
+                        + chapter + "', 'Notes lesson', 1, 1, '" + lesson + "')"));
+        String collection = "/v1/lms/lessons/" + lesson + "/notes";
+        Answer created = rest("POST", collection, ADMIN,
+                "{\"note\":\"Remember this\",\"highlightedText\":\"A line\",\"color\":\"green\"}");
+        assertThat(created.status()).as(created.body().toString()).isEqualTo(201);
+        GrpcParityContract.Resource resource = handled("LessonNote", collection, "{\"note\":\"Remember that\"}",
+                "color", "highlightedText");
+        String id = created.body().path("id").asString();
+        String etag = updatedAlike(resource, id, created.body().path("etag").asString());
+        contract(ADMIN).patchStates(resource, id, etag);
+    }
+
+    /**
+     * The tenant's settings singleton over gRPC as over REST: a stale, missing or unpermitted update is refused alike;
+     * the first save writes version 1 and returns only the mask of the write-only image-search key; an empty message
+     * changes nothing; leaving the key out keeps it, and a wrapper holding null removes it.
+     */
+    @Test
+    void theSettingsSingletonIsUpdatedAlikeOverBothAndKeepsItsKeyWriteOnly() throws Exception {
+        String admin = token(UUID.randomUUID(), List.of("lms.*"));
+        MethodDescriptor update = LmsProto.getDescriptor().findServiceByName("SettingsService")
+                .findMethodByName("UpdateSettings");
+        String settings = "/v1/lms/settings";
+        ObjectNode first = (ObjectNode) JSON.readTree("{\"disableSignup\":false,\"unsplashAccessKey\":\"key-123456\"}");
+        same(rest("PATCH", settings, admin, first.toString(), "If-Match", "\"7\""),
+                grpc(update, settings(update, first, "7"), admin));
+        same(rest("PATCH", settings, admin, first.toString()), grpc(update, settings(update, first, ""), admin));
+        same(rest("PATCH", settings, NOBODY, first.toString(), "If-Match", "\"0\""),
+                grpc(update, settings(update, first, "0"), NOBODY));
+
+        JsonNode saved = settingsRow(grpc(update, settings(update, first, "0"), admin));
+        GrpcParity.assertSameResource(rest("GET", settings, admin, null).body(), saved);
+        assertThat(saved.path("etag").asString()).isEqualTo("\"1\"");
+        assertThat(saved.path("disableSignup").asBoolean()).isFalse();
+        assertThat(saved.path("unsplashAccessKey").isMissingNode()).as("the plaintext never returns").isTrue();
+        assertThat(saved.path("unsplashAccessKeyMasked").asString()).endsWith("3456");
+
+        JsonNode unchanged = settingsRow(grpc(update, settings(update, JSON.createObjectNode(), "\"1\""), admin));
+        assertThat(unchanged.path("etag").asString()).as("an empty update changes nothing").isEqualTo("\"1\"");
+        GrpcParity.assertSameResource(rest("GET", settings, admin, null).body(), unchanged);
+
+        JsonNode kept = settingsRow(grpc(update, settings(update, (ObjectNode) JSON.readTree(
+                "{\"disableSignup\":true}"), "\"1\""), admin));
+        assertThat(kept.path("disableSignup").asBoolean()).isTrue();
+        assertThat(kept.path("unsplashAccessKeyMasked").asString()).as("an absent key keeps the stored one")
+                .endsWith("3456");
+
+        JsonNode removed = settingsRow(grpc(update, settings(update, (ObjectNode) JSON.readTree(
+                "{\"unsplashAccessKey\":null}"), kept.path("etag").asString()), admin));
+        assertThat(removed.path("unsplashAccessKeyMasked").isMissingNode()).as("null removes the key").isTrue();
+        assertThat(removed.path("etag").asString()).isEqualTo("\"3\"");
+        GrpcParity.assertSameResource(rest("GET", settings, admin, null).body(), removed);
+    }
+
+    /** A quiz of the parity institution. */
+    private static String quiz(String id) {
+        return "INSERT INTO lms.quiz (tenant_id, title, passing_percentage, total_marks, institution_id, row_version, id)"
+                + " VALUES (:tenant, 'Parity quiz', 1, 2, '" + INSTITUTION + "', 1, '" + id + "')";
+    }
+
+    /** A resource outside crud-spec.json for the kit's update steps: its collection, update body and PATCH entry. */
+    private static GrpcParityContract.Resource handled(String name, String collection, String update, String keeps,
+                                                       String clears) {
+        ObjectNode described = JSON.createObjectNode();
+        List.of("Create", "Get", "List", "Update", "Delete").forEach(described.putArray("ops")::add);
+        ObjectNode patch = described.putObject("patch").put("clears", clears);
+        if (keeps != null) {
+            patch.put("keeps", keeps);
+        }
+        return new GrpcParityContract.Resource(name, collection, JSON.createObjectNode(),
+                (ObjectNode) JSON.readTree(update), false, described);
+    }
+
+    /**
+     * The update of a row at {@code etag} refused alike for a stale etag, none and a caller without the permission,
+     * then applied over gRPC and read back alike over REST; the row's new ETag.
+     */
+    private String updatedAlike(GrpcParityContract.Resource resource, String id, String etag) throws Exception {
+        GrpcParityContract kit = contract(ADMIN);
+        MethodDescriptor update = kit.rpc("Update" + resource.name());
+        String item = resource.collection() + "/" + id;
+        ObjectNode changes = resource.update();
+        same(rest("PATCH", item, ADMIN, changes.toString(), "If-Match", "\"99\""),
+                grpc(update, kit.updateRequest(update, resource, id, changes, "99"), ADMIN));
+        same(rest("PATCH", item, ADMIN, changes.toString()),
+                grpc(update, kit.updateRequest(update, resource, id, changes, ""), ADMIN));
+        same(rest("PATCH", item, NOBODY, changes.toString(), "If-Match", etag),
+                grpc(update, kit.updateRequest(update, resource, id, changes, etag), NOBODY));
+        Answer updated = grpc(update, kit.updateRequest(update, resource, id, changes, etag), ADMIN);
+        assertThat(updated.status()).as("%s update: %s", resource.name(), updated.code()).isEqualTo(200);
+        JsonNode row = updated.body().properties().iterator().next().getValue();
+        GrpcParity.assertSameResource(rest("GET", item, ADMIN, null).body(), row);
+        changes.properties().forEach(change -> assertThat(row.path(change.getKey()).asString()).as(change.getKey())
+                .isEqualTo(change.getValue().asString()));
+        return row.path("etag").asString();
+    }
+
+    /** An UpdateSettings message: the changes of a REST PATCH body and the etag. */
+    private DynamicMessage settings(MethodDescriptor update, ObjectNode changes, String etag) {
+        return set(contract(ADMIN).changes(update, changes), "etag", etag).build();
+    }
+
+    /** The settings an UpdateSettings answer carries. */
+    private static JsonNode settingsRow(Answer answer) {
+        assertThat(answer.status()).as("UpdateSettings: %s", answer.code()).isEqualTo(200);
+        return answer.body().path("settings");
     }
 
     // ---- the workflow
@@ -586,33 +728,33 @@ class LmsGrpcParityPart1ComponentTest {
 
     /** The parent ids a nested resource's request carries beside the row's own. */
     private static List<FieldDescriptor> parentIds(Descriptor request) {
-        return request.getFields().stream().filter(field -> field.getName().endsWith("_id")
-                && !"request_id".equals(field.getName()) && field.getJavaType() == FieldDescriptor.JavaType.STRING).toList();
+        return request.getFields().stream().filter(LmsGrpcParityPart1ComponentTest::parentId).toList();
+    }
+
+    /**
+     * Whether a request field is a parent id the REST path carries: a plain string key, never a field an update
+     * message changes (those have presence or are wrappers).
+     */
+    private static boolean parentId(FieldDescriptor field) {
+        return field.getName().endsWith("_id") && !"request_id".equals(field.getName())
+                && field.getJavaType() == FieldDescriptor.JavaType.STRING && !field.hasPresence();
     }
 
     private static DynamicMessage.Builder withPathIds(DynamicMessage.Builder request, ObjectNode body) {
         for (FieldDescriptor field : request.getDescriptorForType().getFields()) {
-            if (field.getName().endsWith("_id") && !"request_id".equals(field.getName()) && body.has(field.getJsonName())) {
+            if (parentId(field) && body.has(field.getJsonName())) {
                 request.setField(field, body.path(field.getJsonName()).asString());
             }
         }
         return request;
     }
 
-    /** An update request: the row's id and etag in the resource, the changes, and a mask naming them. */
-    @SuppressWarnings("unchecked")
-    private DynamicMessage updateRequest(MethodDescriptor update, String field, ObjectNode body, String id,
-                                         ObjectNode changes, String etag) {
-        ObjectNode resource = changes.deepCopy();
-        resource.put("id", id);
-        resource.put("etag", etag);
-        DynamicMessage.Builder request = withPathIds(bridge.reply(request(update), field,
-                JSON.convertValue(resource, Map.class)), body);
-        FieldMask.Builder mask = FieldMask.newBuilder();
-        Descriptor type = update.getInputType().findFieldByName(field).getMessageType();
-        changes.propertyNames().forEach(name -> type.getFields().stream()
-                .filter(f -> f.getJsonName().equals(name)).forEach(f -> mask.addPaths(f.getName())));
-        return set(request, "update_mask", mask.build()).build();
+    /** An update request: the {@code <Resource>Update} message of a REST PATCH body, with its parent ids, id and etag. */
+    private DynamicMessage updateRequest(MethodDescriptor update, ObjectNode path, String id, ObjectNode changes,
+                                         String etag) {
+        DynamicMessage.Builder request = withPathIds(contract(ADMIN).changes(update, changes), path);
+        set(request, "id", id);
+        return set(request, "etag", etag).build();
     }
 
     private static DynamicMessage pageable(MethodDescriptor list, int size) {

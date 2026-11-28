@@ -4,7 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.finance.api.model.Operation;
 import com.mysms.finance.api.model.StudentFeeDue;
-import com.mysms.finance.api.model.StudentFeeDueUpdate;
 import com.mysms.finance.business.StudentFeeDueService;
 import com.mysms.finance.v1.GenerateFeeDuesRequest;
 import com.mysms.finance.v1.GenerateFeeDuesResponse;
@@ -13,7 +12,7 @@ import com.mysms.finance.v1.GetStudentFeeDueResponse;
 import com.mysms.finance.v1.ListStudentFeeDuesRequest;
 import com.mysms.finance.v1.ListStudentFeeDuesResponse;
 import com.mysms.finance.v1.StudentFeeDueServiceGrpc;
-import com.mysms.finance.v1.UpdateStudentFeeDueRequest;
+import com.mysms.finance.v1.StudentFeeDueUpdate;
 import com.mysms.finance.v1.UpdateStudentFeeDueResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -49,12 +48,12 @@ public class StudentFeeDueResolver extends StudentFeeDueServiceGrpc.StudentFeeDu
     }
 
     @Override
-    public void updateStudentFeeDue(UpdateStudentFeeDueRequest request,
+    public void updateStudentFeeDue(StudentFeeDueUpdate request,
             StreamObserver<UpdateStudentFeeDueResponse> out) {
         StudentFeeDue updated = service.updateStudentFeeDue(
-                bridge.id(request.getStudentFeeDue().getId(), "id"),
-                bridge.requiredIfMatch(request.getStudentFeeDue().getEtag()),
-                bridge.changes(request.getStudentFeeDue(), request.getUpdateMask(), StudentFeeDueUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StudentFeeDueProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStudentFeeDueResponse.newBuilder(), "student_fee_due",
                 updated).build());

@@ -1,10 +1,10 @@
 # Cross-module logical references
 
-**There are no cross-module (cross-schema) foreign keys anywhere in MySMS** — each module's schema may be deployed on its own PostgreSQL instance, so a reference into another module's schema is *logical*: a plain uuid column, always indexed. Integrity is enforced by five mechanisms instead of the database:
+**There are no cross-module foreign keys anywhere in MySMS** — each module's schemas may be deployed on their own PostgreSQL instance, so a reference into another module's schema is *logical*: a plain uuid column, always indexed. Inside one module the schemas deploy together, so a foreign key between hrms's sibling schemas (`hr`, `payroll`, `time_attendance`) is allowed and not registered here. Integrity is enforced by five mechanisms instead of the database:
 
 1. **No live check at write time** (owner decision, option C): a reference is stored as given — a uuid, in the caller's tenant (row-level security) — without asking the owning module. A live check would need service-to-service identity (ROADMAP P1-34); with the caller's own token, a user who may not read the owner's records could not save a valid reference. Dangling references are prevented and repaired by rules 2 and 3.
 2. **No hard deletes of referenced entities** — owners archive by status / soft delete; every money- and evidence-protecting RESTRICT rule is an in-module foreign key and stays in the DDL.
-3. **Events drive cleanup** — the owner's `*.deleted` outbox events reach dependents' inboxes over the bus (RabbitMQ by default); the *event action* column below says what the dependent does. Built: each dependent module's `<Module>ReferenceCleanup` (owned source; first written by a generator that has since been retired) clears the column or soft-deletes the row, audits it and announces it on its own outbox (`<table>.updated` / `<table>.deleted`), so the cleanup cascades; it runs exactly once per event through the module's inbox. Both tables below are built — 153 actions in 19 modules: in the against-DAG table "delete the row" is the same soft delete and "archive/retain" needs no action; each action of these tables is implemented in its module's cleanup class. Two actions are kept by design: `comms.in_app_notification` is append-only (no `deleted_at`), so the notifications of a deleted user or cohort age out with the table's partition retention.
+3. **Events drive cleanup** — the owner's `*.deleted` outbox events reach dependents' inboxes over the bus (RabbitMQ by default); the *event action* column below says what the dependent does. Built: each dependent module's `<Module>ReferenceCleanup` (owned source; first written by a generator that has since been retired) clears the column or soft-deletes the row, audits it and announces it on its own outbox (`<table>.updated` / `<table>.deleted`), so the cleanup cascades; it runs exactly once per event through the module's inbox. Both tables below are built — 153 actions in 20 modules: in the against-DAG table "delete the row" is the same soft delete and "archive/retain" needs no action; each action of these tables is implemented in its module's cleanup class. Two actions are kept by design: `comms.in_app_notification` is append-only (no `deleted_at`), so the notifications of a deleted user or cohort age out with the table's partition retention.
 4. **Reconciliation** — a periodic per-module job batch-verifies reference ids against the owner via the SDK and reports orphans (never auto-fixes). **Not built:** like a live check, it needs service-to-service identity (P1-34).
 5. **Row-level security** stays the cross-tenant backstop on both sides.
 
@@ -119,7 +119,7 @@ row mirrors the person of one `sis.student` row from that row's own created and 
 so privacy's tasks find a person's submissions and results without reading sis's schema. A deleted student keeps its
 row: its results stay the person's.
 
-## attendance (15 references)
+## attendance (12 references)
 
 | Column | References (owner) | Event action on owner deletion |
 |---|---|---|
@@ -135,14 +135,12 @@ row: its results stay the person's.
 | `attendance.attendance_sheet.taken_by_staff_id` | `hr.staff` | owner is never hard-deleted (archived by status); no action needed |
 | `attendance.attendance_sheet.timetable_session_id` | `timetable.session` | null the column |
 | `attendance.attendance_type.institution_id` | `org.institution` | owner is never hard-deleted (archived by status); no action needed |
-| `attendance.staff_attendance.leave_application_id` | `hr.leave_application` | null the column |
-| `attendance.staff_attendance.recorded_by_user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
-| `attendance.staff_attendance.staff_id` | `hr.staff` | owner is never hard-deleted (archived by status); no action needed |
 
 `attendance.member_record` is not a set of references but a copy kept from events, like `iam.member_record`: each
-row mirrors the person of one `hr.staff` or `sis.student` row from that row's own created and updated events
+row mirrors the person of one `sis.student` row from that row's own created and updated events
 (`MemberRecordSync`), so privacy's tasks and the `attendance.after_leaving` sweep find a person's attendance without
-reading another schema. A deleted record keeps its row: its attendance stays the person's.
+reading another schema. A deleted record keeps its row: its attendance stays the person's. Staff attendance moved to
+hrms (`time_attendance`, reorganisation 2c), and its staff entries with it.
 
 ## careers (6 references)
 
@@ -539,6 +537,20 @@ tombstone that lists nothing.
 payroll and hr are sibling areas of the hrms module (JAVA-CODING-RULES §2.2): payslip reads apply the owner-only rule,
 and privacy's tasks find a person's payroll records (`PayrollPrivacyTaskHandler`), by reading `hr.staff` (account,
 person, `deleted_at`) directly; payroll keeps no copy of it.
+
+## time_attendance (2 references)
+
+| Column | References (owner) | Event action on owner deletion |
+|---|---|---|
+| `time_attendance.staff_attendance.recorded_by_user_id` | `iam.user_account` | owner is never hard-deleted (archived by status); no action needed |
+| `time_attendance.staff_attendance.staff_id` | `hr.staff` | owner is never hard-deleted (archived by status); no action needed |
+
+time_attendance and hr are sibling areas of the hrms module, so
+`time_attendance.staff_attendance.leave_application_id` → `hr.leave_application` is **not** in this register: since
+the 2c move it is a declared in-module, tenant-composite foreign key. Its owner is only ever soft-deleted, so the
+link is still released by `hr.leave_application.deleted` (`TimeAttendanceReferenceCleanup`: null the column), and
+privacy's tasks find a person's attendance days by reading `hr.staff` directly (`TimeAttendancePrivacyTaskHandler`),
+like payroll.
 
 ## people (9 references)
 

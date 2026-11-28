@@ -552,7 +552,7 @@ export {
   useAssignmentSubmissionStep,
   useAssignmentSubmissions,
   useAssignmentApprovals,
-  useCreateAssignmentApproval,
+  useRequestAssignmentApproval,
   useCreateHomeworkSubmission,
   useExamResults,
   useExamSessionStep,

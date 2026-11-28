@@ -4,8 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.finance.api.model.FeePlan;
 import com.mysms.finance.api.model.FeePlanInstallment;
-import com.mysms.finance.api.model.FeePlanInstallmentUpdate;
-import com.mysms.finance.api.model.FeePlanUpdate;
 import com.mysms.finance.business.FeePlanService;
 import com.mysms.finance.v1.CreateFeePlanInstallmentRequest;
 import com.mysms.finance.v1.CreateFeePlanInstallmentResponse;
@@ -15,7 +13,9 @@ import com.mysms.finance.v1.DeleteFeePlanInstallmentRequest;
 import com.mysms.finance.v1.DeleteFeePlanInstallmentResponse;
 import com.mysms.finance.v1.DeleteFeePlanRequest;
 import com.mysms.finance.v1.DeleteFeePlanResponse;
+import com.mysms.finance.v1.FeePlanInstallmentUpdate;
 import com.mysms.finance.v1.FeePlanServiceGrpc;
+import com.mysms.finance.v1.FeePlanUpdate;
 import com.mysms.finance.v1.GetFeePlanInstallmentRequest;
 import com.mysms.finance.v1.GetFeePlanInstallmentResponse;
 import com.mysms.finance.v1.GetFeePlanRequest;
@@ -24,9 +24,7 @@ import com.mysms.finance.v1.ListFeePlanInstallmentsRequest;
 import com.mysms.finance.v1.ListFeePlanInstallmentsResponse;
 import com.mysms.finance.v1.ListFeePlansRequest;
 import com.mysms.finance.v1.ListFeePlansResponse;
-import com.mysms.finance.v1.UpdateFeePlanInstallmentRequest;
 import com.mysms.finance.v1.UpdateFeePlanInstallmentResponse;
-import com.mysms.finance.v1.UpdateFeePlanRequest;
 import com.mysms.finance.v1.UpdateFeePlanResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -68,11 +66,11 @@ public class FeePlanResolver extends FeePlanServiceGrpc.FeePlanServiceImplBase {
     }
 
     @Override
-    public void updateFeePlan(UpdateFeePlanRequest request, StreamObserver<UpdateFeePlanResponse> out) {
+    public void updateFeePlan(FeePlanUpdate request, StreamObserver<UpdateFeePlanResponse> out) {
         FeePlan updated = service.updateFeePlan(
-                bridge.id(request.getFeePlan().getId(), "id"),
-                bridge.requiredIfMatch(request.getFeePlan().getEtag()),
-                bridge.changes(request.getFeePlan(), request.getUpdateMask(), FeePlanUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                FeePlanProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeePlanResponse.newBuilder(), "fee_plan", updated).build());
     }
 
@@ -110,14 +108,13 @@ public class FeePlanResolver extends FeePlanServiceGrpc.FeePlanServiceImplBase {
     }
 
     @Override
-    public void updateFeePlanInstallment(UpdateFeePlanInstallmentRequest request,
+    public void updateFeePlanInstallment(FeePlanInstallmentUpdate request,
             StreamObserver<UpdateFeePlanInstallmentResponse> out) {
         FeePlanInstallment updated = service.updateFeePlanInstallment(
                 bridge.id(request.getFeePlanId(), "feePlanId"),
-                bridge.id(request.getFeePlanInstallment().getId(), "id"),
-                bridge.requiredIfMatch(request.getFeePlanInstallment().getEtag()),
-                bridge.changes(request.getFeePlanInstallment(), request.getUpdateMask(),
-                        FeePlanInstallmentUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                FeePlanInstallmentProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeePlanInstallmentResponse.newBuilder(), "fee_plan_installment",
                 updated).build());
     }

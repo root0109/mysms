@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.careers.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "CareersProto";
@@ -20,7 +20,7 @@ service FunctionAreaService {
   // Create FunctionArea.
   rpc CreateFunctionArea(CreateFunctionAreaRequest) returns (CreateFunctionAreaResponse);
   // Update FunctionArea.
-  rpc UpdateFunctionArea(UpdateFunctionAreaRequest) returns (UpdateFunctionAreaResponse);
+  rpc UpdateFunctionArea(FunctionAreaUpdate) returns (UpdateFunctionAreaResponse);
   // Soft-delete FunctionArea.
   rpc DeleteFunctionArea(DeleteFunctionAreaRequest) returns (DeleteFunctionAreaResponse);
 }
@@ -34,7 +34,7 @@ service IndustryService {
   // Create Industry.
   rpc CreateIndustry(CreateIndustryRequest) returns (CreateIndustryResponse);
   // Update Industry.
-  rpc UpdateIndustry(UpdateIndustryRequest) returns (UpdateIndustryResponse);
+  rpc UpdateIndustry(IndustryUpdate) returns (UpdateIndustryResponse);
   // Soft-delete Industry.
   rpc DeleteIndustry(DeleteIndustryRequest) returns (DeleteIndustryResponse);
 }
@@ -48,7 +48,7 @@ service JobOpeningService {
   // Create JobOpening.
   rpc CreateJobOpening(CreateJobOpeningRequest) returns (CreateJobOpeningResponse);
   // Update JobOpening.
-  rpc UpdateJobOpening(UpdateJobOpeningRequest) returns (UpdateJobOpeningResponse);
+  rpc UpdateJobOpening(JobOpeningUpdate) returns (UpdateJobOpeningResponse);
   // Soft-delete JobOpening.
   rpc DeleteJobOpening(DeleteJobOpeningRequest) returns (DeleteJobOpeningResponse);
   // List JobApplications.
@@ -58,7 +58,7 @@ service JobOpeningService {
   // Create JobApplication.
   rpc CreateJobApplication(CreateJobApplicationRequest) returns (CreateJobApplicationResponse);
   // Update JobApplication.
-  rpc UpdateJobApplication(UpdateJobApplicationRequest) returns (UpdateJobApplicationResponse);
+  rpc UpdateJobApplication(JobApplicationUpdate) returns (UpdateJobApplicationResponse);
   // Soft-delete JobApplication.
   rpc DeleteJobApplication(DeleteJobApplicationRequest) returns (DeleteJobApplicationResponse);
   // Close.
@@ -82,7 +82,7 @@ service CandidatePreferenceService {
   // Create CandidatePreference.
   rpc CreateCandidatePreference(CreateCandidatePreferenceRequest) returns (CreateCandidatePreferenceResponse);
   // Update CandidatePreference.
-  rpc UpdateCandidatePreference(UpdateCandidatePreferenceRequest) returns (UpdateCandidatePreferenceResponse);
+  rpc UpdateCandidatePreference(CandidatePreferenceUpdate) returns (UpdateCandidatePreferenceResponse);
   // Soft-delete CandidatePreference.
   rpc DeleteCandidatePreference(DeleteCandidatePreferenceRequest) returns (DeleteCandidatePreferenceResponse);
   // List CandidatePreferredFunctions.
@@ -92,7 +92,7 @@ service CandidatePreferenceService {
   // Create CandidatePreferredFunction.
   rpc CreateCandidatePreferredFunction(CreateCandidatePreferredFunctionRequest) returns (CreateCandidatePreferredFunctionResponse);
   // Update CandidatePreferredFunction.
-  rpc UpdateCandidatePreferredFunction(UpdateCandidatePreferredFunctionRequest) returns (UpdateCandidatePreferredFunctionResponse);
+  rpc UpdateCandidatePreferredFunction(CandidatePreferredFunctionUpdate) returns (UpdateCandidatePreferredFunctionResponse);
   // Soft-delete CandidatePreferredFunction.
   rpc DeleteCandidatePreferredFunction(DeleteCandidatePreferredFunctionRequest) returns (DeleteCandidatePreferredFunctionResponse);
   // List CandidatePreferredIndustries.
@@ -102,7 +102,7 @@ service CandidatePreferenceService {
   // Create CandidatePreferredIndustry.
   rpc CreateCandidatePreferredIndustry(CreateCandidatePreferredIndustryRequest) returns (CreateCandidatePreferredIndustryResponse);
   // Update CandidatePreferredIndustry.
-  rpc UpdateCandidatePreferredIndustry(UpdateCandidatePreferredIndustryRequest) returns (UpdateCandidatePreferredIndustryResponse);
+  rpc UpdateCandidatePreferredIndustry(CandidatePreferredIndustryUpdate) returns (UpdateCandidatePreferredIndustryResponse);
   // Soft-delete CandidatePreferredIndustry.
   rpc DeleteCandidatePreferredIndustry(DeleteCandidatePreferredIndustryRequest) returns (DeleteCandidatePreferredIndustryResponse);
 }
@@ -146,13 +146,23 @@ message CreateFunctionAreaResponse {
   FunctionArea function_area = 1;
 }
 
-message UpdateFunctionAreaRequest {
-  // Resource with id and etag set.
-  FunctionArea function_area = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateFunctionArea (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message FunctionAreaUpdate {
+  // FunctionArea id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Function.
+  optional string name = 7;
 }
 message UpdateFunctionAreaResponse {
   FunctionArea function_area = 1;
@@ -206,13 +216,23 @@ message CreateIndustryResponse {
   Industry industry = 1;
 }
 
-message UpdateIndustryRequest {
-  // Resource with id and etag set.
-  Industry industry = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateIndustry (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message IndustryUpdate {
+  // Industry id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Industry.
+  optional string name = 7;
 }
 message UpdateIndustryResponse {
   Industry industry = 1;
@@ -266,13 +286,37 @@ message CreateJobOpeningResponse {
   JobOpening job_opening = 1;
 }
 
-message UpdateJobOpeningRequest {
-  // Resource with id and etag set.
-  JobOpening job_opening = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateJobOpening (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message JobOpeningUpdate {
+  // JobOpening id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Poster. [UUID]
+  mysms.common.v1.NullableString posted_by_user_id = 4;
+  // Job title.
+  optional string title = 5;
+  // Location.
+  optional string location = 6;
+  // Country. [UUID]
+  optional string country_id = 7;
+  // Employment type.
+  optional JobOpening.EmploymentType employment_type = 8;
+  // Work mode.
+  optional JobOpening.WorkMode work_mode = 9;
+  // Description.
+  optional string description = 10;
+  // Company.
+  optional string company_name = 11;
+  // Company website.
+  optional string company_website = 12;
+  // Company e-mail.
+  optional string company_email = 13;
+  // Company logo. [UUID]
+  optional string company_logo_file_id = 14;
 }
 message UpdateJobOpeningResponse {
   JobOpening job_opening = 1;
@@ -332,15 +376,19 @@ message CreateJobApplicationResponse {
   JobApplication job_application = 1;
 }
 
-message UpdateJobApplicationRequest {
+// The changes of UpdateJobApplication (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message JobApplicationUpdate {
   // JobOpening id (UUID).
   string job_opening_id = 1;
-  // Resource with id and etag set.
-  JobApplication job_application = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // JobApplication id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Résumé. [UUID]
+  optional string resume_file_id = 5;
 }
 message UpdateJobApplicationResponse {
   JobApplication job_application = 1;
@@ -396,13 +444,35 @@ message CreateCandidatePreferenceResponse {
   CandidatePreference candidate_preference = 1;
 }
 
-message UpdateCandidatePreferenceRequest {
-  // Resource with id and etag set.
-  CandidatePreference candidate_preference = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateCandidatePreference (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CandidatePreferenceUpdate {
+  // CandidatePreference id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Person. [UUID]
+  optional string person_id = 4;
+  // Open to work or hiring.
+  optional CandidatePreference.OpenTo open_to = 5;
+  // Preferred location.
+  mysms.common.v1.NullableString preferred_location = 6;
+  // Dream companies.
+  mysms.common.v1.NullableString dream_companies = 7;
+  // Attire preference.
+  optional CandidatePreference.Attire attire = 8;
+  // Collaboration preference.
+  optional CandidatePreference.Collaboration collaboration = 9;
+  // Role-structure preference.
+  optional CandidatePreference.RoleClarity role_clarity = 10;
+  // Travel / commute preference.
+  optional CandidatePreference.LocationPreference location_preference = 11;
+  // Working-hours preference.
+  optional CandidatePreference.WorkHours work_hours = 12;
+  // Company-type preference.
+  optional CandidatePreference.CompanyType company_type = 13;
 }
 message UpdateCandidatePreferenceResponse {
   CandidatePreference candidate_preference = 1;
@@ -462,15 +532,19 @@ message CreateCandidatePreferredFunctionResponse {
   CandidatePreferredFunction candidate_preferred_function = 1;
 }
 
-message UpdateCandidatePreferredFunctionRequest {
+// The changes of UpdateCandidatePreferredFunction (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CandidatePreferredFunctionUpdate {
   // CandidatePreference id (UUID).
   string candidate_preference_id = 1;
-  // Resource with id and etag set.
-  CandidatePreferredFunction candidate_preferred_function = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // CandidatePreferredFunction id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Function. [UUID]
+  optional string function_area_id = 5;
 }
 message UpdateCandidatePreferredFunctionResponse {
   CandidatePreferredFunction candidate_preferred_function = 1;
@@ -532,15 +606,19 @@ message CreateCandidatePreferredIndustryResponse {
   CandidatePreferredIndustry candidate_preferred_industry = 1;
 }
 
-message UpdateCandidatePreferredIndustryRequest {
+// The changes of UpdateCandidatePreferredIndustry (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CandidatePreferredIndustryUpdate {
   // CandidatePreference id (UUID).
   string candidate_preference_id = 1;
-  // Resource with id and etag set.
-  CandidatePreferredIndustry candidate_preferred_industry = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // CandidatePreferredIndustry id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Industry. [UUID]
+  optional string industry_id = 5;
 }
 message UpdateCandidatePreferredIndustryResponse {
   CandidatePreferredIndustry candidate_preferred_industry = 1;

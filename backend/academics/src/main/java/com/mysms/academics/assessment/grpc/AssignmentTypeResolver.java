@@ -1,9 +1,9 @@
 package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.AssignmentType;
-import com.mysms.academics.assessment.api.model.AssignmentTypeUpdate;
 import com.mysms.academics.assessment.business.AssignmentTypeService;
 import com.mysms.assessment.v1.AssignmentTypeServiceGrpc;
+import com.mysms.assessment.v1.AssignmentTypeUpdate;
 import com.mysms.assessment.v1.CreateAssignmentTypeRequest;
 import com.mysms.assessment.v1.CreateAssignmentTypeResponse;
 import com.mysms.assessment.v1.DeleteAssignmentTypeRequest;
@@ -12,7 +12,6 @@ import com.mysms.assessment.v1.GetAssignmentTypeRequest;
 import com.mysms.assessment.v1.GetAssignmentTypeResponse;
 import com.mysms.assessment.v1.ListAssignmentTypesRequest;
 import com.mysms.assessment.v1.ListAssignmentTypesResponse;
-import com.mysms.assessment.v1.UpdateAssignmentTypeRequest;
 import com.mysms.assessment.v1.UpdateAssignmentTypeResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -59,12 +58,12 @@ public class AssignmentTypeResolver extends AssignmentTypeServiceGrpc.Assignment
     }
 
     @Override
-    public void updateAssignmentType(UpdateAssignmentTypeRequest request,
+    public void updateAssignmentType(AssignmentTypeUpdate request,
             StreamObserver<UpdateAssignmentTypeResponse> out) {
         AssignmentType updated = assignmentTypeService.updateAssignmentType(
-                bridge.id(request.getAssignmentType().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssignmentType().getEtag()),
-                bridge.changes(request.getAssignmentType(), request.getUpdateMask(), AssignmentTypeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AssignmentTypeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAssignmentTypeResponse.newBuilder(),
                 "assignment_type", updated).build());

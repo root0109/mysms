@@ -173,6 +173,9 @@ public class RoomService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -344,6 +347,9 @@ public class RoomService extends AppTransactionManager {
             assertValidRoomAsset(entity, false);
             scope.requireWritable(institutionOfRoomAsset(entity));
             assertUniqueRoomAsset(entity);
+            if (fields.isEmpty()) {
+                return roomAssetMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return roomAssetMapper.toDto(entity);
@@ -500,6 +506,9 @@ public class RoomService extends AppTransactionManager {
             assertValidRoomFacility(entity, false);
             scope.requireWritable(institutionOfRoomFacility(entity));
             assertUniqueRoomFacility(entity);
+            if (fields.isEmpty()) {
+                return roomFacilityMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return roomFacilityMapper.toDto(entity);

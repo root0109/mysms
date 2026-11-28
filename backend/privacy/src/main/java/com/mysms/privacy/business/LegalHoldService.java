@@ -73,7 +73,7 @@ public class LegalHoldService extends AppTransactionManager {
 
     /** No institution owns a row of this aggregate. */
     private static final Optional<UUID> TENANT_LEVEL = Optional.empty();
-    private static final Pattern MODULE = Pattern.compile("^[a-z]{2,30}$");
+    private static final Pattern MODULE = Pattern.compile("^[a-z][a-z_]{1,29}$");
     private static final String SUBJECT = "subject";
     private static final String CATEGORY = "category";
     private static final String RECORDS = "records";
@@ -180,6 +180,9 @@ public class LegalHoldService extends AppTransactionManager {
             reviewByError(entity.getReviewBy()).ifPresent(error -> {
                 throw new ValidationFailedException(List.of(error));
             });
+            if (fields.isEmpty()) {
+                return dto(entity, today());
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (repository.update(entity, expected) == 0) {
                 throw new PreconditionFailedException("The legal hold changed since it was read.");

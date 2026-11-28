@@ -1,9 +1,7 @@
 package com.mysms.students.careers.grpc;
 
 import com.mysms.students.careers.api.model.JobApplication;
-import com.mysms.students.careers.api.model.JobApplicationUpdate;
 import com.mysms.students.careers.api.model.JobOpening;
-import com.mysms.students.careers.api.model.JobOpeningUpdate;
 import com.mysms.students.careers.business.JobOpeningService;
 import com.mysms.careers.v1.CloseJobOpeningRequest;
 import com.mysms.careers.v1.CloseJobOpeningResponse;
@@ -21,7 +19,9 @@ import com.mysms.careers.v1.GetJobApplicationRequest;
 import com.mysms.careers.v1.GetJobApplicationResponse;
 import com.mysms.careers.v1.GetJobOpeningRequest;
 import com.mysms.careers.v1.GetJobOpeningResponse;
+import com.mysms.careers.v1.JobApplicationUpdate;
 import com.mysms.careers.v1.JobOpeningServiceGrpc;
+import com.mysms.careers.v1.JobOpeningUpdate;
 import com.mysms.careers.v1.ListJobApplicationsRequest;
 import com.mysms.careers.v1.ListJobApplicationsResponse;
 import com.mysms.careers.v1.ListJobOpeningsRequest;
@@ -32,9 +32,7 @@ import com.mysms.careers.v1.ReportJobOpeningRequest;
 import com.mysms.careers.v1.ReportJobOpeningResponse;
 import com.mysms.careers.v1.UpdateApplicationStatusRequest;
 import com.mysms.careers.v1.UpdateApplicationStatusResponse;
-import com.mysms.careers.v1.UpdateJobApplicationRequest;
 import com.mysms.careers.v1.UpdateJobApplicationResponse;
-import com.mysms.careers.v1.UpdateJobOpeningRequest;
 import com.mysms.careers.v1.UpdateJobOpeningResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -78,11 +76,11 @@ public class JobOpeningResolver extends JobOpeningServiceGrpc.JobOpeningServiceI
     }
 
     @Override
-    public void updateJobOpening(UpdateJobOpeningRequest request, StreamObserver<UpdateJobOpeningResponse> out) {
+    public void updateJobOpening(JobOpeningUpdate request, StreamObserver<UpdateJobOpeningResponse> out) {
         JobOpening updated = service.updateJobOpening(
-                bridge.id(request.getJobOpening().getId(), "id"),
-                bridge.requiredIfMatch(request.getJobOpening().getEtag()),
-                bridge.changes(request.getJobOpening(), request.getUpdateMask(), JobOpeningUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                JobOpeningProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateJobOpeningResponse.newBuilder(), "job_opening", updated).build());
     }
@@ -120,12 +118,12 @@ public class JobOpeningResolver extends JobOpeningServiceGrpc.JobOpeningServiceI
     }
 
     @Override
-    public void updateJobApplication(UpdateJobApplicationRequest request, StreamObserver<UpdateJobApplicationResponse> out) {
+    public void updateJobApplication(JobApplicationUpdate request, StreamObserver<UpdateJobApplicationResponse> out) {
         JobApplication updated = service.updateJobApplication(
                 bridge.id(request.getJobOpeningId(), "jobOpeningId"),
-                bridge.id(request.getJobApplication().getId(), "id"),
-                bridge.requiredIfMatch(request.getJobApplication().getEtag()),
-                bridge.changes(request.getJobApplication(), request.getUpdateMask(), JobApplicationUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                JobApplicationProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateJobApplicationResponse.newBuilder(), "job_application", updated).build());
     }

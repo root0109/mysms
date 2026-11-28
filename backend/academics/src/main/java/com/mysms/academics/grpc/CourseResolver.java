@@ -2,10 +2,10 @@ package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.Course;
 import com.mysms.academics.api.model.CourseSubject;
-import com.mysms.academics.api.model.CourseSubjectUpdate;
-import com.mysms.academics.api.model.CourseUpdate;
 import com.mysms.academics.business.CourseService;
 import com.mysms.academics.v1.CourseServiceGrpc;
+import com.mysms.academics.v1.CourseSubjectUpdate;
+import com.mysms.academics.v1.CourseUpdate;
 import com.mysms.academics.v1.CreateCourseRequest;
 import com.mysms.academics.v1.CreateCourseResponse;
 import com.mysms.academics.v1.CreateCourseSubjectRequest;
@@ -22,9 +22,7 @@ import com.mysms.academics.v1.ListCourseSubjectsRequest;
 import com.mysms.academics.v1.ListCourseSubjectsResponse;
 import com.mysms.academics.v1.ListCoursesRequest;
 import com.mysms.academics.v1.ListCoursesResponse;
-import com.mysms.academics.v1.UpdateCourseRequest;
 import com.mysms.academics.v1.UpdateCourseResponse;
-import com.mysms.academics.v1.UpdateCourseSubjectRequest;
 import com.mysms.academics.v1.UpdateCourseSubjectResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -67,10 +65,10 @@ public class CourseResolver extends CourseServiceGrpc.CourseServiceImplBase {
     }
 
     @Override
-    public void updateCourse(UpdateCourseRequest request, StreamObserver<UpdateCourseResponse> out) {
-        Course updated = service.updateCourse(bridge.id(request.getCourse().getId(), "id"),
-                bridge.requiredIfMatch(request.getCourse().getEtag()),
-                bridge.changes(request.getCourse(), request.getUpdateMask(), CourseUpdate.class), request.getValidateOnly());
+    public void updateCourse(CourseUpdate request, StreamObserver<UpdateCourseResponse> out) {
+        Course updated = service.updateCourse(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CourseProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCourseResponse.newBuilder(), "course", updated).build());
     }
 
@@ -103,10 +101,10 @@ public class CourseResolver extends CourseServiceGrpc.CourseServiceImplBase {
     }
 
     @Override
-    public void updateCourseSubject(UpdateCourseSubjectRequest request, StreamObserver<UpdateCourseSubjectResponse> out) {
+    public void updateCourseSubject(CourseSubjectUpdate request, StreamObserver<UpdateCourseSubjectResponse> out) {
         CourseSubject updated = service.updateCourseSubject(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getCourseSubject().getId(), "id"), bridge.requiredIfMatch(request.getCourseSubject().getEtag()),
-                bridge.changes(request.getCourseSubject(), request.getUpdateMask(), CourseSubjectUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CourseSubjectProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCourseSubjectResponse.newBuilder(), "course_subject", updated).build());
     }

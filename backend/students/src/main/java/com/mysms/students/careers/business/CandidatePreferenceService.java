@@ -175,6 +175,9 @@ public class CandidatePreferenceService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -338,6 +341,9 @@ public class CandidatePreferenceService extends AppTransactionManager {
             assertValidCandidatePreferredFunction(entity, false);
             scope.requireWritable(institutionOfCandidatePreferredFunction(entity));
             assertUniqueCandidatePreferredFunction(entity);
+            if (fields.isEmpty()) {
+                return candidatePreferredFunctionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return candidatePreferredFunctionMapper.toDto(entity);
@@ -499,6 +505,9 @@ public class CandidatePreferenceService extends AppTransactionManager {
             assertValidCandidatePreferredIndustry(entity, false);
             scope.requireWritable(institutionOfCandidatePreferredIndustry(entity));
             assertUniqueCandidatePreferredIndustry(entity);
+            if (fields.isEmpty()) {
+                return candidatePreferredIndustryMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return candidatePreferredIndustryMapper.toDto(entity);

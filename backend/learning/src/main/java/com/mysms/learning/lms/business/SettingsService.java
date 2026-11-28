@@ -181,6 +181,9 @@ public class SettingsService extends AppTransactionManager {
             assertValidSettingsPrimaryCountry(entity, false);
             scope.requireWritable(institutionOfSettingsPrimaryCountry(entity));
             assertUniqueSettingsPrimaryCountry(entity);
+            if (fields.isEmpty()) {
+                return settingsPrimaryCountryMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return settingsPrimaryCountryMapper.toDto(entity);
@@ -333,6 +336,9 @@ public class SettingsService extends AppTransactionManager {
             assertValidSettingsSidebarItem(entity, false);
             scope.requireWritable(institutionOfSettingsSidebarItem(entity));
             assertUniqueSettingsSidebarItem(entity);
+            if (fields.isEmpty()) {
+                return settingsSidebarItemMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return settingsSidebarItemMapper.toDto(entity);
@@ -472,7 +478,7 @@ public class SettingsService extends AppTransactionManager {
                 throw new ValidationFailedException(List.of(new FieldError("lessonDwellSeconds",
                         "must be zero or more", "Min")));
             }
-            if (validateOnly) {
+            if (validateOnly || fields.isEmpty()) {
                 return settingsDto(entity);
             }
             SettingsEntity saved;

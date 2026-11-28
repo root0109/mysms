@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.privacy.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "PrivacyProto";
@@ -18,7 +18,7 @@ service PurposeService {
   // Get Purpose.
   rpc GetPurpose(GetPurposeRequest) returns (GetPurposeResponse);
   // Update the tenant's setting of a purpose.
-  rpc UpdatePurpose(UpdatePurposeRequest) returns (UpdatePurposeResponse);
+  rpc UpdatePurpose(PurposeUpdate) returns (UpdatePurposeResponse);
 }
 
 // ConsentDecisionService: whether a subject's data may be processed for a processing activity at a width.
@@ -50,7 +50,7 @@ service NoticeService {
   // Create Notice.
   rpc CreateNotice(CreateNoticeRequest) returns (CreateNoticeResponse);
   // Update Notice.
-  rpc UpdateNotice(UpdateNoticeRequest) returns (UpdateNoticeResponse);
+  rpc UpdateNotice(NoticeUpdate) returns (UpdateNoticeResponse);
   // Soft-delete Notice.
   rpc DeleteNotice(DeleteNoticeRequest) returns (DeleteNoticeResponse);
   // List NoticeVersions.
@@ -60,7 +60,7 @@ service NoticeService {
   // Create NoticeVersion (a draft).
   rpc CreateNoticeVersion(CreateNoticeVersionRequest) returns (CreateNoticeVersionResponse);
   // Update a draft NoticeVersion.
-  rpc UpdateNoticeVersion(UpdateNoticeVersionRequest) returns (UpdateNoticeVersionResponse);
+  rpc UpdateNoticeVersion(NoticeVersionUpdate) returns (UpdateNoticeVersionResponse);
   // Publish a draft NoticeVersion; the previously active version is retired.
   rpc PublishNoticeVersion(PublishNoticeVersionRequest) returns (PublishNoticeVersionResponse);
   // List NoticeTranslations.
@@ -70,7 +70,7 @@ service NoticeService {
   // Create NoticeTranslation.
   rpc CreateNoticeTranslation(CreateNoticeTranslationRequest) returns (CreateNoticeTranslationResponse);
   // Update NoticeTranslation.
-  rpc UpdateNoticeTranslation(UpdateNoticeTranslationRequest) returns (UpdateNoticeTranslationResponse);
+  rpc UpdateNoticeTranslation(NoticeTranslationUpdate) returns (UpdateNoticeTranslationResponse);
   // Soft-delete NoticeTranslation.
   rpc DeleteNoticeTranslation(DeleteNoticeTranslationRequest) returns (DeleteNoticeTranslationResponse);
 }
@@ -150,7 +150,7 @@ service BreachService {
   // Report a breach into the register; its Board report is due 72 hours after the school became aware.
   rpc ReportBreach(ReportBreachRequest) returns (ReportBreachResponse);
   // Update what is known of an open breach.
-  rpc UpdateBreach(UpdateBreachRequest) returns (UpdateBreachResponse);
+  rpc UpdateBreach(BreachUpdate) returns (UpdateBreachResponse);
   // Record that a reported breach was triaged.
   rpc TriageBreach(TriageBreachRequest) returns (TriageBreachResponse);
   // Record that a triaged breach is contained.
@@ -178,7 +178,7 @@ service LegalHoldService {
   // Place a legal hold on a subject's data, a data category or a set of records.
   rpc PlaceLegalHold(PlaceLegalHoldRequest) returns (PlaceLegalHoldResponse);
   // Move an active hold's review date.
-  rpc UpdateLegalHold(UpdateLegalHoldRequest) returns (UpdateLegalHoldResponse);
+  rpc UpdateLegalHold(LegalHoldUpdate) returns (UpdateLegalHoldResponse);
   // Release an active legal hold.
   rpc ReleaseLegalHold(ReleaseLegalHoldRequest) returns (ReleaseLegalHoldResponse);
   // The active holds that may cover a subject's data (internal: called with a service token).
@@ -192,7 +192,7 @@ service RetentionService {
   // Get RetentionPolicy.
   rpc GetRetentionPolicy(GetRetentionPolicyRequest) returns (GetRetentionPolicyResponse);
   // Set the tenant's own period and action of a retention policy, never below its legal floor.
-  rpc UpdateRetentionPolicy(UpdateRetentionPolicyRequest) returns (UpdateRetentionPolicyResponse);
+  rpc UpdateRetentionPolicy(RetentionPolicyUpdate) returns (UpdateRetentionPolicyResponse);
   // List RetentionRuns.
   rpc ListRetentionRuns(ListRetentionRunsRequest) returns (ListRetentionRunsResponse);
 }
@@ -229,13 +229,21 @@ message GetPurposeResponse {
   Purpose purpose = 1;
 }
 
-message UpdatePurposeRequest {
-  // Purpose with id and etag set ("0" while the tenant has never set it).
-  Purpose purpose = 1;
-  // Fields to update (enabled, max_scope, notice_id); empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePurpose (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PurposeUpdate {
+  // Purpose id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Whether the tenant processes data for the purpose.
+  optional bool enabled = 4;
+  // The widest width the tenant allows for a width purpose; absent = no ceiling.
+  optional Purpose.MaxScope max_scope = 5;
+  // The notice shown when asking for consent to the purpose. [UUID]
+  mysms.common.v1.NullableString notice_id = 6;
 }
 message UpdatePurposeResponse {
   Purpose purpose = 1;
@@ -272,13 +280,17 @@ message CreateNoticeResponse {
   Notice notice = 1;
 }
 
-message UpdateNoticeRequest {
-  // Resource with id and etag set.
-  Notice notice = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateNotice (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NoticeUpdate {
+  // Notice id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Title shown to tenant administrators.
+  optional string title = 4;
 }
 message UpdateNoticeResponse {
   Notice notice = 1;
@@ -330,15 +342,25 @@ message CreateNoticeVersionResponse {
   NoticeVersion notice_version = 1;
 }
 
-message UpdateNoticeVersionRequest {
+// The changes of UpdateNoticeVersion (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NoticeVersionUpdate {
   // Notice id (UUID).
   string notice_id = 1;
-  // Resource with id and etag set.
-  NoticeVersion notice_version = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // NoticeVersion id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Whether consents given under earlier versions must be asked for again once this version is published.
+  optional bool requires_reconsent = 5;
+  // Codes of the active catalogue purposes the version asks consent for.
+  mysms.common.v1.StringList purpose_codes = 6;
+  // The school's grievance officer the version names.
+  GrievanceContact grievance_contact = 7;
+  // Optional signed PDF of the version (a platform file). [UUID]
+  mysms.common.v1.NullableString document_file_id = 8;
 }
 message UpdateNoticeVersionResponse {
   NoticeVersion notice_version = 1;
@@ -401,17 +423,25 @@ message CreateNoticeTranslationResponse {
   NoticeTranslation notice_translation = 1;
 }
 
-message UpdateNoticeTranslationRequest {
+// The changes of UpdateNoticeTranslation (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message NoticeTranslationUpdate {
   // Notice id (UUID).
   string notice_id = 1;
   // NoticeVersion id (UUID).
   string notice_version_id = 2;
-  // Resource with id and etag set.
-  NoticeTranslation notice_translation = 3;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 4;
+  // NoticeTranslation id (UUID).
+  string id = 3;
+  // ETag from the last read; required (If-Match).
+  string etag = 4;
   // Validate without persisting.
   bool validate_only = 5;
+  // BCP 47 language code: en, hi, ta, mr-IN ...; one per version.
+  optional string language = 6;
+  // The notice in Markdown: the data processed, the purposes, how to withdraw and how to complain.
+  optional string body_markdown = 7;
+  // Short plain version shown to a minor alongside the notice.
+  mysms.common.v1.NullableString summary_for_children = 8;
 }
 message UpdateNoticeTranslationResponse {
   NoticeTranslation notice_translation = 1;
@@ -1831,12 +1861,27 @@ message ReportBreachResponse {
   Breach breach = 1;
 }
 
-message UpdateBreachRequest {
-  // Breach with id and etag set.
-  Breach breach = 1;
-  // Fields to update (description, categories, modules, estimated_principals, likely_consequences, mitigation,
-  // owner_user_id); empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateBreach (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message BreachUpdate {
+  // Breach id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
+  // What happened, in ids and counts only, never a name or contact.
+  optional string description = 3;
+  // Codes of the data categories affected.
+  mysms.common.v1.StringList categories = 4;
+  // The MySMS modules whose data is affected.
+  mysms.common.v1.StringList modules = 5;
+  // How many data principals are estimated to be affected; absent while unknown.
+  mysms.common.v1.NullableInt32 estimated_principals = 6;
+  // The likely consequences for the principals, in ids and counts only.
+  mysms.common.v1.NullableString likely_consequences = 7;
+  // What was done or is planned to contain the breach, in ids and counts only.
+  mysms.common.v1.NullableString mitigation = 8;
+  // The staff member handling the breach. [UUID]
+  optional string owner_user_id = 9;
 }
 message UpdateBreachResponse {
   Breach breach = 1;
@@ -2241,11 +2286,15 @@ message PlaceLegalHoldResponse {
   LegalHold legal_hold = 1;
 }
 
-message UpdateLegalHoldRequest {
-  // Legal hold with id and etag set.
-  LegalHold legal_hold = 1;
-  // Fields to update (review_by); empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateLegalHold (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message LegalHoldUpdate {
+  // LegalHold id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
+  // When the hold must be reviewed: today or later. [ISO-8601 date (YYYY-MM-DD)]
+  optional string review_by = 3;
 }
 message UpdateLegalHoldResponse {
   LegalHold legal_hold = 1;
@@ -2404,11 +2453,17 @@ message GetRetentionPolicyResponse {
   RetentionPolicy retention_policy = 1;
 }
 
-message UpdateRetentionPolicyRequest {
-  // Retention policy with id and etag set ("0" while the tenant has never set it).
-  RetentionPolicy retention_policy = 1;
-  // Fields to update (period_days, action); empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateRetentionPolicy (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message RetentionPolicyUpdate {
+  // RetentionPolicy id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
+  // Days the data is kept after the trigger: the tenant's own when set, the catalogue's otherwise.
+  optional int32 period_days = 3;
+  // delete, anonymise or archive.
+  optional RetentionPolicy.Action action = 4;
 }
 message UpdateRetentionPolicyResponse {
   RetentionPolicy retention_policy = 1;

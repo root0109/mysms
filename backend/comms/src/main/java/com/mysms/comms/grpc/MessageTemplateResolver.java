@@ -1,7 +1,6 @@
 package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.MessageTemplate;
-import com.mysms.comms.api.model.MessageTemplateUpdate;
 import com.mysms.comms.business.MessageTemplateService;
 import com.mysms.comms.v1.CreateMessageTemplateRequest;
 import com.mysms.comms.v1.CreateMessageTemplateResponse;
@@ -12,7 +11,7 @@ import com.mysms.comms.v1.GetMessageTemplateResponse;
 import com.mysms.comms.v1.ListMessageTemplatesRequest;
 import com.mysms.comms.v1.ListMessageTemplatesResponse;
 import com.mysms.comms.v1.MessageTemplateServiceGrpc;
-import com.mysms.comms.v1.UpdateMessageTemplateRequest;
+import com.mysms.comms.v1.MessageTemplateUpdate;
 import com.mysms.comms.v1.UpdateMessageTemplateResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,11 +55,11 @@ public class MessageTemplateResolver extends MessageTemplateServiceGrpc.MessageT
     }
 
     @Override
-    public void updateMessageTemplate(UpdateMessageTemplateRequest request, StreamObserver<UpdateMessageTemplateResponse> out) {
+    public void updateMessageTemplate(MessageTemplateUpdate request, StreamObserver<UpdateMessageTemplateResponse> out) {
         MessageTemplate updated = service.updateMessageTemplate(
-                bridge.id(request.getMessageTemplate().getId(), "id"),
-                bridge.requiredIfMatch(request.getMessageTemplate().getEtag()),
-                bridge.changes(request.getMessageTemplate(), request.getUpdateMask(), MessageTemplateUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MessageTemplateProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMessageTemplateResponse.newBuilder(), "message_template", updated).build());
     }

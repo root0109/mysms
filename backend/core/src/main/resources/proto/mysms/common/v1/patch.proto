@@ -1,0 +1,80 @@
+// The field wrappers of every <Resource>Update message: gRPC's rendering of a PATCH body (JAVA-CODING-RULES §7.2).
+// A field the client leaves unset keeps its value; a Nullable* wrapper holding null clears it; a wrapper holding a
+// value sets it. A field the contract never lets be cleared is a plain proto3 optional instead, and a list travels in
+// a list wrapper, so an unset list is unchanged and never replaced by an empty one.
+syntax = "proto3";
+
+package mysms.common.v1;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "PatchProto";
+option java_package = "com.mysms.common.v1";
+
+// A text field that may be cleared (also UUIDs, ISO-8601 dates and times, decimals: strings on the wire).
+message NullableString {
+  oneof kind {
+    // Clears the field.
+    google.protobuf.NullValue null = 1;
+    // Sets the field.
+    string value = 2;
+  }
+}
+
+// A flag that may be cleared.
+message NullableBool {
+  oneof kind {
+    // Clears the field.
+    google.protobuf.NullValue null = 1;
+    // Sets the field.
+    bool value = 2;
+  }
+}
+
+// A 32-bit number that may be cleared.
+message NullableInt32 {
+  oneof kind {
+    // Clears the field.
+    google.protobuf.NullValue null = 1;
+    // Sets the field.
+    int32 value = 2;
+  }
+}
+
+// A 64-bit number that may be cleared (REST carries it as a decimal string).
+message NullableInt64 {
+  oneof kind {
+    // Clears the field.
+    google.protobuf.NullValue null = 1;
+    // Sets the field.
+    int64 value = 2;
+  }
+}
+
+// An instant that may be cleared.
+message NullableTimestamp {
+  oneof kind {
+    // Clears the field.
+    google.protobuf.NullValue null = 1;
+    // Sets the field.
+    google.protobuf.Timestamp value = 2;
+  }
+}
+
+// A duration that may be cleared (REST carries it as "<seconds>s").
+message NullableDuration {
+  oneof kind {
+    // Clears the field.
+    google.protobuf.NullValue null = 1;
+    // Sets the field.
+    google.protobuf.Duration value = 2;
+  }
+}
+
+// A list of texts that replaces the field's list when set (empty: no entries).
+message StringList {
+  repeated string values = 1;
+}

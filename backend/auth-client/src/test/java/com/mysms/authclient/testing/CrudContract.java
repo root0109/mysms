@@ -386,8 +386,9 @@ public final class CrudContract {
         assertThat(s.version()).as("validateOnly must not persist").isEqualTo(version);
         Reply done = call("PATCH", s.item(s.id), admin(s), body, "If-Match", "\"" + version + "\"");
         assertThat(done.status).as(done.text).isEqualTo(200);
-        assertThat(done.etag()).isEqualTo("\"" + (version + 1) + "\"");
-        s.known = version + 1;
+        int written = change.isObject() && !change.isEmpty() ? version + 1 : version; // empty: no version (§7.2)
+        assertThat(done.etag()).isEqualTo("\"" + written + "\"");
+        s.known = written;
         assertEchoes(change, done.body);
         threeStates(s, change, s.r.path("patch"));
     }
@@ -427,9 +428,12 @@ public final class CrudContract {
         }
     }
 
-    /** The area's PATCH body of a resource, found on the classpath: {@code com.mysms.…<area>.api.model.<R>Update}. */
+    /**
+     * The area's PATCH body of a resource, found on the classpath: {@code com.mysms.…<area>.api.model.<R>Update}
+     * (the package segment drops an area name's underscores: {@code time_attendance} → {@code timeattendance}).
+     */
     private static Class<?> updateBody(String area, String resource) {
-        String suffix = "/" + area + "/api/model/" + resource + "Update.class";
+        String suffix = "/" + area.replace("_", "") + "/api/model/" + resource + "Update.class"; // package segment
         try {
             for (Resource found : new PathMatchingResourcePatternResolver()
                     .getResources("classpath*:com/mysms/**/api/model/" + resource + "Update.class")) {
@@ -446,28 +450,44 @@ public final class CrudContract {
     }
 
     /**
-     * The three states of a PATCH body (§7.2): a property left out keeps its value, JSON null clears an optional
-     * field ({@code patch.clears}) and is 422 on a required one ({@code patch.keeps}), which nothing changes.
+     * No outbox row about the row since {@code since}: neither an event nor an audit record (audit travels as an
+     * {@code audit.recorded} event of the module's outbox).
+     */
+    private void noEventSince(State s, Instant since) {
+        String module = s.r.path("table").asString().split("\\.")[0];
+        sql.accept(tenant, List.of("DO $$ BEGIN IF EXISTS (SELECT 1 FROM " + module + ".outbox_event WHERE "
+                + "occurred_at >= CAST('" + since + "' AS timestamptz) AND (aggregate_id = CAST('" + s.id
+                + "' AS uuid) OR strpos(payload, '" + s.id + "') > 0)) THEN RAISE EXCEPTION "
+                + "'an empty PATCH wrote an event or an audit record'; END IF; END $$"));
+    }
+
+    /**
+     * The three states of a PATCH body (§7.2): a property left out keeps its value — an empty body answers the row
+     * unchanged, without a new version — JSON null clears an optional field ({@code patch.clears}) and is 422 on a
+     * required one ({@code patch.keeps}), which nothing changes.
      */
     private void threeStates(State s, JsonNode change, JsonNode patch) {
         int version = s.version();
+        Instant before = Instant.now();
         Reply absent = call("PATCH", s.item(s.id), admin(s), "{}", "If-Match", "\"" + version + "\"");
         assertThat(absent.status).as(absent.text).isEqualTo(200);
-        s.known = version + 1;
+        assertThat(absent.etag()).as("an empty PATCH changes nothing").isEqualTo("\"" + version + "\"");
+        assertThat(s.version()).as("an empty PATCH writes no new version").isEqualTo(version);
         assertEchoes(change, absent.body);
+        noEventSince(s, before);
         if (patch.hasNonNull("keeps")) {
             String required = patch.path("keeps").asString();
             ObjectNode clear = JSON.createObjectNode().putNull(required);
             Reply refused = call("PATCH", s.item(s.id), admin(s), clear.toString(), "If-Match", "\"" + s.version() + "\"");
             assertThat(refused.status).as(required + " is required: " + refused.text).isEqualTo(422);
-            assertThat(s.version()).as("a refused patch changes nothing").isEqualTo(version + 1);
+            assertThat(s.version()).as("a refused patch changes nothing").isEqualTo(version);
         }
         if (patch.hasNonNull("clears")) {
             String optional = patch.path("clears").asString();
             ObjectNode clear = JSON.createObjectNode().putNull(optional);
             Reply cleared = call("PATCH", s.item(s.id), admin(s), clear.toString(), "If-Match", "\"" + s.version() + "\"");
             assertThat(cleared.status).as(cleared.text).isEqualTo(200);
-            s.known = version + 2;
+            s.known = version + 1;
             JsonNode actual = cleared.body.path(optional);
             assertThat(actual.isNull() || actual.isMissingNode()).as(optional + " is cleared").isTrue();
         }

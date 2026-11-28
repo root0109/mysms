@@ -44,9 +44,11 @@ import com.mysms.hrms.payroll.repository.PayrollPaymentRepository;
 import com.mysms.hrms.payroll.repository.PayslipLineRepository;
 import com.mysms.hrms.payroll.repository.PayslipRepository;
 import com.mysms.hrms.payroll.repository.PayslipRunRepository;
+import com.mysms.hrms.payroll.repository.PayslipRunRepository.Absence;
 import com.mysms.hrms.payroll.repository.PayslipRunRepository.Period;
 import com.mysms.hrms.payroll.repository.PayslipRunRepository.SalaryRow;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -54,6 +56,7 @@ import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -276,7 +279,9 @@ public class PayslipService extends AppTransactionManager {
     /**
      * payroll.GeneratePayslips: one payslip per staff member (or per named one) whose salary in force on the period's
      * last day belongs to the institution through its template, answered as the operation that records the run. The
-     * caller must be able to write the institution (403); the period must lie within one calendar month (422). <p>Each
+     * caller must be able to write the institution (403); the period must lie within one calendar month (422).
+     * Approved leave of unpaid types on working days of the period is deducted as a line of its own
+     * ({@link PayslipCalculator}). <p>Each
      * payslip and its lines are written in a transaction of their own, so one staff member who cannot be paid never
      * holds back the others. A run is safe to repeat and to race: an existing payslip that counts for the period is
      * kept (cancel it to recalculate), a payslip of an overlapping period stops a second payment, and the salary rows
@@ -373,7 +378,12 @@ public class PayslipService extends AppTransactionManager {
                 .stream().map(row -> new Component(row.id(), row.staffSalaryId(), row.code(), row.name(), row.type(),
                         row.amount()))
                 .toList();
-        Result result = PayslipCalculator.calculate(periodStart, segments, components);
+        Map<UUID, Absence> absences = new HashMap<>();
+        for (Segment segment : segments) {
+            absences.put(segment.staffSalaryId(),
+                    runRepository.absence(staffId, institutionId, segment.from(), segment.to()));
+        }
+        Result result = PayslipCalculator.calculate(periodStart, segments, components, absences);
         if (result.lines().isEmpty()) {
             return Outcome.NO_COMPONENTS;
         }
@@ -386,9 +396,9 @@ public class PayslipService extends AppTransactionManager {
                 .staffSalaryId(salaries.get(salaries.size() - 1).id())
                 .periodStart(periodStart)
                 .periodEnd(periodEnd)
-                .payPercentage(FULL_PAY)
-                .leaveDays(BigDecimal.ZERO)
-                .leaveDeduction(BigDecimal.ZERO)
+                .payPercentage(payPercentage(result))
+                .leaveDays(result.unpaidDays())
+                .leaveDeduction(result.leaveDeduction())
                 .grossAmount(result.gross())
                 .deductionTotal(result.deductions())
                 .netAmount(result.net())
@@ -403,6 +413,15 @@ public class PayslipService extends AppTransactionManager {
         outbox.publish(AGGREGATE + PayrollEvents.CREATED, AGGREGATE, payslip.getId(),
                 PayrollEvents.payload(payslip.getId()));
         return Outcome.GENERATED;
+    }
+
+    /** The share of the earnings paid after the unpaid-leave deduction, in percent (two decimals, half-up). */
+    private static BigDecimal payPercentage(Result result) {
+        if (result.gross().signum() == 0) {
+            return FULL_PAY;
+        }
+        return result.gross().subtract(result.leaveDeduction()).multiply(FULL_PAY)
+                .divide(result.gross(), FULL_PAY.scale(), RoundingMode.HALF_UP);
     }
 
     /**

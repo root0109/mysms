@@ -3,7 +3,6 @@ package com.mysms.students.sis.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.StudentHealthRecord;
-import com.mysms.students.sis.api.model.StudentHealthRecordUpdate;
 import com.mysms.students.sis.business.StudentHealthRecordService;
 import com.mysms.sis.v1.CreateStudentHealthRecordRequest;
 import com.mysms.sis.v1.CreateStudentHealthRecordResponse;
@@ -14,7 +13,7 @@ import com.mysms.sis.v1.GetStudentHealthRecordResponse;
 import com.mysms.sis.v1.ListStudentHealthRecordsRequest;
 import com.mysms.sis.v1.ListStudentHealthRecordsResponse;
 import com.mysms.sis.v1.StudentHealthRecordServiceGrpc;
-import com.mysms.sis.v1.UpdateStudentHealthRecordRequest;
+import com.mysms.sis.v1.StudentHealthRecordUpdate;
 import com.mysms.sis.v1.UpdateStudentHealthRecordResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -61,12 +60,12 @@ public class StudentHealthRecordResolver extends StudentHealthRecordServiceGrpc.
     }
 
     @Override
-    public void updateStudentHealthRecord(UpdateStudentHealthRecordRequest request,
+    public void updateStudentHealthRecord(StudentHealthRecordUpdate request,
             StreamObserver<UpdateStudentHealthRecordResponse> out) {
         StudentHealthRecord updated = service.updateStudentHealthRecord(
-                bridge.id(request.getStudentHealthRecord().getId(), "id"),
-                bridge.requiredIfMatch(request.getStudentHealthRecord().getEtag()),
-                bridge.changes(request.getStudentHealthRecord(), request.getUpdateMask(), StudentHealthRecordUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StudentHealthRecordProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateStudentHealthRecordResponse.newBuilder(), "student_health_record", updated).build());

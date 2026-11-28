@@ -15,6 +15,8 @@ import com.mysms.core.testkit.GrpcParity.Answer;
 import com.mysms.core.testkit.GrpcParityContract;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.core.testkit.TestTransactions;
+import com.mysms.platform.PlatformTenants;
+import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.org.config.OrgDatabaseConfig;
 import com.mysms.org.v1.OrgProto;
 import io.grpc.Channel;
@@ -77,6 +79,9 @@ class OrgGrpcParityComponentTest {
     @Autowired
     @Qualifier(OrgDatabaseConfig.DATABASE)
     private ModuleDatabase database;
+    @Autowired
+    @Qualifier(PlatformDatabaseConfig.DATABASE)
+    private ModuleDatabase platform;
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
@@ -148,6 +153,7 @@ class OrgGrpcParityComponentTest {
     }
 
     private void fixtures(UUID tenant, List<String> statements) {
+        PlatformTenants.register(platform, tenant);
         CallContext context = CallContext.anonymous(TRACE).withIdentity(tenant, null);
         CallContextHolder.callAs(context, () -> TestTransactions.of(database).write(() -> {
             statements.forEach(statement -> database.jdbc().sql(statement).param("tenant", tenant).update());

@@ -48,7 +48,9 @@
     "groupId": "a9ede448-81f4-58b3-add7-1f815de6c327",
     "userId": "bd301134-dbae-5d12-ba4a-3d7b46997e59"
    },
-   "update": {},
+   "update": {
+    "memberType": "teacher"
+   },
    "patch": {
     "keeps": "memberType"
    },
@@ -190,7 +192,9 @@
     "contentType": "image",
     "contentId": "77be7951-d101-58f2-b2a1-db954bbe64a8"
    },
-   "update": {},
+   "update": {
+    "viewedAt": "2026-03-01T10:00:00Z"
+   },
    "patch": {
     "keeps": "contentType",
     "clears": "viewedAt"
@@ -275,7 +279,9 @@
     "conversationId": "0189ad16-e46c-5f10-b14e-2b4d28e5aedf",
     "userId": "0196f000-0000-7000-8000-00000000c0c0"
    },
-   "update": {},
+   "update": {
+    "lastReadAt": "2026-03-01T10:00:00Z"
+   },
    "patch": {
     "keeps": "userId",
     "clears": "lastReadAt"
@@ -372,7 +378,9 @@
     "eventId": "ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7",
     "userId": "f07b701f-6b7b-565a-b55d-1329ebc3a8c2"
    },
-   "update": {},
+   "update": {
+    "userId": "f07b701f-6b7b-565a-b55d-1329ebc3a8c2"
+   },
    "patch": {
     "keeps": "userId"
    },
@@ -398,7 +406,9 @@
     "eventId": "ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7",
     "fileId": "a8c02f5e-2c99-58d7-9e2e-720c8e611b63"
    },
-   "update": {},
+   "update": {
+    "sortOrder": 2
+   },
    "patch": {
     "keeps": "sortOrder"
    },
@@ -424,7 +434,9 @@
     "eventId": "ffd5d3e9-c1d2-5a54-83dc-c93cdd1d20b7",
     "institutionId": "0196f000-0000-7000-8000-00000000a001"
    },
-   "update": {},
+   "update": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001"
+   },
    "patch": {
     "keeps": "institutionId"
    },
@@ -533,7 +545,9 @@
     "studentId": "86c5ebfe-1aec-5267-9491-d322134d0b96",
     "assignedToUserId": "f2cbd8eb-2933-5c95-b3c2-ce0b33d2c582"
    },
-   "update": {},
+   "update": {
+    "assignedToUserId": "f2cbd8eb-2933-5c95-b3c2-ce0b33d2c582"
+   },
    "patch": {
     "keeps": "institutionId"
    },
@@ -816,7 +830,9 @@
     "noticeId": "e29a6e57-7418-58c5-894e-774a6ed6e415",
     "institutionId": "0196f000-0000-7000-8000-00000000a001"
    },
-   "update": {},
+   "update": {
+    "roleId": "0196f000-0000-7000-8000-0000000a2e01"
+   },
    "patch": {
     "clears": "institutionId"
    },
@@ -840,7 +856,9 @@
     "institutionId": "0196f000-0000-7000-8000-00000000a001",
     "usage": "event"
    },
-   "update": {},
+   "update": {
+    "usage": "event"
+   },
    "patch": {
     "keeps": "usage",
     "clears": "imageFileId"
@@ -1011,7 +1029,9 @@
    "create": {
     "userId": "472efc0e-5ae9-59fb-b98f-4b1553388edc"
    },
-   "update": {},
+   "update": {
+    "userId": "472efc0e-5ae9-59fb-b98f-4b1553388edc"
+   },
    "patch": {
     "keeps": "userId",
     "clears": "roleId"
@@ -1255,7 +1275,9 @@
     "postId": "7881eb3d-f824-5883-b284-e2c7b34c9b29",
     "classSectionId": "d168404f-61fb-5cb1-9b61-94052d665953"
    },
-   "update": {},
+   "update": {
+    "classSectionId": "d168404f-61fb-5cb1-9b61-94052d665953"
+   },
    "patch": {
     "keeps": "classSectionId"
    },
@@ -1408,7 +1430,9 @@
     "taskId": "31dac2d4-c41f-5343-a5c9-fd25cf73f100",
     "userId": "0196f000-0000-7000-8000-0000000a5e01"
    },
-   "update": {},
+   "update": {
+    "userId": "0196f000-0000-7000-8000-0000000a5e01"
+   },
    "patch": {
     "keeps": "assigneeType",
     "clears": "claimedByUserId"

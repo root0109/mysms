@@ -3,18 +3,17 @@ package com.mysms.finance.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.finance.api.model.FeePlanInstallmentComponent;
-import com.mysms.finance.api.model.FeePlanInstallmentComponentUpdate;
 import com.mysms.finance.business.FeePlanInstallmentComponentService;
 import com.mysms.finance.v1.CreateFeePlanInstallmentComponentRequest;
 import com.mysms.finance.v1.CreateFeePlanInstallmentComponentResponse;
 import com.mysms.finance.v1.DeleteFeePlanInstallmentComponentRequest;
 import com.mysms.finance.v1.DeleteFeePlanInstallmentComponentResponse;
 import com.mysms.finance.v1.FeePlanInstallmentComponentServiceGrpc;
+import com.mysms.finance.v1.FeePlanInstallmentComponentUpdate;
 import com.mysms.finance.v1.GetFeePlanInstallmentComponentRequest;
 import com.mysms.finance.v1.GetFeePlanInstallmentComponentResponse;
 import com.mysms.finance.v1.ListFeePlanInstallmentComponentsRequest;
 import com.mysms.finance.v1.ListFeePlanInstallmentComponentsResponse;
-import com.mysms.finance.v1.UpdateFeePlanInstallmentComponentRequest;
 import com.mysms.finance.v1.UpdateFeePlanInstallmentComponentResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -63,13 +62,12 @@ public class FeePlanInstallmentComponentResolver
     }
 
     @Override
-    public void updateFeePlanInstallmentComponent(UpdateFeePlanInstallmentComponentRequest request,
+    public void updateFeePlanInstallmentComponent(FeePlanInstallmentComponentUpdate request,
             StreamObserver<UpdateFeePlanInstallmentComponentResponse> out) {
         FeePlanInstallmentComponent updated = service.updateFeePlanInstallmentComponent(
-                bridge.id(request.getFeePlanInstallmentComponent().getId(), "id"),
-                bridge.requiredIfMatch(request.getFeePlanInstallmentComponent().getEtag()),
-                bridge.changes(request.getFeePlanInstallmentComponent(), request.getUpdateMask(),
-                        FeePlanInstallmentComponentUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                FeePlanInstallmentComponentProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFeePlanInstallmentComponentResponse.newBuilder(),
                 "fee_plan_installment_component", updated).build());
     }

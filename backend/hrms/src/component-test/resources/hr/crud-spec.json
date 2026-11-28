@@ -157,7 +157,9 @@
     "entitledDays": "1",
     "academicYearId": "7715fd57-5b52-5a44-b0cc-365a55f1a89a"
    },
-   "update": {},
+   "update": {
+    "entitledDays": "1.0"
+   },
    "patch": {
     "keeps": "entitledDays",
     "fixed": [
@@ -184,7 +186,8 @@
     "code": "C7EAE2E0B",
     "institutionId": "0196f000-0000-7000-8000-00000000a001",
     "name": "t-name-c7b6b485",
-    "maxDaysPerYear": "2"
+    "maxDaysPerYear": "2",
+    "isPaid": false
    },
    "update": {
     "name": "Updated name"
@@ -266,7 +269,9 @@
     "staffId": "8c30c7a5-6493-5af1-b7dd-ed2a542ff298",
     "departmentId": "4728af22-fa3e-5679-9b4d-98dac89dc5a6"
    },
-   "update": {},
+   "update": {
+    "departmentId": "4728af22-fa3e-5679-9b4d-98dac89dc5a6"
+   },
    "patch": {
     "keeps": "departmentId"
    },

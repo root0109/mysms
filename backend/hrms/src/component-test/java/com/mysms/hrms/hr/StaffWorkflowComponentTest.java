@@ -61,7 +61,7 @@ class StaffWorkflowComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "hr", "payroll");
+        DATABASE.register(registry, "hr", "payroll", "time_attendance");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }

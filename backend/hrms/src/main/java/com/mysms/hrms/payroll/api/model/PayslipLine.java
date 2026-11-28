@@ -39,7 +39,7 @@ public class PayslipLine {
   private @Nullable UUID payslipId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private UUID staffSalaryComponentId;
+  private @Nullable UUID staffSalaryComponentId;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private String amount;
@@ -68,8 +68,7 @@ public class PayslipLine {
   /**
    * Constructor with only required parameters
    */
-  public PayslipLine(UUID staffSalaryComponentId, String amount) {
-    this.staffSalaryComponentId = staffSalaryComponentId;
+  public PayslipLine(String amount) {
     this.amount = amount;
   }
 
@@ -173,23 +172,23 @@ public class PayslipLine {
     this.payslipId = payslipId;
   }
 
-  public PayslipLine staffSalaryComponentId(UUID staffSalaryComponentId) {
+  public PayslipLine staffSalaryComponentId(@Nullable UUID staffSalaryComponentId) {
     this.staffSalaryComponentId = staffSalaryComponentId;
     return this;
   }
 
   /**
-   * Component.
+   * Component; absent on the unpaid-leave line (componentCode UNPAID_LEAVE).
    * @return staffSalaryComponentId
    */
-  @NotNull @Valid 
+  @Valid 
   @JsonProperty("staffSalaryComponentId")
-  public UUID getStaffSalaryComponentId() {
+  public @Nullable UUID getStaffSalaryComponentId() {
     return staffSalaryComponentId;
   }
 
   @JsonProperty("staffSalaryComponentId")
-  public void setStaffSalaryComponentId(UUID staffSalaryComponentId) {
+  public void setStaffSalaryComponentId(@Nullable UUID staffSalaryComponentId) {
     this.staffSalaryComponentId = staffSalaryComponentId;
   }
 

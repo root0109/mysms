@@ -202,6 +202,24 @@ class AssessmentGrpcParityComponentTest {
         return call(rpc, Map.of(idField, id), body);
     }
 
+    /** An update: the {@code <Resource>Update} message of a REST PATCH body, with the row's id and etag. */
+    private DynamicMessage updating(MethodDescriptor update, String id, String etag, ObjectNode changes) {
+        DynamicMessage.Builder request = contract().changes(update, changes);
+        set(request, "id", id);
+        return set(request, "etag", etag).build();
+    }
+
+    /** A resource's crud-spec.json entry, for the kit's PATCH-state step on resources outside the standard flow. */
+    private static GrpcParityContract.Resource described(String spec, String name) throws Exception {
+        for (JsonNode resource : JSON.readTree(AssessmentGrpcParityComponentTest.class.getClassLoader().getResourceAsStream(spec))
+                .path("resources")) {
+            if (name.equals(resource.path("name").asString())) {
+                return GrpcParityContract.Resource.of(resource);
+            }
+        }
+        throw new IllegalArgumentException("no resource " + name + " in " + spec);
+    }
+
     /** The one resource a response carries. */
     private static JsonNode resource(Answer overGrpc) {
         assertThat(overGrpc.status()).as("gRPC answered %s", overGrpc.code()).isEqualTo(200);
@@ -499,6 +517,8 @@ class AssessmentGrpcParityComponentTest {
                 alikeOnTwins(school, school.admin(), move[0], ASSIGNMENTS, move[1], assignment(school, status),
                         assignment(school, status), "{\"reason\":\"Parity\"}");
             }
+            alikeOnTwins(school, school.admin(), "RequestAssignmentApproval", ASSIGNMENTS, "requestApproval",
+                    assignment(school, status), assignment(school, status), "{}");
         }
         String assignment = assignment(school, "published");
         refusedAlike(403, school.nobody(), "FinishAssignment", ASSIGNMENTS + "/" + assignment + ":finish", assignment, "{}");
@@ -614,26 +634,24 @@ class AssessmentGrpcParityComponentTest {
         String id = anns.path("id").asString();
         MethodDescriptor update = rpc("UpdateExamResult");
         ObjectNode changes = json("{\"note\":\"Rechecked\"}");
-        com.google.protobuf.FieldMask mask = com.google.protobuf.FieldMask.newBuilder().addPaths("note").build();
         for (String etag : List.of("\"99\"", "", anns.path("etag").asString())) {
             Answer overRest = etag.isEmpty() ? rest("PATCH", RESULTS + "/" + id, school.nobody(), changes.toString())
                     : rest("PATCH", RESULTS + "/" + id, school.nobody(), changes.toString(), "If-Match", etag);
-            GrpcParityContract.assertSameAnswer(overRest, grpc(update, set(call(update, Map.of(), json("{}")
-                    .set("examResult", changes.deepCopy().put("id", id).put("etag", etag))).toBuilder(), "update_mask",
-                    mask).build(), school.nobody()));
+            GrpcParityContract.assertSameAnswer(overRest, grpc(update, updating(update, id, etag, changes),
+                    school.nobody()));
         }
         GrpcParityContract.assertSameAnswer(
                 rest("PATCH", RESULTS + "/" + id, school.admin(), changes.toString(), "If-Match", "\"99\""),
-                grpc(update, set(call(update, Map.of(), json("{}").set("examResult", changes.deepCopy().put("id", id)
-                        .put("etag", "\"99\""))).toBuilder(), "update_mask", mask).build(), school.admin()));
+                grpc(update, updating(update, id, "\"99\"", changes), school.admin()));
         GrpcParityContract.assertSameAnswer(rest("PATCH", RESULTS + "/" + id, school.admin(), changes.toString()),
-                grpc(update, set(call(update, Map.of(), json("{}").set("examResult", changes.deepCopy().put("id", id)))
-                        .toBuilder(), "update_mask", mask).build(), school.admin()));
-        JsonNode updated = resource(grpc(update, set(call(update, Map.of(), json("{}").set("examResult",
-                changes.deepCopy().put("id", id).put("etag", anns.path("etag").asString()))).toBuilder(), "update_mask",
-                mask).build(), school.admin()));
+                grpc(update, updating(update, id, "", changes), school.admin()));
+        JsonNode updated = resource(grpc(update, updating(update, id, anns.path("etag").asString(), changes),
+                school.admin()));
         assertThat(updated.path("note").asString()).isEqualTo("Rechecked");
         sameResource(rest("GET", RESULTS + "/" + id, school.admin(), null).body(), updated);
+        new GrpcParityContract(AssessmentProto.getDescriptor(), this::rest, this::channel, bridge,
+                new GrpcParityContract.Callers(school.admin(), school.nobody(), STRANGER))
+                .patchStates(described("assessment/crud-spec.json", "ExamResult"), id, updated.path("etag").asString());
     }
 
     /** sis and facility are not running here: after every local check both transports answer 503. */

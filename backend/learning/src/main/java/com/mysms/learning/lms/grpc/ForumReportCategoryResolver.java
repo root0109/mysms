@@ -3,18 +3,17 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ForumReportCategory;
-import com.mysms.learning.lms.api.model.ForumReportCategoryUpdate;
 import com.mysms.learning.lms.business.ForumReportCategoryService;
 import com.mysms.lms.v1.CreateForumReportCategoryRequest;
 import com.mysms.lms.v1.CreateForumReportCategoryResponse;
 import com.mysms.lms.v1.DeleteForumReportCategoryRequest;
 import com.mysms.lms.v1.DeleteForumReportCategoryResponse;
 import com.mysms.lms.v1.ForumReportCategoryServiceGrpc;
+import com.mysms.lms.v1.ForumReportCategoryUpdate;
 import com.mysms.lms.v1.GetForumReportCategoryRequest;
 import com.mysms.lms.v1.GetForumReportCategoryResponse;
 import com.mysms.lms.v1.ListForumReportCategoriesRequest;
 import com.mysms.lms.v1.ListForumReportCategoriesResponse;
-import com.mysms.lms.v1.UpdateForumReportCategoryRequest;
 import com.mysms.lms.v1.UpdateForumReportCategoryResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -61,13 +60,12 @@ public class ForumReportCategoryResolver extends ForumReportCategoryServiceGrpc.
     }
 
     @Override
-    public void updateForumReportCategory(UpdateForumReportCategoryRequest request,
+    public void updateForumReportCategory(ForumReportCategoryUpdate request,
             StreamObserver<UpdateForumReportCategoryResponse> out) {
         ForumReportCategory updated = service.updateForumReportCategory(
-                bridge.id(request.getForumReportCategory().getId(), "id"),
-                bridge.requiredIfMatch(request.getForumReportCategory().getEtag()),
-                bridge.changes(request.getForumReportCategory(), request.getUpdateMask(),
-                        ForumReportCategoryUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ForumReportCategoryProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateForumReportCategoryResponse.newBuilder(), "forum_report_category", updated).build());
     }

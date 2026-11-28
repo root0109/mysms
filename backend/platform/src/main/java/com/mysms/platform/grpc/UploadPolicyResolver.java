@@ -3,7 +3,6 @@ package com.mysms.platform.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.api.model.UploadPolicy;
-import com.mysms.platform.api.model.UploadPolicyUpdate;
 import com.mysms.platform.business.UploadPolicyService;
 import com.mysms.platform.v1.CreateUploadPolicyRequest;
 import com.mysms.platform.v1.CreateUploadPolicyResponse;
@@ -13,9 +12,9 @@ import com.mysms.platform.v1.GetUploadPolicyRequest;
 import com.mysms.platform.v1.GetUploadPolicyResponse;
 import com.mysms.platform.v1.ListUploadPoliciesRequest;
 import com.mysms.platform.v1.ListUploadPoliciesResponse;
-import com.mysms.platform.v1.UpdateUploadPolicyRequest;
 import com.mysms.platform.v1.UpdateUploadPolicyResponse;
 import com.mysms.platform.v1.UploadPolicyServiceGrpc;
+import com.mysms.platform.v1.UploadPolicyUpdate;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 
@@ -56,11 +55,11 @@ public class UploadPolicyResolver extends UploadPolicyServiceGrpc.UploadPolicySe
     }
 
     @Override
-    public void updateUploadPolicy(UpdateUploadPolicyRequest request, StreamObserver<UpdateUploadPolicyResponse> out) {
+    public void updateUploadPolicy(UploadPolicyUpdate request, StreamObserver<UpdateUploadPolicyResponse> out) {
         UploadPolicy updated = service.updateUploadPolicy(
-                bridge.id(request.getUploadPolicy().getId(), "id"),
-                bridge.requiredIfMatch(request.getUploadPolicy().getEtag()),
-                bridge.changes(request.getUploadPolicy(), request.getUpdateMask(), UploadPolicyUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                UploadPolicyProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateUploadPolicyResponse.newBuilder(), "upload_policy", updated).build());
     }

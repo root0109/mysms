@@ -34,7 +34,7 @@ public final class MapperRule implements ConformanceRule {
         for (SourceTree.Area area : tree.areas()) {
             String module = area.name();
             Path base = tree.base(area, "main");
-            String config = Character.toUpperCase(module.charAt(0)) + module.substring(1) + "MapperConfig";
+            String config = area.typeName() + "MapperConfig";
             List<Path> mappers = tree.files(base.resolve("mapper"), ".java");
             List<Path> configs = mappers.stream().filter(f -> tree.read(f).contains("@MapperConfig")).toList();
             if (configs.size() != 1 || !SourceTree.fileName(configs.get(0)).equals(config + ".java")) {

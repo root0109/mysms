@@ -3,9 +3,9 @@ package com.mysms.campus.library.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.library.api.model.Author;
-import com.mysms.campus.library.api.model.AuthorUpdate;
 import com.mysms.campus.library.business.AuthorService;
 import com.mysms.library.v1.AuthorServiceGrpc;
+import com.mysms.library.v1.AuthorUpdate;
 import com.mysms.library.v1.CreateAuthorRequest;
 import com.mysms.library.v1.CreateAuthorResponse;
 import com.mysms.library.v1.DeleteAuthorRequest;
@@ -14,7 +14,6 @@ import com.mysms.library.v1.GetAuthorRequest;
 import com.mysms.library.v1.GetAuthorResponse;
 import com.mysms.library.v1.ListAuthorsRequest;
 import com.mysms.library.v1.ListAuthorsResponse;
-import com.mysms.library.v1.UpdateAuthorRequest;
 import com.mysms.library.v1.UpdateAuthorResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,11 +56,11 @@ public class AuthorResolver extends AuthorServiceGrpc.AuthorServiceImplBase {
     }
 
     @Override
-    public void updateAuthor(UpdateAuthorRequest request, StreamObserver<UpdateAuthorResponse> out) {
+    public void updateAuthor(AuthorUpdate request, StreamObserver<UpdateAuthorResponse> out) {
         Author updated = service.updateAuthor(
-                bridge.id(request.getAuthor().getId(), "id"),
-                bridge.requiredIfMatch(request.getAuthor().getEtag()),
-                bridge.changes(request.getAuthor(), request.getUpdateMask(), AuthorUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AuthorProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAuthorResponse.newBuilder(), "author", updated).build());
     }
 

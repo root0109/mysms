@@ -21,18 +21,12 @@ import com.mysms.identity.iam.api.model.RecoveryCodes;
 import com.mysms.identity.iam.api.model.SwitchRoleResult;
 import com.mysms.identity.iam.api.model.TokenPair;
 import com.mysms.identity.iam.api.model.UserAccount;
-import com.mysms.identity.iam.api.model.UserAccountUpdate;
 import com.mysms.identity.iam.api.model.UserDepartmentAccess;
-import com.mysms.identity.iam.api.model.UserDepartmentAccessUpdate;
 import com.mysms.identity.iam.api.model.UserDevice;
-import com.mysms.identity.iam.api.model.UserDeviceUpdate;
 import com.mysms.identity.iam.api.model.UserPermission;
-import com.mysms.identity.iam.api.model.UserPermissionUpdate;
 import com.mysms.identity.iam.api.model.UserPreference;
-import com.mysms.identity.iam.api.model.UserPreferenceUpdate;
 import com.mysms.identity.iam.api.model.UserRole;
 import com.mysms.identity.iam.api.model.UserRoleList;
-import com.mysms.identity.iam.api.model.UserRoleUpdate;
 import com.mysms.identity.iam.api.model.UserSession;
 import com.mysms.identity.iam.business.AccountProvisioningService;
 import com.mysms.identity.iam.business.AccountRecoveryService;
@@ -170,19 +164,19 @@ import com.mysms.iam.v1.SwitchRoleRequest;
 import com.mysms.iam.v1.SwitchRoleResponse;
 import com.mysms.iam.v1.UnlockUserRequest;
 import com.mysms.iam.v1.UnlockUserResponse;
-import com.mysms.iam.v1.UpdateUserAccountRequest;
 import com.mysms.iam.v1.UpdateUserAccountResponse;
-import com.mysms.iam.v1.UpdateUserDepartmentAccessRequest;
 import com.mysms.iam.v1.UpdateUserDepartmentAccessResponse;
-import com.mysms.iam.v1.UpdateUserDeviceRequest;
 import com.mysms.iam.v1.UpdateUserDeviceResponse;
-import com.mysms.iam.v1.UpdateUserPermissionRequest;
 import com.mysms.iam.v1.UpdateUserPermissionResponse;
-import com.mysms.iam.v1.UpdateUserPreferenceRequest;
 import com.mysms.iam.v1.UpdateUserPreferenceResponse;
-import com.mysms.iam.v1.UpdateUserRoleRequest;
 import com.mysms.iam.v1.UpdateUserRoleResponse;
 import com.mysms.iam.v1.UserAccountServiceGrpc;
+import com.mysms.iam.v1.UserAccountUpdate;
+import com.mysms.iam.v1.UserDepartmentAccessUpdate;
+import com.mysms.iam.v1.UserDeviceUpdate;
+import com.mysms.iam.v1.UserPermissionUpdate;
+import com.mysms.iam.v1.UserPreferenceUpdate;
+import com.mysms.iam.v1.UserRoleUpdate;
 import io.grpc.stub.StreamObserver;
 import java.util.UUID;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -326,11 +320,11 @@ public class UserAccountResolver extends UserAccountServiceGrpc.UserAccountServi
     }
 
     @Override
-    public void updateUserAccount(UpdateUserAccountRequest request, StreamObserver<UpdateUserAccountResponse> out) {
+    public void updateUserAccount(UserAccountUpdate request, StreamObserver<UpdateUserAccountResponse> out) {
         UserAccount updated = service.updateUserAccount(
-                bridge.id(request.getUserAccount().getId(), "id"),
-                bridge.requiredIfMatch(request.getUserAccount().getEtag()),
-                bridge.changes(request.getUserAccount(), request.getUpdateMask(), UserAccountUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                UserAccountProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateUserAccountResponse.newBuilder(), "user_account", updated).build());
     }
@@ -366,12 +360,12 @@ public class UserAccountResolver extends UserAccountServiceGrpc.UserAccountServi
     }
 
     @Override
-    public void updateUserRole(UpdateUserRoleRequest request, StreamObserver<UpdateUserRoleResponse> out) {
+    public void updateUserRole(UserRoleUpdate request, StreamObserver<UpdateUserRoleResponse> out) {
         UserRole updated = service.updateUserRole(
                 userAccountId(request.getUserAccountId()),
-                bridge.id(request.getUserRole().getId(), "id"),
-                bridge.requiredIfMatch(request.getUserRole().getEtag()),
-                bridge.changes(request.getUserRole(), request.getUpdateMask(), UserRoleUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                UserRoleProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateUserRoleResponse.newBuilder(), "user_role", updated).build());
     }
 
@@ -410,13 +404,13 @@ public class UserAccountResolver extends UserAccountServiceGrpc.UserAccountServi
     }
 
     @Override
-    public void updateUserPermission(UpdateUserPermissionRequest request,
+    public void updateUserPermission(UserPermissionUpdate request,
             StreamObserver<UpdateUserPermissionResponse> out) {
         UserPermission updated = service.updateUserPermission(
                 userAccountId(request.getUserAccountId()),
-                bridge.id(request.getUserPermission().getId(), "id"),
-                bridge.requiredIfMatch(request.getUserPermission().getEtag()),
-                bridge.changes(request.getUserPermission(), request.getUpdateMask(), UserPermissionUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                UserPermissionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateUserPermissionResponse.newBuilder(), "user_permission", updated)
                 .build());
@@ -460,14 +454,13 @@ public class UserAccountResolver extends UserAccountServiceGrpc.UserAccountServi
     }
 
     @Override
-    public void updateUserDepartmentAccess(UpdateUserDepartmentAccessRequest request,
+    public void updateUserDepartmentAccess(UserDepartmentAccessUpdate request,
             StreamObserver<UpdateUserDepartmentAccessResponse> out) {
         UserDepartmentAccess updated = service.updateUserDepartmentAccess(
                 userAccountId(request.getUserAccountId()),
-                bridge.id(request.getUserDepartmentAccess().getId(), "id"),
-                bridge.requiredIfMatch(request.getUserDepartmentAccess().getEtag()),
-                bridge.changes(request.getUserDepartmentAccess(), request.getUpdateMask(),
-                        UserDepartmentAccessUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                UserDepartmentAccessProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateUserDepartmentAccessResponse.newBuilder(), "user_department_access",
                 updated).build());
     }
@@ -522,12 +515,12 @@ public class UserAccountResolver extends UserAccountServiceGrpc.UserAccountServi
     }
 
     @Override
-    public void updateUserDevice(UpdateUserDeviceRequest request, StreamObserver<UpdateUserDeviceResponse> out) {
+    public void updateUserDevice(UserDeviceUpdate request, StreamObserver<UpdateUserDeviceResponse> out) {
         UserDevice updated = service.updateUserDevice(
                 userAccountId(request.getUserAccountId()),
-                bridge.id(request.getUserDevice().getId(), "id"),
-                bridge.requiredIfMatch(request.getUserDevice().getEtag()),
-                bridge.changes(request.getUserDevice(), request.getUpdateMask(), UserDeviceUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                UserDeviceProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateUserDeviceResponse.newBuilder(), "user_device", updated).build());
     }
@@ -567,13 +560,13 @@ public class UserAccountResolver extends UserAccountServiceGrpc.UserAccountServi
     }
 
     @Override
-    public void updateUserPreference(UpdateUserPreferenceRequest request,
+    public void updateUserPreference(UserPreferenceUpdate request,
             StreamObserver<UpdateUserPreferenceResponse> out) {
         UserPreference updated = service.updateUserPreference(
                 userAccountId(request.getUserAccountId()),
-                bridge.id(request.getUserPreference().getId(), "id"),
-                bridge.requiredIfMatch(request.getUserPreference().getEtag()),
-                bridge.changes(request.getUserPreference(), request.getUpdateMask(), UserPreferenceUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                UserPreferenceProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateUserPreferenceResponse.newBuilder(), "user_preference", updated)
                 .build());

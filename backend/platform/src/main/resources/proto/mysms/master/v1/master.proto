@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.master.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "MasterProto";
@@ -20,7 +20,7 @@ service CountryService {
   // Create Country.
   rpc CreateCountry(CreateCountryRequest) returns (CreateCountryResponse);
   // Update Country.
-  rpc UpdateCountry(UpdateCountryRequest) returns (UpdateCountryResponse);
+  rpc UpdateCountry(CountryUpdate) returns (UpdateCountryResponse);
   // Soft-delete Country.
   rpc DeleteCountry(DeleteCountryRequest) returns (DeleteCountryResponse);
 }
@@ -34,7 +34,7 @@ service StateProvinceService {
   // Create StateProvince.
   rpc CreateStateProvince(CreateStateProvinceRequest) returns (CreateStateProvinceResponse);
   // Update StateProvince.
-  rpc UpdateStateProvince(UpdateStateProvinceRequest) returns (UpdateStateProvinceResponse);
+  rpc UpdateStateProvince(StateProvinceUpdate) returns (UpdateStateProvinceResponse);
   // Soft-delete StateProvince.
   rpc DeleteStateProvince(DeleteStateProvinceRequest) returns (DeleteStateProvinceResponse);
 }
@@ -48,7 +48,7 @@ service CityService {
   // Create City.
   rpc CreateCity(CreateCityRequest) returns (CreateCityResponse);
   // Update City.
-  rpc UpdateCity(UpdateCityRequest) returns (UpdateCityResponse);
+  rpc UpdateCity(CityUpdate) returns (UpdateCityResponse);
   // Soft-delete City.
   rpc DeleteCity(DeleteCityRequest) returns (DeleteCityResponse);
 }
@@ -64,7 +64,7 @@ service CurrencyService {
   // Create Currency.
   rpc CreateCurrency(CreateCurrencyRequest) returns (CreateCurrencyResponse);
   // Update Currency.
-  rpc UpdateCurrency(UpdateCurrencyRequest) returns (UpdateCurrencyResponse);
+  rpc UpdateCurrency(CurrencyUpdate) returns (UpdateCurrencyResponse);
   // Soft-delete Currency.
   rpc DeleteCurrency(DeleteCurrencyRequest) returns (DeleteCurrencyResponse);
 }
@@ -112,13 +112,29 @@ message CreateCountryResponse {
   Country country = 1;
 }
 
-message UpdateCountryRequest {
-  // Resource with id and etag set.
-  Country country = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateCountry (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CountryUpdate {
+  // Country id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // ISO 3166-1 alpha-2 code.
+  mysms.common.v1.NullableString iso2 = 4;
+  // ISO 3166-1 alpha-3 code.
+  mysms.common.v1.NullableString iso3 = 5;
+  // Country name.
+  optional string name = 6;
+  // Short/common name.
+  mysms.common.v1.NullableString short_name = 7;
+  // International dialling prefix, e.g. +91.
+  mysms.common.v1.NullableString phone_prefix = 8;
+  // Display order in pick-lists.
+  mysms.common.v1.NullableInt32 sort_order = 9;
+  // Whether the country is selectable.
+  optional bool is_active = 10;
 }
 message UpdateCountryResponse {
   Country country = 1;
@@ -174,13 +190,23 @@ message CreateStateProvinceResponse {
   StateProvince state_province = 1;
 }
 
-message UpdateStateProvinceRequest {
-  // Resource with id and etag set.
-  StateProvince state_province = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStateProvince (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StateProvinceUpdate {
+  // StateProvince id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Country the state belongs to. [UUID]
+  optional string country_id = 4;
+  // Official subdivision code (ISO 3166-2 suffix).
+  mysms.common.v1.NullableString code = 5;
+  // State / province name.
+  optional string name = 6;
+  // Whether selectable.
+  optional bool is_active = 7;
 }
 message UpdateStateProvinceResponse {
   StateProvince state_province = 1;
@@ -236,13 +262,23 @@ message CreateCityResponse {
   City city = 1;
 }
 
-message UpdateCityRequest {
-  // Resource with id and etag set.
-  City city = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateCity (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CityUpdate {
+  // City id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Country of the city. [UUID]
+  optional string country_id = 4;
+  // State / province of the city. [UUID]
+  mysms.common.v1.NullableString state_province_id = 5;
+  // City name.
+  optional string name = 6;
+  // Whether selectable.
+  optional bool is_active = 7;
 }
 message UpdateCityResponse {
   City city = 1;
@@ -298,13 +334,25 @@ message CreateCurrencyResponse {
   Currency currency = 1;
 }
 
-message UpdateCurrencyRequest {
-  // Resource with id and etag set.
-  Currency currency = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateCurrency (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CurrencyUpdate {
+  // Currency id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // ISO 4217 code, e.g. INR, USD.
+  optional string code = 4;
+  // Currency name.
+  optional string name = 5;
+  // Display symbol.
+  mysms.common.v1.NullableString symbol = 6;
+  // Number of decimal places.
+  optional int32 minor_units = 7;
+  // Whether usable.
+  optional bool is_active = 8;
 }
 message UpdateCurrencyResponse {
   Currency currency = 1;

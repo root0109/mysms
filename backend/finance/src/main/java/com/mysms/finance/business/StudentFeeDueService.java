@@ -186,6 +186,9 @@ public class StudentFeeDueService extends AppTransactionManager {
                     && !repository.withAllocations(List.of(id)).isEmpty()) {
                 throw new InvalidStateException("A payment settles this due; its institution stays.");
             }
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);

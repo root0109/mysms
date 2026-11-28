@@ -801,15 +801,17 @@ CREATE TABLE academics.staff_record (
     tenant_id uuid NOT NULL,
     staff_id uuid NOT NULL,
     person_id uuid NOT NULL,
+    is_deleted boolean NOT NULL DEFAULT false,
     source_version integer NOT NULL,
     synced_at timestamptz NOT NULL,
     CONSTRAINT pk_academics_staff_record PRIMARY KEY (tenant_id, staff_id),
     CONSTRAINT ck_staff_record_source_version CHECK (source_version >= 1)
 );
-COMMENT ON TABLE academics.staff_record IS 'The person of each hr.staff record, kept from hr.staff created/updated events (academics never reads another module''s schema), so privacy''s tasks find a data principal''s lesson plans (AcademicsPrivacyTaskHandler).';
+COMMENT ON TABLE academics.staff_record IS 'The person of each hr.staff record, kept from hr.staff created/updated/deleted events (academics never reads another module''s schema): privacy''s tasks find a data principal''s lesson plans through it (AcademicsPrivacyTaskHandler), and teaching assignments and teacher subjects may name only a live entry.';
 COMMENT ON COLUMN academics.staff_record.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
 COMMENT ON COLUMN academics.staff_record.staff_id IS 'hr.staff.id (logical, maintained from its events): teaching_assignment.staff_id, class_section.class_teacher_staff_id.';
 COMMENT ON COLUMN academics.staff_record.person_id IS 'Person of the staff record (people.person.id), the data principal privacy''s tasks name.';
+COMMENT ON COLUMN academics.staff_record.is_deleted IS 'The hr.staff record was deleted: the entry stays for privacy''s tasks, but no new teaching assignment or teacher subject may name it.';
 COMMENT ON COLUMN academics.staff_record.source_version IS 'Row version of the hr.staff row this entry reflects; an event with an older or equal version is ignored.';
 COMMENT ON COLUMN academics.staff_record.synced_at IS 'When the row was last changed by an event.';
 CREATE INDEX ix_academics_staff_record_person ON academics.staff_record (tenant_id, person_id);

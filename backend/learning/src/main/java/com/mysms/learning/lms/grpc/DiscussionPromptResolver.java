@@ -3,18 +3,17 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.DiscussionPrompt;
-import com.mysms.learning.lms.api.model.DiscussionPromptUpdate;
 import com.mysms.learning.lms.business.DiscussionPromptService;
 import com.mysms.lms.v1.CreateDiscussionPromptRequest;
 import com.mysms.lms.v1.CreateDiscussionPromptResponse;
 import com.mysms.lms.v1.DeleteDiscussionPromptRequest;
 import com.mysms.lms.v1.DeleteDiscussionPromptResponse;
 import com.mysms.lms.v1.DiscussionPromptServiceGrpc;
+import com.mysms.lms.v1.DiscussionPromptUpdate;
 import com.mysms.lms.v1.GetDiscussionPromptRequest;
 import com.mysms.lms.v1.GetDiscussionPromptResponse;
 import com.mysms.lms.v1.ListDiscussionPromptsRequest;
 import com.mysms.lms.v1.ListDiscussionPromptsResponse;
-import com.mysms.lms.v1.UpdateDiscussionPromptRequest;
 import com.mysms.lms.v1.UpdateDiscussionPromptResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,11 +56,11 @@ public class DiscussionPromptResolver extends DiscussionPromptServiceGrpc.Discus
     }
 
     @Override
-    public void updateDiscussionPrompt(UpdateDiscussionPromptRequest request,
+    public void updateDiscussionPrompt(DiscussionPromptUpdate request,
             StreamObserver<UpdateDiscussionPromptResponse> out) {
-        DiscussionPrompt updated = service.updateDiscussionPrompt(bridge.id(request.getDiscussionPrompt().getId(), "id"),
-                bridge.requiredIfMatch(request.getDiscussionPrompt().getEtag()),
-                bridge.changes(request.getDiscussionPrompt(), request.getUpdateMask(), DiscussionPromptUpdate.class),
+        DiscussionPrompt updated = service.updateDiscussionPrompt(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                DiscussionPromptProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateDiscussionPromptResponse.newBuilder(), "discussion_prompt", updated).build());
     }

@@ -4,7 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.ChildCard;
 import com.mysms.students.sis.api.model.Guardian;
-import com.mysms.students.sis.api.model.GuardianUpdate;
 import com.mysms.students.sis.business.GuardianService;
 import com.mysms.students.sis.business.PortalAccountService;
 import com.mysms.students.sis.business.StudentSummaryService;
@@ -17,11 +16,11 @@ import com.mysms.sis.v1.DeleteGuardianResponse;
 import com.mysms.sis.v1.GetGuardianRequest;
 import com.mysms.sis.v1.GetGuardianResponse;
 import com.mysms.sis.v1.GuardianServiceGrpc;
+import com.mysms.sis.v1.GuardianUpdate;
 import com.mysms.sis.v1.ListGuardiansRequest;
 import com.mysms.sis.v1.ListGuardiansResponse;
 import com.mysms.sis.v1.ListMyChildrenRequest;
 import com.mysms.sis.v1.ListMyChildrenResponse;
-import com.mysms.sis.v1.UpdateGuardianRequest;
 import com.mysms.sis.v1.UpdateGuardianResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -69,10 +68,10 @@ public class GuardianResolver extends GuardianServiceGrpc.GuardianServiceImplBas
     }
 
     @Override
-    public void updateGuardian(UpdateGuardianRequest request, StreamObserver<UpdateGuardianResponse> out) {
+    public void updateGuardian(GuardianUpdate request, StreamObserver<UpdateGuardianResponse> out) {
         Guardian updated = guardianService.updateGuardian(
-                bridge.id(request.getGuardian().getId(), "id"), bridge.requiredIfMatch(request.getGuardian().getEtag()),
-                bridge.changes(request.getGuardian(), request.getUpdateMask(), GuardianUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                GuardianProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateGuardianResponse.newBuilder(), "guardian", updated).build());
     }
 

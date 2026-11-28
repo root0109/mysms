@@ -161,6 +161,9 @@ public class LeaveApplicationService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -235,13 +238,17 @@ public class LeaveApplicationService extends AppTransactionManager {
             OffsetDateTime now = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC)
                     .truncatedTo(ChronoUnit.MICROS);
             UUID actor = Actor.current().orElse(null);
-            countAgainstBalance(entity, now, actor);
-            if (repository.approveLeave(id, entity.getRowVersion(), now, actor, now.toLocalDate(), comment) == 0) {
+            // the days are kept on the application, so a cancellation gives back what was counted even when the
+            // calendar has changed since
+            BigDecimal days = ledger.daysOf(id);
+            countAgainstBalance(entity, days, now, actor);
+            if (repository.approveLeave(id, entity.getRowVersion(), now, actor, now.toLocalDate(), comment, days)
+                    == 0) {
                 throw new PreconditionFailedException("The row changed since it was read.");
             }
             audit.recordTransition(AGGREGATE, id, "approveLeave",
-                    List.of("status", "decidedByUserId", "decidedOn"), comment);
-            outbox.publish(AGGREGATE + ".approveLeave", AGGREGATE, id, HrEvents.payload(id));
+                    List.of("status", "decidedByUserId", "decidedOn", "countedDays"), comment);
+            outbox.publish(AGGREGATE + ".approve_leave", AGGREGATE, id, HrEvents.payload(id));
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });
@@ -257,7 +264,8 @@ public class LeaveApplicationService extends AppTransactionManager {
      * Counts the application's days against the balance of its leave type and year, with the audit record of the
      * balance it opens or changes; 409 when too few days are left.
      */
-    private void countAgainstBalance(LeaveApplicationEntity application, OffsetDateTime now, UUID actor) {
+    private void countAgainstBalance(LeaveApplicationEntity application, BigDecimal days, OffsetDateTime now,
+            UUID actor) {
         if (application.getLeaveTypeId() == null) {
             if (ledger.hasLeaveTypes(application.getInstitutionId(), application.getAcademicYearId())) {
                 throw new InvalidStateException(
@@ -276,7 +284,6 @@ public class LeaveApplicationService extends AppTransactionManager {
             outbox.publish(LeaveBalanceService.AGGREGATE + HrEvents.CREATED, LeaveBalanceService.AGGREGATE,
                     balance.id(), HrEvents.payload(balance.id()));
         }
-        BigDecimal days = ledger.daysOf(application.getId());
         if (days.compareTo(balance.available()) > 0) {
             throw new InvalidStateException("The application asks for " + LeaveDays.plain(days) + " days and "
                     + LeaveDays.plain(balance.available().max(BigDecimal.ZERO)) + " are left for this leave type.");
@@ -329,7 +336,7 @@ public class LeaveApplicationService extends AppTransactionManager {
             }
             audit.recordTransition(AGGREGATE, id, "rejectLeave", List.of("status", "decidedByUserId", "decidedOn"),
                     comment);
-            outbox.publish(AGGREGATE + ".rejectLeave", AGGREGATE, id, HrEvents.payload(id));
+            outbox.publish(AGGREGATE + ".reject_leave", AGGREGATE, id, HrEvents.payload(id));
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });
@@ -381,13 +388,16 @@ public class LeaveApplicationService extends AppTransactionManager {
             }
             audit.recordTransition(AGGREGATE, id, "cancelLeave", List.of("status"), request == null ? null
                     : request.getReason());
-            outbox.publish(AGGREGATE + ".cancelLeave", AGGREGATE, id, HrEvents.payload(id));
+            outbox.publish(AGGREGATE + ".cancel_leave", AGGREGATE, id, HrEvents.payload(id));
             return mapper.toDto(repository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException(AGGREGATE, id)));
         });
     }
 
-    /** Gives a cancelled approved leave's days back to the balance its approval counted them against. */
+    /**
+     * Gives a cancelled approved leave's days back to the balance its approval counted them against: exactly the days
+     * the approval counted (kept on the application), not a recount on today's calendar.
+     */
     private void returnToBalance(LeaveApplicationEntity application, OffsetDateTime now, UUID actor) {
         if (application.getLeaveTypeId() == null) {
             return; // approved where the school keeps no leave types: nothing was counted
@@ -397,7 +407,7 @@ public class LeaveApplicationService extends AppTransactionManager {
         if (counted.isEmpty()) {
             return; // the balance was deleted since: there is nothing to give back to
         }
-        if (ledger.returnDays(counted.get(), ledger.daysOf(application.getId()), now, actor) == 0) {
+        if (ledger.returnDays(counted.get(), application.getCountedDays(), now, actor) == 0) {
             throw new PreconditionFailedException("The leave balance changed since it was read.");
         }
         audit.recordUpdate(LeaveBalanceService.AGGREGATE, counted.get().id(), List.of("usedDays"));

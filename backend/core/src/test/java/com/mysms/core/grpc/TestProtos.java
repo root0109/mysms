@@ -13,7 +13,6 @@ import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.FieldMaskProto;
 import com.google.protobuf.TimestampProto;
 import io.grpc.MethodDescriptor;
 import io.grpc.protobuf.ProtoUtils;
@@ -107,12 +106,11 @@ final class TestProtos {
                 .addField(field("validate_only", 3, Type.TYPE_BOOL, null)).build();
         FileDescriptorProto file = FileDescriptorProto.newBuilder().setName("mysms/coretest/v1/coretest.proto")
                 .setPackage("mysms.coretest.v1").setSyntax("proto3")
-                .addDependency("google/protobuf/timestamp.proto").addDependency("google/protobuf/field_mask.proto")
+                .addDependency("google/protobuf/timestamp.proto")
                 .addMessageType(widget).addMessageType(sort).addMessageType(pageable).addMessageType(pagination)
                 .addMessageType(list).addMessageType(get).addMessageType(create).build();
         try {
-            return FileDescriptor.buildFrom(file, new FileDescriptor[] {TimestampProto.getDescriptor(),
-                    FieldMaskProto.getDescriptor()});
+            return FileDescriptor.buildFrom(file, new FileDescriptor[] {TimestampProto.getDescriptor()});
         } catch (DescriptorValidationException e) {
             throw new IllegalStateException(e);
         }

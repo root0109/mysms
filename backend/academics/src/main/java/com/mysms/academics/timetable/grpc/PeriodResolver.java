@@ -3,7 +3,6 @@ package com.mysms.academics.timetable.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.academics.timetable.api.model.Period;
-import com.mysms.academics.timetable.api.model.PeriodUpdate;
 import com.mysms.academics.timetable.business.PeriodService;
 import com.mysms.timetable.v1.CreatePeriodRequest;
 import com.mysms.timetable.v1.CreatePeriodResponse;
@@ -14,7 +13,7 @@ import com.mysms.timetable.v1.GetPeriodResponse;
 import com.mysms.timetable.v1.ListPeriodsRequest;
 import com.mysms.timetable.v1.ListPeriodsResponse;
 import com.mysms.timetable.v1.PeriodServiceGrpc;
-import com.mysms.timetable.v1.UpdatePeriodRequest;
+import com.mysms.timetable.v1.PeriodUpdate;
 import com.mysms.timetable.v1.UpdatePeriodResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -55,10 +54,10 @@ public class PeriodResolver extends PeriodServiceGrpc.PeriodServiceImplBase {
     }
 
     @Override
-    public void updatePeriod(UpdatePeriodRequest request, StreamObserver<UpdatePeriodResponse> out) {
-        Period updated = service.updatePeriod(bridge.id(request.getPeriod().getId(), "id"),
-                bridge.requiredIfMatch(request.getPeriod().getEtag()),
-                bridge.changes(request.getPeriod(), request.getUpdateMask(), PeriodUpdate.class), request.getValidateOnly());
+    public void updatePeriod(PeriodUpdate request, StreamObserver<UpdatePeriodResponse> out) {
+        Period updated = service.updatePeriod(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PeriodProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePeriodResponse.newBuilder(), "period", updated).build());
     }
 

@@ -5,8 +5,6 @@ import com.mysms.core.paging.Page;
 import com.mysms.platform.org.api.model.Institution;
 import com.mysms.platform.org.api.model.InstitutionCard;
 import com.mysms.platform.org.api.model.InstitutionAttribute;
-import com.mysms.platform.org.api.model.InstitutionAttributeUpdate;
-import com.mysms.platform.org.api.model.InstitutionUpdate;
 import com.mysms.platform.org.business.InstitutionService;
 import com.mysms.platform.org.business.SchoolFinder;
 import com.mysms.org.v1.CreateInstitutionAttributeRequest;
@@ -23,16 +21,16 @@ import com.mysms.org.v1.GetInstitutionAttributeRequest;
 import com.mysms.org.v1.GetInstitutionAttributeResponse;
 import com.mysms.org.v1.GetInstitutionRequest;
 import com.mysms.org.v1.GetInstitutionResponse;
+import com.mysms.org.v1.InstitutionAttributeUpdate;
 import com.mysms.org.v1.InstitutionServiceGrpc;
+import com.mysms.org.v1.InstitutionUpdate;
 import com.mysms.org.v1.ListActiveInstitutionsRequest;
 import com.mysms.org.v1.ListActiveInstitutionsResponse;
 import com.mysms.org.v1.ListInstitutionAttributesRequest;
 import com.mysms.org.v1.ListInstitutionAttributesResponse;
 import com.mysms.org.v1.ListInstitutionsRequest;
 import com.mysms.org.v1.ListInstitutionsResponse;
-import com.mysms.org.v1.UpdateInstitutionAttributeRequest;
 import com.mysms.org.v1.UpdateInstitutionAttributeResponse;
-import com.mysms.org.v1.UpdateInstitutionRequest;
 import com.mysms.org.v1.UpdateInstitutionResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -88,11 +86,11 @@ public class InstitutionResolver extends InstitutionServiceGrpc.InstitutionServi
     }
 
     @Override
-    public void updateInstitution(UpdateInstitutionRequest request, StreamObserver<UpdateInstitutionResponse> out) {
+    public void updateInstitution(InstitutionUpdate request, StreamObserver<UpdateInstitutionResponse> out) {
         Institution updated = service.updateInstitution(
-                bridge.id(request.getInstitution().getId(), "id"),
-                bridge.requiredIfMatch(request.getInstitution().getEtag()),
-                bridge.changes(request.getInstitution(), request.getUpdateMask(), InstitutionUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                InstitutionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateInstitutionResponse.newBuilder(), "institution", updated).build());
     }
@@ -135,14 +133,13 @@ public class InstitutionResolver extends InstitutionServiceGrpc.InstitutionServi
     }
 
     @Override
-    public void updateInstitutionAttribute(UpdateInstitutionAttributeRequest request,
+    public void updateInstitutionAttribute(InstitutionAttributeUpdate request,
             StreamObserver<UpdateInstitutionAttributeResponse> out) {
         InstitutionAttribute updated = service.updateInstitutionAttribute(
                 bridge.id(request.getInstitutionId(), "institutionId"),
-                bridge.id(request.getInstitutionAttribute().getId(), "id"),
-                bridge.requiredIfMatch(request.getInstitutionAttribute().getEtag()),
-                bridge.changes(request.getInstitutionAttribute(), request.getUpdateMask(),
-                        InstitutionAttributeUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                InstitutionAttributeProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateInstitutionAttributeResponse.newBuilder(), "institution_attribute",
                 updated).build());
     }

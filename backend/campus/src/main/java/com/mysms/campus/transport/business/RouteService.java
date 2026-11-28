@@ -167,6 +167,9 @@ public class RouteService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -346,6 +349,9 @@ public class RouteService extends AppTransactionManager {
             assertValidRouteStop(entity, false);
             scope.requireWritable(institutionOfRouteStop(entity));
             assertUniqueRouteStop(entity);
+            if (fields.isEmpty()) {
+                return routeStopMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return routeStopMapper.toDto(entity);

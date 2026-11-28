@@ -47,7 +47,7 @@ class PayrollServiceComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "payroll", "hr");
+        DATABASE.register(registry, "payroll", "hr", "time_attendance");
         registry.add("mysms.auth.api-docs", () -> true);
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
@@ -70,7 +70,7 @@ class PayrollServiceComponentTest {
         assertThat(tables).isEqualTo(TABLES);
         Integer moduleSchemas = database.jdbc().sql("SELECT count(*) FROM pg_namespace WHERE nspname = ANY(:modules)")
                 .param("modules", ModuleChecks.SCHEMAS.toArray(String[]::new)).query(Integer.class).single();
-        assertThat(moduleSchemas).as("only its module's schemas exist in its database").isEqualTo(2);
+        assertThat(moduleSchemas).as("only its module's schemas exist in its database").isEqualTo(3);
         Boolean ownsSchema = database.jdbc().sql(
                 "SELECT pg_get_userbyid(nspowner) = current_user FROM pg_namespace WHERE nspname = 'payroll'")
                 .query(Boolean.class).single();

@@ -6,7 +6,6 @@ import com.mysms.learning.lms.api.model.ExternalLink;
 import com.mysms.learning.lms.api.model.LiveClass;
 import com.mysms.learning.lms.api.model.LiveClassParticipant;
 import com.mysms.learning.lms.api.model.LiveClassParticipantList;
-import com.mysms.learning.lms.api.model.LiveClassUpdate;
 import com.mysms.learning.lms.business.LiveClassService;
 import com.mysms.lms.v1.CreateLiveClassRequest;
 import com.mysms.lms.v1.CreateLiveClassResponse;
@@ -27,13 +26,13 @@ import com.mysms.lms.v1.ListLiveClassParticipantsResponse;
 import com.mysms.lms.v1.ListLiveClassesRequest;
 import com.mysms.lms.v1.ListLiveClassesResponse;
 import com.mysms.lms.v1.LiveClassServiceGrpc;
+import com.mysms.lms.v1.LiveClassUpdate;
 import com.mysms.lms.v1.RetryLiveClassInvitesRequest;
 import com.mysms.lms.v1.RetryLiveClassInvitesResponse;
 import com.mysms.lms.v1.ScheduleLiveClassRequest;
 import com.mysms.lms.v1.ScheduleLiveClassResponse;
 import com.mysms.lms.v1.SyncLiveClassAttendanceRequest;
 import com.mysms.lms.v1.SyncLiveClassAttendanceResponse;
-import com.mysms.lms.v1.UpdateLiveClassRequest;
 import com.mysms.lms.v1.UpdateLiveClassResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -75,10 +74,10 @@ public class LiveClassResolver extends LiveClassServiceGrpc.LiveClassServiceImpl
     }
 
     @Override
-    public void updateLiveClass(UpdateLiveClassRequest request, StreamObserver<UpdateLiveClassResponse> out) {
-        LiveClass updated = service.updateLiveClass(bridge.id(request.getLiveClass().getId(), "id"),
-                bridge.requiredIfMatch(request.getLiveClass().getEtag()),
-                bridge.changes(request.getLiveClass(), request.getUpdateMask(), LiveClassUpdate.class),
+    public void updateLiveClass(LiveClassUpdate request, StreamObserver<UpdateLiveClassResponse> out) {
+        LiveClass updated = service.updateLiveClass(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LiveClassProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLiveClassResponse.newBuilder(), "live_class", updated).build());
     }

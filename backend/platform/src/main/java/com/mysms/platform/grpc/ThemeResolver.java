@@ -3,7 +3,6 @@ package com.mysms.platform.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.api.model.Theme;
-import com.mysms.platform.api.model.ThemeUpdate;
 import com.mysms.platform.business.ThemeService;
 import com.mysms.platform.v1.CreateThemeRequest;
 import com.mysms.platform.v1.CreateThemeResponse;
@@ -14,7 +13,7 @@ import com.mysms.platform.v1.GetThemeResponse;
 import com.mysms.platform.v1.ListThemesRequest;
 import com.mysms.platform.v1.ListThemesResponse;
 import com.mysms.platform.v1.ThemeServiceGrpc;
-import com.mysms.platform.v1.UpdateThemeRequest;
+import com.mysms.platform.v1.ThemeUpdate;
 import com.mysms.platform.v1.UpdateThemeResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class ThemeResolver extends ThemeServiceGrpc.ThemeServiceImplBase {
     }
 
     @Override
-    public void updateTheme(UpdateThemeRequest request, StreamObserver<UpdateThemeResponse> out) {
+    public void updateTheme(ThemeUpdate request, StreamObserver<UpdateThemeResponse> out) {
         Theme updated = service.updateTheme(
-                bridge.id(request.getTheme().getId(), "id"),
-                bridge.requiredIfMatch(request.getTheme().getEtag()),
-                bridge.changes(request.getTheme(), request.getUpdateMask(), ThemeUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ThemeProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateThemeResponse.newBuilder(), "theme", updated).build());
     }
 

@@ -4,10 +4,7 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.LearningProgram;
 import com.mysms.learning.lms.api.model.LearningProgramCourse;
-import com.mysms.learning.lms.api.model.LearningProgramCourseUpdate;
 import com.mysms.learning.lms.api.model.LearningProgramMember;
-import com.mysms.learning.lms.api.model.LearningProgramMemberUpdate;
-import com.mysms.learning.lms.api.model.LearningProgramUpdate;
 import com.mysms.learning.lms.business.LearningProgramService;
 import com.mysms.lms.v1.CreateLearningProgramCourseRequest;
 import com.mysms.lms.v1.CreateLearningProgramCourseResponse;
@@ -29,18 +26,18 @@ import com.mysms.lms.v1.GetLearningProgramMemberRequest;
 import com.mysms.lms.v1.GetLearningProgramMemberResponse;
 import com.mysms.lms.v1.GetLearningProgramRequest;
 import com.mysms.lms.v1.GetLearningProgramResponse;
+import com.mysms.lms.v1.LearningProgramCourseUpdate;
+import com.mysms.lms.v1.LearningProgramMemberUpdate;
 import com.mysms.lms.v1.LearningProgramServiceGrpc;
+import com.mysms.lms.v1.LearningProgramUpdate;
 import com.mysms.lms.v1.ListLearningProgramCoursesRequest;
 import com.mysms.lms.v1.ListLearningProgramCoursesResponse;
 import com.mysms.lms.v1.ListLearningProgramMembersRequest;
 import com.mysms.lms.v1.ListLearningProgramMembersResponse;
 import com.mysms.lms.v1.ListLearningProgramsRequest;
 import com.mysms.lms.v1.ListLearningProgramsResponse;
-import com.mysms.lms.v1.UpdateLearningProgramCourseRequest;
 import com.mysms.lms.v1.UpdateLearningProgramCourseResponse;
-import com.mysms.lms.v1.UpdateLearningProgramMemberRequest;
 import com.mysms.lms.v1.UpdateLearningProgramMemberResponse;
-import com.mysms.lms.v1.UpdateLearningProgramRequest;
 import com.mysms.lms.v1.UpdateLearningProgramResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -83,10 +80,10 @@ public class LearningProgramResolver extends LearningProgramServiceGrpc.Learning
     }
 
     @Override
-    public void updateLearningProgram(UpdateLearningProgramRequest request, StreamObserver<UpdateLearningProgramResponse> out) {
-        LearningProgram updated = service.updateLearningProgram(bridge.id(request.getLearningProgram().getId(), "id"),
-                bridge.requiredIfMatch(request.getLearningProgram().getEtag()),
-                bridge.changes(request.getLearningProgram(), request.getUpdateMask(), LearningProgramUpdate.class),
+    public void updateLearningProgram(LearningProgramUpdate request, StreamObserver<UpdateLearningProgramResponse> out) {
+        LearningProgram updated = service.updateLearningProgram(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LearningProgramProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLearningProgramResponse.newBuilder(), "learning_program", updated).build());
     }
@@ -127,14 +124,13 @@ public class LearningProgramResolver extends LearningProgramServiceGrpc.Learning
     }
 
     @Override
-    public void updateLearningProgramCourse(UpdateLearningProgramCourseRequest request,
+    public void updateLearningProgramCourse(LearningProgramCourseUpdate request,
             StreamObserver<UpdateLearningProgramCourseResponse> out) {
         LearningProgramCourse updated = service.updateLearningProgramCourse(
                 bridge.id(request.getLearningProgramId(), "learningProgramId"),
-                bridge.id(request.getLearningProgramCourse().getId(), "id"),
-                bridge.requiredIfMatch(request.getLearningProgramCourse().getEtag()),
-                bridge.changes(request.getLearningProgramCourse(), request.getUpdateMask(),
-                LearningProgramCourseUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LearningProgramCourseProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateLearningProgramCourseResponse.newBuilder(), "learning_program_course", updated).build());
     }
@@ -177,14 +173,13 @@ public class LearningProgramResolver extends LearningProgramServiceGrpc.Learning
     }
 
     @Override
-    public void updateLearningProgramMember(UpdateLearningProgramMemberRequest request,
+    public void updateLearningProgramMember(LearningProgramMemberUpdate request,
             StreamObserver<UpdateLearningProgramMemberResponse> out) {
         LearningProgramMember updated = service.updateLearningProgramMember(
                 bridge.id(request.getLearningProgramId(), "learningProgramId"),
-                bridge.id(request.getLearningProgramMember().getId(), "id"),
-                bridge.requiredIfMatch(request.getLearningProgramMember().getEtag()),
-                bridge.changes(request.getLearningProgramMember(), request.getUpdateMask(),
-                LearningProgramMemberUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LearningProgramMemberProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateLearningProgramMemberResponse.newBuilder(), "learning_program_member", updated).build());
     }

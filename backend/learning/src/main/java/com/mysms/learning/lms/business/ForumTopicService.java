@@ -191,6 +191,9 @@ public class ForumTopicService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -486,6 +489,9 @@ public class ForumTopicService extends AppTransactionManager {
             assertValidForumPost(entity, false);
             scope.requireWritable(institutionOfForumPost(entity));
             assertUniqueForumPost(entity);
+            if (fields.isEmpty()) {
+                return forumPostMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return forumPostMapper.toDto(entity);

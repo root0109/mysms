@@ -3,9 +3,9 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ContentAuthor;
-import com.mysms.learning.lms.api.model.ContentAuthorUpdate;
 import com.mysms.learning.lms.business.ContentAuthorService;
 import com.mysms.lms.v1.ContentAuthorServiceGrpc;
+import com.mysms.lms.v1.ContentAuthorUpdate;
 import com.mysms.lms.v1.CreateContentAuthorRequest;
 import com.mysms.lms.v1.CreateContentAuthorResponse;
 import com.mysms.lms.v1.DeleteContentAuthorRequest;
@@ -14,7 +14,6 @@ import com.mysms.lms.v1.GetContentAuthorRequest;
 import com.mysms.lms.v1.GetContentAuthorResponse;
 import com.mysms.lms.v1.ListContentAuthorsRequest;
 import com.mysms.lms.v1.ListContentAuthorsResponse;
-import com.mysms.lms.v1.UpdateContentAuthorRequest;
 import com.mysms.lms.v1.UpdateContentAuthorResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,10 +55,10 @@ public class ContentAuthorResolver extends ContentAuthorServiceGrpc.ContentAutho
     }
 
     @Override
-    public void updateContentAuthor(UpdateContentAuthorRequest request, StreamObserver<UpdateContentAuthorResponse> out) {
-        ContentAuthor updated = service.updateContentAuthor(bridge.id(request.getContentAuthor().getId(), "id"),
-                bridge.requiredIfMatch(request.getContentAuthor().getEtag()),
-                bridge.changes(request.getContentAuthor(), request.getUpdateMask(), ContentAuthorUpdate.class),
+    public void updateContentAuthor(ContentAuthorUpdate request, StreamObserver<UpdateContentAuthorResponse> out) {
+        ContentAuthor updated = service.updateContentAuthor(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ContentAuthorProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateContentAuthorResponse.newBuilder(), "content_author", updated).build());
     }

@@ -104,7 +104,9 @@
    "create": {
     "name": "t-name-19221b32"
    },
-   "update": {},
+   "update": {
+    "sortOrder": 5
+   },
    "patch": {
     "keeps": "name"
    },
@@ -162,7 +164,9 @@
     "startDate": "2026-01-10",
     "endDate": "2026-01-20"
    },
-   "update": {},
+   "update": {
+    "endDate": "2026-01-25"
+   },
    "patch": {
     "keeps": "title",
     "clears": "institutionId"

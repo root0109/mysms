@@ -51,7 +51,9 @@
     "annotationId": "d45ce65f-29c5-55c9-8e65-7635d39bcfa1",
     "sharedWithUserId": "af0baf46-cd87-59d1-a0a9-2ab6e27358cb"
    },
-   "update": {},
+   "update": {
+    "sharedWithUserId": "af0baf46-cd87-59d1-a0a9-2ab6e27358cb"
+   },
    "patch": {
     "keeps": "sharedAt"
    },
@@ -117,7 +119,9 @@
     "userId": "3fec768c-3ea2-538b-9f26-dcbbb9bd6763",
     "contentItemId": "33f45148-7c83-54fd-8625-2b783212edb7"
    },
-   "update": {},
+   "update": {
+    "assignmentGroupId": "5ae2fc4d-faac-562d-b6c8-bc528a768ee7"
+   },
    "patch": {
     "keeps": "assignmentGroupId"
    },
@@ -274,7 +278,9 @@
     "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4",
     "placement": "featured"
    },
-   "update": {},
+   "update": {
+    "placement": "featured"
+   },
    "patch": {
     "keeps": "placement",
     "clears": "imageFileId"
@@ -662,7 +668,9 @@
     "cohortId": "b57373c4-1219-5a6b-bdc7-d3e05a9d6cce",
     "courseId": "f4d46540-46ce-5ab7-b39b-504f7710036c"
    },
-   "update": {},
+   "update": {
+    "courseId": "f4d46540-46ce-5ab7-b39b-504f7710036c"
+   },
    "patch": {
     "keeps": "courseId",
     "clears": "evaluatorId"
@@ -938,7 +946,9 @@
     "userId": "c3ea6e54-ec82-5d94-bb2b-359c69341413",
     "quizId": "40dfc79a-bb66-5e67-948b-8d634687edb4"
    },
-   "update": {},
+   "update": {
+    "userId": "c3ea6e54-ec82-5d94-bb2b-359c69341413"
+   },
    "patch": {
     "keeps": "userId",
     "clears": "questionId"
@@ -1116,7 +1126,9 @@
     "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4",
     "userId": "b8b27f97-5d73-570b-99b2-dfd4c774f137"
    },
-   "update": {},
+   "update": {
+    "userId": "b8b27f97-5d73-570b-99b2-dfd4c774f137"
+   },
    "patch": {
     "keeps": "userId"
    },
@@ -1201,7 +1213,9 @@
     "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4",
     "userId": "e35707de-f248-5ffb-9b65-22afb31fd8ba"
    },
-   "update": {},
+   "update": {
+    "userId": "e35707de-f248-5ffb-9b65-22afb31fd8ba"
+   },
    "patch": {
     "keeps": "sortOrder"
    },
@@ -1312,7 +1326,9 @@
     "driveItemId": "26a0caa8-75f9-5bac-ba23-279e6350b98d",
     "userId": "f92d9d23-4b4c-571e-8511-e666f3af99d2"
    },
-   "update": {},
+   "update": {
+    "userId": "f92d9d23-4b4c-571e-8511-e666f3af99d2"
+   },
    "patch": {
     "keeps": "userId",
     "clears": "reaction"
@@ -1365,7 +1381,9 @@
     "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4",
     "userId": "0c8375f8-c914-58b7-93dd-5b20e96ad2c1"
    },
-   "update": {},
+   "update": {
+    "memberRole": "member"
+   },
    "patch": {
     "keeps": "memberRole"
    },
@@ -1394,7 +1412,9 @@
    "create": {
     "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4"
    },
-   "update": {},
+   "update": {
+    "requestedAt": "2026-01-05T10:00:00Z"
+   },
    "patch": {
     "keeps": "requestedAt",
     "clears": "cohortId"
@@ -1445,7 +1465,9 @@
    "create": {
     "userId": "be28c4c2-c946-582e-85f2-4f966ef892f2"
    },
-   "update": {},
+   "update": {
+    "userId": "be28c4c2-c946-582e-85f2-4f966ef892f2"
+   },
    "patch": {
     "keeps": "userId",
     "clears": "unavailableFrom"
@@ -1494,7 +1516,9 @@
     "startTime": "09:00",
     "endTime": "10:00"
    },
-   "update": {},
+   "update": {
+    "weekday": "monday"
+   },
    "patch": {
     "keeps": "weekday"
    },
@@ -1625,7 +1649,9 @@
     "externalToolId": "5f6c59a4-6826-58c1-9f8e-d9dace0509b6",
     "institutionId": "0196f000-0000-7000-8000-00000000a001"
    },
-   "update": {},
+   "update": {
+    "institutionId": "0196f000-0000-7000-8000-00000000a001"
+   },
    "patch": {
     "keeps": "institutionId"
    },
@@ -1681,7 +1707,9 @@
     "optionKind": "tool_type",
     "optionValue": "t-option-value-aa07fafa"
    },
-   "update": {},
+   "update": {
+    "optionKind": "tool_type"
+   },
    "patch": {
     "keeps": "optionKind"
    },
@@ -1734,7 +1762,9 @@
     "externalToolId": "5f6c59a4-6826-58c1-9f8e-d9dace0509b6",
     "roleId": "7d4b3594-4971-5366-8f70-e07ffe0109db"
    },
-   "update": {},
+   "update": {
+    "roleId": "7d4b3594-4971-5366-8f70-e07ffe0109db"
+   },
    "patch": {
     "keeps": "roleId"
    },
@@ -2384,7 +2414,9 @@
     "learningProgramId": "4bbb500a-aefd-573a-92c7-2a5cb09003ba",
     "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4"
    },
-   "update": {},
+   "update": {
+    "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4"
+   },
    "patch": {
     "keeps": "sortOrder"
    },
@@ -2410,7 +2442,9 @@
     "learningProgramId": "4bbb500a-aefd-573a-92c7-2a5cb09003ba",
     "userId": "ad08824e-e7fb-589e-a0f9-500a13fc7366"
    },
-   "update": {},
+   "update": {
+    "userId": "ad08824e-e7fb-589e-a0f9-500a13fc7366"
+   },
    "patch": {
     "keeps": "progressPercent"
    },
@@ -2827,7 +2861,9 @@
     "mentorUserId": "0b9d381f-80f4-56f8-a7ed-8e02501a8e41",
     "menteeUserId": "14bfd350-c9fc-5721-823e-9780ca09722c"
    },
-   "update": {},
+   "update": {
+    "mentorUserId": "0b9d381f-80f4-56f8-a7ed-8e02501a8e41"
+   },
    "patch": {
     "keeps": "mentorUserId",
     "clears": "validFrom"
@@ -2887,7 +2923,9 @@
     "reviewerUserId": "7a59b3df-26c5-516b-85df-ef51e8fc217d",
     "revieweeUserId": "a4d72b4b-7231-50ac-8e57-d3a98be7b86f"
    },
-   "update": {},
+   "update": {
+    "assignmentGroupId": "5ae2fc4d-faac-562d-b6c8-bc528a768ee7"
+   },
    "patch": {
     "clears": "points",
     "keeps": "assignmentGroupId"
@@ -3344,7 +3382,9 @@
     "questionPoolId": "3c5b17f9-7779-56d5-a3b4-1f26825b1ba6",
     "questionId": "5d66ff67-531d-5f48-bcba-07ca0b137ee8"
    },
-   "update": {},
+   "update": {
+    "questionId": "5d66ff67-531d-5f48-bcba-07ca0b137ee8"
+   },
    "patch": {
     "keeps": "questionId"
    },
@@ -3426,7 +3466,9 @@
     "questionId": "5d66ff67-531d-5f48-bcba-07ca0b137ee8",
     "marks": "1"
    },
-   "update": {},
+   "update": {
+    "marks": "1.00"
+   },
    "patch": {
     "keeps": "marks"
    },
@@ -3559,7 +3601,9 @@
     "courseId": "affca88e-9a3d-5ad4-8f6b-621b239891b4",
     "relatedCourseId": "f4d46540-46ce-5ab7-b39b-504f7710036c"
    },
-   "update": {},
+   "update": {
+    "relatedCourseId": "f4d46540-46ce-5ab7-b39b-504f7710036c"
+   },
    "patch": {
     "keeps": "sortOrder",
     "clears": "authorProfileId"
@@ -3755,7 +3799,9 @@
     "releaseRuleId": "bc6ed325-257c-57fe-8fc5-12e8d70a3518",
     "chapterId": "54fd9eee-473b-5b70-920d-db4d54b5ac56"
    },
-   "update": {},
+   "update": {
+    "chapterId": "54fd9eee-473b-5b70-920d-db4d54b5ac56"
+   },
    "patch": {
     "clears": "contentItemId"
    },
@@ -3961,7 +4007,9 @@
     "settingsId": "99f4ab80-ec5f-5fd6-b08a-0dcc26c8e18a",
     "countryId": "6ec114b6-9022-502c-b114-2b5da19a1c24"
    },
-   "update": {},
+   "update": {
+    "countryId": "6ec114b6-9022-502c-b114-2b5da19a1c24"
+   },
    "patch": {
     "keeps": "countryId"
    },

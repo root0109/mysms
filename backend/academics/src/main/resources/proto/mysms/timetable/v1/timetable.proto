@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.timetable.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "TimetableProto";
@@ -20,7 +20,7 @@ service PeriodService {
   // Create Period.
   rpc CreatePeriod(CreatePeriodRequest) returns (CreatePeriodResponse);
   // Update Period.
-  rpc UpdatePeriod(UpdatePeriodRequest) returns (UpdatePeriodResponse);
+  rpc UpdatePeriod(PeriodUpdate) returns (UpdatePeriodResponse);
   // Soft-delete Period.
   rpc DeletePeriod(DeletePeriodRequest) returns (DeletePeriodResponse);
 }
@@ -34,7 +34,7 @@ service SessionService {
   // Create Session.
   rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
   // Update Session.
-  rpc UpdateSession(UpdateSessionRequest) returns (UpdateSessionResponse);
+  rpc UpdateSession(SessionUpdate) returns (UpdateSessionResponse);
   // Soft-delete Session.
   rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse);
   // List SessionStudents.
@@ -44,7 +44,7 @@ service SessionService {
   // Create SessionStudent.
   rpc CreateSessionStudent(CreateSessionStudentRequest) returns (CreateSessionStudentResponse);
   // Update SessionStudent.
-  rpc UpdateSessionStudent(UpdateSessionStudentRequest) returns (UpdateSessionStudentResponse);
+  rpc UpdateSessionStudent(SessionStudentUpdate) returns (UpdateSessionStudentResponse);
   // Soft-delete SessionStudent.
   rpc DeleteSessionStudent(DeleteSessionStudentRequest) returns (DeleteSessionStudentResponse);
   // Confirm.
@@ -112,13 +112,25 @@ message CreatePeriodResponse {
   Period period = 1;
 }
 
-message UpdatePeriodRequest {
-  // Resource with id and etag set.
-  Period period = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePeriod (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PeriodUpdate {
+  // Period id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Period name.
+  optional string name = 5;
+  // Start time. [Time of day (HH:MM[:SS])]
+  optional string start_time = 6;
+  // Duration in minutes. [Decimal string]
+  mysms.common.v1.NullableString duration_minutes = 7;
+  // Order in the day.
+  mysms.common.v1.NullableInt32 sequence = 8;
 }
 message UpdatePeriodResponse {
   Period period = 1;
@@ -172,13 +184,43 @@ message CreateSessionResponse {
   Session session = 1;
 }
 
-message UpdateSessionRequest {
-  // Resource with id and etag set.
-  Session session = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateSession (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SessionUpdate {
+  // Session id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Period. [UUID]
+  mysms.common.v1.NullableString period_id = 5;
+  // Start.
+  google.protobuf.Timestamp start_at = 6;
+  // End.
+  google.protobuf.Timestamp end_at = 7;
+  // ISO weekday (1 = Monday).
+  mysms.common.v1.NullableInt32 weekday = 8;
+  // Class section (K-12). [UUID]
+  mysms.common.v1.NullableString class_section_id = 9;
+  // Course (higher education). [UUID]
+  mysms.common.v1.NullableString course_id = 10;
+  // Batch (higher education). [UUID]
+  mysms.common.v1.NullableString batch_id = 11;
+  // Subject taught. [UUID]
+  optional string subject_id = 12;
+  // Teacher. [UUID]
+  optional string staff_id = 13;
+  // Room. [UUID]
+  mysms.common.v1.NullableString room_id = 14;
+  // Display title.
+  mysms.common.v1.NullableString title = 15;
+  // Session type (lecture, lab, tutorial...).
+  mysms.common.v1.NullableString session_type = 16;
+  // Calendar colour index.
+  mysms.common.v1.NullableInt32 color = 17;
 }
 message UpdateSessionResponse {
   Session session = 1;
@@ -238,15 +280,19 @@ message CreateSessionStudentResponse {
   SessionStudent session_student = 1;
 }
 
-message UpdateSessionStudentRequest {
+// The changes of UpdateSessionStudent (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SessionStudentUpdate {
   // Session id (UUID).
   string session_id = 1;
-  // Resource with id and etag set.
-  SessionStudent session_student = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // SessionStudent id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Student. [UUID]
+  optional string student_id = 5;
 }
 message UpdateSessionStudentResponse {
   SessionStudent session_student = 1;

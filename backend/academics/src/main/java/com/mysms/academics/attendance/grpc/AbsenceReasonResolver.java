@@ -1,9 +1,9 @@
 package com.mysms.academics.attendance.grpc;
 
 import com.mysms.academics.attendance.api.model.AbsenceReason;
-import com.mysms.academics.attendance.api.model.AbsenceReasonUpdate;
 import com.mysms.academics.attendance.business.AbsenceReasonService;
 import com.mysms.attendance.v1.AbsenceReasonServiceGrpc;
+import com.mysms.attendance.v1.AbsenceReasonUpdate;
 import com.mysms.attendance.v1.CreateAbsenceReasonRequest;
 import com.mysms.attendance.v1.CreateAbsenceReasonResponse;
 import com.mysms.attendance.v1.DeleteAbsenceReasonRequest;
@@ -12,7 +12,6 @@ import com.mysms.attendance.v1.GetAbsenceReasonRequest;
 import com.mysms.attendance.v1.GetAbsenceReasonResponse;
 import com.mysms.attendance.v1.ListAbsenceReasonsRequest;
 import com.mysms.attendance.v1.ListAbsenceReasonsResponse;
-import com.mysms.attendance.v1.UpdateAbsenceReasonRequest;
 import com.mysms.attendance.v1.UpdateAbsenceReasonResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,10 +55,10 @@ public class AbsenceReasonResolver extends AbsenceReasonServiceGrpc.AbsenceReaso
     }
 
     @Override
-    public void updateAbsenceReason(UpdateAbsenceReasonRequest request, StreamObserver<UpdateAbsenceReasonResponse> out) {
-        AbsenceReason updated = service.updateAbsenceReason(bridge.id(request.getAbsenceReason().getId(), "id"),
-                bridge.requiredIfMatch(request.getAbsenceReason().getEtag()),
-                bridge.changes(request.getAbsenceReason(), request.getUpdateMask(), AbsenceReasonUpdate.class),
+    public void updateAbsenceReason(AbsenceReasonUpdate request, StreamObserver<UpdateAbsenceReasonResponse> out) {
+        AbsenceReason updated = service.updateAbsenceReason(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                AbsenceReasonProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateAbsenceReasonResponse.newBuilder(), "absence_reason", updated).build());
     }

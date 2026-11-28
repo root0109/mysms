@@ -184,6 +184,9 @@ public class FeedbackThreadService extends AppTransactionManager {
             scope.requireWritable(institutionOf(entity));
             requireOpenedAsGuardianUnlessSchoolSide(entity);
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -451,6 +454,9 @@ public class FeedbackThreadService extends AppTransactionManager {
             }
             scope.requireWritable(institutionOfFeedbackMessage(entity));
             assertUniqueFeedbackMessage(entity);
+            if (fields.isEmpty()) {
+                return feedbackMessageMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return feedbackMessageMapper.toDto(entity);

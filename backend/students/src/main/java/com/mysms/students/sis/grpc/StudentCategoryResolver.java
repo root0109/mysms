@@ -3,7 +3,6 @@ package com.mysms.students.sis.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.StudentCategory;
-import com.mysms.students.sis.api.model.StudentCategoryUpdate;
 import com.mysms.students.sis.business.StudentCategoryService;
 import com.mysms.sis.v1.CreateStudentCategoryRequest;
 import com.mysms.sis.v1.CreateStudentCategoryResponse;
@@ -14,7 +13,7 @@ import com.mysms.sis.v1.GetStudentCategoryResponse;
 import com.mysms.sis.v1.ListStudentCategoriesRequest;
 import com.mysms.sis.v1.ListStudentCategoriesResponse;
 import com.mysms.sis.v1.StudentCategoryServiceGrpc;
-import com.mysms.sis.v1.UpdateStudentCategoryRequest;
+import com.mysms.sis.v1.StudentCategoryUpdate;
 import com.mysms.sis.v1.UpdateStudentCategoryResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class StudentCategoryResolver extends StudentCategoryServiceGrpc.StudentC
     }
 
     @Override
-    public void updateStudentCategory(UpdateStudentCategoryRequest request, StreamObserver<UpdateStudentCategoryResponse> out) {
+    public void updateStudentCategory(StudentCategoryUpdate request, StreamObserver<UpdateStudentCategoryResponse> out) {
         StudentCategory updated = service.updateStudentCategory(
-                bridge.id(request.getStudentCategory().getId(), "id"),
-                bridge.requiredIfMatch(request.getStudentCategory().getEtag()),
-                bridge.changes(request.getStudentCategory(), request.getUpdateMask(), StudentCategoryUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StudentCategoryProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStudentCategoryResponse.newBuilder(), "student_category", updated).build());
     }

@@ -3,7 +3,6 @@ package com.mysms.students.sis.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.RelationshipType;
-import com.mysms.students.sis.api.model.RelationshipTypeUpdate;
 import com.mysms.students.sis.business.RelationshipTypeService;
 import com.mysms.sis.v1.CreateRelationshipTypeRequest;
 import com.mysms.sis.v1.CreateRelationshipTypeResponse;
@@ -14,7 +13,7 @@ import com.mysms.sis.v1.GetRelationshipTypeResponse;
 import com.mysms.sis.v1.ListRelationshipTypesRequest;
 import com.mysms.sis.v1.ListRelationshipTypesResponse;
 import com.mysms.sis.v1.RelationshipTypeServiceGrpc;
-import com.mysms.sis.v1.UpdateRelationshipTypeRequest;
+import com.mysms.sis.v1.RelationshipTypeUpdate;
 import com.mysms.sis.v1.UpdateRelationshipTypeResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,12 +56,12 @@ public class RelationshipTypeResolver extends RelationshipTypeServiceGrpc.Relati
     }
 
     @Override
-    public void updateRelationshipType(UpdateRelationshipTypeRequest request,
+    public void updateRelationshipType(RelationshipTypeUpdate request,
             StreamObserver<UpdateRelationshipTypeResponse> out) {
         RelationshipType updated = service.updateRelationshipType(
-                bridge.id(request.getRelationshipType().getId(), "id"),
-                bridge.requiredIfMatch(request.getRelationshipType().getEtag()),
-                bridge.changes(request.getRelationshipType(), request.getUpdateMask(), RelationshipTypeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                RelationshipTypeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRelationshipTypeResponse.newBuilder(), "relationship_type", updated).build());
     }

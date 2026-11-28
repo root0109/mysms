@@ -192,6 +192,9 @@ public class ReleaseRuleService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -522,6 +525,9 @@ public class ReleaseRuleService extends AppTransactionManager {
             assertValidReleaseRuleCondition(entity, false);
             scope.requireWritable(institutionOfReleaseRuleCondition(entity));
             assertUniqueReleaseRuleCondition(entity);
+            if (fields.isEmpty()) {
+                return releaseRuleConditionMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return releaseRuleConditionMapper.toDto(entity);
@@ -684,6 +690,9 @@ public class ReleaseRuleService extends AppTransactionManager {
             assertValidReleaseRuleTarget(entity, false);
             scope.requireWritable(institutionOfReleaseRuleTarget(entity));
             assertUniqueReleaseRuleTarget(entity);
+            if (fields.isEmpty()) {
+                return releaseRuleTargetMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return releaseRuleTargetMapper.toDto(entity);

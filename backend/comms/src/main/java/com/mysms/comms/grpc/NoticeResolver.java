@@ -2,8 +2,6 @@ package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.Notice;
 import com.mysms.comms.api.model.NoticeAudience;
-import com.mysms.comms.api.model.NoticeAudienceUpdate;
-import com.mysms.comms.api.model.NoticeUpdate;
 import com.mysms.comms.api.model.NoticeVersion;
 import com.mysms.comms.business.NoticeService;
 import com.mysms.comms.v1.CloseNoticeRepliesRequest;
@@ -30,16 +28,16 @@ import com.mysms.comms.v1.ListNoticeVersionsRequest;
 import com.mysms.comms.v1.ListNoticeVersionsResponse;
 import com.mysms.comms.v1.ListNoticesRequest;
 import com.mysms.comms.v1.ListNoticesResponse;
+import com.mysms.comms.v1.NoticeAudienceUpdate;
 import com.mysms.comms.v1.NoticeServiceGrpc;
+import com.mysms.comms.v1.NoticeUpdate;
 import com.mysms.comms.v1.PublishNoticeRequest;
 import com.mysms.comms.v1.PublishNoticeResponse;
 import com.mysms.comms.v1.ReactivateNoticeRequest;
 import com.mysms.comms.v1.ReactivateNoticeResponse;
 import com.mysms.comms.v1.UnpublishNoticeRequest;
 import com.mysms.comms.v1.UnpublishNoticeResponse;
-import com.mysms.comms.v1.UpdateNoticeAudienceRequest;
 import com.mysms.comms.v1.UpdateNoticeAudienceResponse;
-import com.mysms.comms.v1.UpdateNoticeRequest;
 import com.mysms.comms.v1.UpdateNoticeResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -82,10 +80,10 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
     }
 
     @Override
-    public void updateNotice(UpdateNoticeRequest request, StreamObserver<UpdateNoticeResponse> out) {
+    public void updateNotice(NoticeUpdate request, StreamObserver<UpdateNoticeResponse> out) {
         Notice updated = service.updateNotice(
-                bridge.id(request.getNotice().getId(), "id"), bridge.requiredIfMatch(request.getNotice().getEtag()),
-                bridge.changes(request.getNotice(), request.getUpdateMask(), NoticeUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                NoticeProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeResponse.newBuilder(), "notice", updated).build());
     }
 
@@ -120,11 +118,11 @@ public class NoticeResolver extends NoticeServiceGrpc.NoticeServiceImplBase {
     }
 
     @Override
-    public void updateNoticeAudience(UpdateNoticeAudienceRequest request, StreamObserver<UpdateNoticeAudienceResponse> out) {
+    public void updateNoticeAudience(NoticeAudienceUpdate request, StreamObserver<UpdateNoticeAudienceResponse> out) {
         NoticeAudience updated = service.updateNoticeAudience(
-                bridge.id(request.getNoticeId(), "noticeId"), bridge.id(request.getNoticeAudience().getId(), "id"),
-                bridge.requiredIfMatch(request.getNoticeAudience().getEtag()),
-                bridge.changes(request.getNoticeAudience(), request.getUpdateMask(), NoticeAudienceUpdate.class),
+                bridge.id(request.getNoticeId(), "noticeId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NoticeAudienceProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNoticeAudienceResponse.newBuilder(), "notice_audience", updated).build());
     }

@@ -37,8 +37,8 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * The admission flow over HTTP against real PostgreSQL: the cycle opened for applications, an applicant's own
  * application handed in, the office's decisions, and the guards of enrolment. Each test works in a tenant of its own.
- * people and sis do not run here, so an enrolment that would call them answers 503 and changes nothing; the full
- * enrolment is tested in the app module.
+ * people does not run here, so an enrolment that would call it answers 503 and changes nothing; sis, a sibling area,
+ * is called in process and its permissions are checked as its edge did. The full enrolment is tested in the app module.
  */
 @SpringBootTest(classes = StudentsApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AdmissionWorkflowComponentTest {
@@ -379,6 +379,32 @@ class AdmissionWorkflowComponentTest {
         Reply officeReads = call("GET", byNote, school.office, null);
         assertThat(officeReads.status()).as(officeReads.text()).isEqualTo(200);
         assertThat(officeReads.body().path("data")).hasSize(1);
+    }
+
+    @Test
+    void enrolmentWithoutTheSiblingSisPermissionIsRefusedAsOverGrpcAndChangesNothing() throws Exception {
+        School school = new School();
+        String id = school.apply(school.office, null, "E-2", "2019-01-01", "").body().path("id").asString();
+        school.sql("UPDATE admission.application SET status = 'admitted', academic_year_id = '" + UUID.randomUUID()
+                + "', applicant_person_id = '" + UUID.randomUUID() + "' WHERE id = '" + id + "'");
+        String placement = "{\"classSectionId\":\"" + UUID.randomUUID() + "\"}";
+
+        String withoutRead = token(UUID.randomUUID(), school.tenant, List.of(school.institution.toString()),
+                "admission.*");
+        Reply unread = enroll(id, withoutRead, placement);
+        assertThat(unread.status()).as(unread.text()).isEqualTo(403);
+        assertThat(unread.text()).contains("Enrolling an applicant also needs sis.student.read.");
+
+        String withoutCreate = token(UUID.randomUUID(), school.tenant, List.of(school.institution.toString()),
+                "admission.*", "sis.student.read");
+        Reply refused = enroll(id, withoutCreate, placement);
+        assertThat(refused.status()).as("sis looked for the student in process, then the create was refused: "
+                + refused.text()).isEqualTo(403);
+        assertThat(refused.text()).contains("Enrolling an applicant also needs sis.student.create.");
+
+        Reply unchanged = school.get(school.office, id);
+        assertThat(unchanged.body().path("status").asString()).isEqualTo("admitted");
+        assertThat(unchanged.body().has("studentId")).as("no student without sis's permission").isFalse();
     }
 
     @Test

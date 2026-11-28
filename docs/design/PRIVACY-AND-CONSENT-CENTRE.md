@@ -692,7 +692,8 @@ skipped.
 | hr | the staff record anonymised and kept (qualification, specialisation, interests cleared); leave applications' remarks and decision comments cleared | no policy |
 | payroll | bank accounts cleared and soft-deleted (holder `Erased`, account-number envelope cleared); salary structures, components, payslips, lines and payments kept and counted under `payroll.after_leaving` | kept rows answered with the policy code |
 | admission | each application of the person with its guardians and emergency contacts cleared and soft-deleted (birth date `1900-01-01`, gender `other`; the application number stays); a guardian's own request finds nothing (guardians have no person link) | `admission.applicant_not_admitted` not swept: most applications have no person |
-| attendance | nothing changed: the person's student and staff attendance counted as kept under `attendance.after_leaving` (person known from `attendance.member_record`, fed by hr.staff and sis.student events) | `attendance.after_leaving`: student marks anonymised (student `md5(id)`, remark and leave request cleared) for students not marked since the cutoff (no leaving date in attendance); staff attendance not swept |
+| attendance | nothing changed: the person's student attendance counted as kept under `attendance.after_leaving` (person known from `attendance.member_record`, fed by sis.student events) | `attendance.after_leaving`: student marks anonymised (student `md5(id)`, remark and leave request cleared) for students not marked since the cutoff (no leaving date in attendance) |
+| time_attendance (hrms) | nothing changed: the person's staff attendance days counted as kept under `time_attendance.after_leaving` (person from the sibling `hr.staff`) | archive: not swept (the days back the wage records, as staff attendance was never swept under `attendance.after_leaving`) |
 | assessment | homework submissions cleared and soft-deleted; assignment answers and feedback cleared, marks kept; exam results and marksheet lines kept and counted under `assessment.after_leaving` (person known from `assessment.student_record`, fed by sis.student events) | archive: not swept |
 | comms (wave 1) | for a student (person from `comms.student_record`, fed by sis.student events): unsent outbound messages cancelled and every message to them cleared; in-app notifications cleared and archived; preferences, group memberships, mailbox, receipts, chat messages and participation, feedback threads about them, tasks, event attendance, calendar exports, class-page membership, reactions, content views, posts and comments cleared and soft-deleted. Guardian and staff accounts are not reached (iam's account events carry no person) | `comms.media_after_withdrawal`: comms stores no media of a person — answers `RETENTION_POLICY_UNSUPPORTED` |
 | academics | lesson plans' notes cleared (plan kept); teaching assignments and class-teacher designations kept (operational records); person from `academics.staff_record`, fed by hr.staff events | no policy |
@@ -871,11 +872,11 @@ register (`processing_activity`, `purpose`, `data_category`) with the tenant's `
 
 ## 10. Retention and deletion engine (privacy side built, P3)
 
-- **Policies** (`RetentionPolicyService`): the platform catalogue `retention_policy` (seeded by the baseline, ten
+- **Policies** (`RetentionPolicyService`): the platform catalogue `retention_policy` (seeded by the baseline, eleven
   policies: `admission.applicant_not_admitted` 365 days, floor 90; `assessment.after_leaving` 10 years, archive;
   `attendance.after_leaving` 5 years, anonymise; `comms.media_after_withdrawal` 30 days; `finance` and `payroll` 8
   years at the floor; `frontoffice.visitor_log` 90 days; `iam.after_inactivity` 3 years with 2 days' notice;
-  `platform.access_log` 1 year at the floor; `sis.health_after_leaving` 365 days — *all values to verify with counsel
+  `platform.access_log` 1 year at the floor; `sis.health_after_leaving` 365 days; `time_attendance.after_leaving` 5 years, archive — *all values to verify with counsel
   and the owner*, brief Q11) with each tenant's own period and action (`tenant_retention_policy`; no row = the
   catalogue's), set by a tenant administrator (tenant-wide grant, If-Match `"0"` while never set) and never below the
   floor (422 `RETENTION_BELOW_LEGAL_FLOOR`) — the pattern of purposes and `tenant_purpose`. Periods are whole days.

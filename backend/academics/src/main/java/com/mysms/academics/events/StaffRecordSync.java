@@ -15,11 +15,13 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Keeps academics.staff_record — the person of each staff record — in step with hr.staff from its created and updated
- * events (academics never reads another module's schema), so privacy's tasks find a data principal's lesson plans
- * ({@link AcademicsPrivacyTaskHandler}). An entry changes only to a newer row version, so out-of-order and repeated
- * deliveries are harmless; a deleted staff record keeps its entry, since its lesson plans stay the person's. Runs
- * inside the event's tenant (messaging's InboxProcessor: exactly once per event).
+ * Keeps academics.staff_record — the person of each staff record — in step with hr.staff from its created, updated and
+ * deleted events (academics never reads another module's schema), so privacy's tasks find a data principal's lesson
+ * plans ({@link AcademicsPrivacyTaskHandler}) and teaching assignments name only live staff. An entry changes only to a
+ * newer row version, so out-of-order and repeated deliveries are harmless; a deleted staff record keeps its entry,
+ * flagged, since its lesson plans stay the person's. The deleted event reaches {@link #apply} through
+ * {@link AcademicsReferenceCleanup}, academics's one subscriber of that type. Runs inside the event's tenant
+ * (messaging's InboxProcessor: exactly once per event).
  */
 @Component
 public class StaffRecordSync implements EventSubscriptions {
@@ -63,7 +65,7 @@ public class StaffRecordSync implements EventSubscriptions {
         } catch (IllegalArgumentException malformed) {
             throw new RejectedEventException("staff event " + event.id() + " names no person");
         }
-        return records.apply(event.aggregateId(), personId, version,
+        return records.apply(event.aggregateId(), personId, event.type().endsWith(".deleted"), version,
                 OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC));
     }
 }

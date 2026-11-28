@@ -127,6 +127,7 @@ CREATE TABLE hr.leave_type (
     academic_year_id uuid,
     name varchar(100) NOT NULL,
     max_days_per_year numeric(5,1) NOT NULL,
+    is_paid boolean NOT NULL DEFAULT true,
     is_active boolean NOT NULL DEFAULT true,
     created_at timestamptz NOT NULL DEFAULT now(),
     created_by uuid,
@@ -146,6 +147,7 @@ COMMENT ON COLUMN hr.leave_type.institution_id IS 'Institution.';
 COMMENT ON COLUMN hr.leave_type.academic_year_id IS 'Year the entitlement applies to (NULL = every year).';
 COMMENT ON COLUMN hr.leave_type.name IS 'Leave type.';
 COMMENT ON COLUMN hr.leave_type.max_days_per_year IS 'Entitlement in days.';
+COMMENT ON COLUMN hr.leave_type.is_paid IS 'Whether leave of this type is paid; approved unpaid leave reduces the pay of the period it falls in (payroll.GeneratePayslips).';
 COMMENT ON COLUMN hr.leave_type.is_active IS 'Whether usable.';
 COMMENT ON COLUMN hr.leave_type.created_at IS 'Row creation time.';
 COMMENT ON COLUMN hr.leave_type.created_by IS 'User account that created the row (audit reference to iam.user_account; not FK-constrained).';
@@ -173,6 +175,7 @@ CREATE TABLE hr.leave_application (
     decided_by_user_id uuid,
     decided_on date,
     decision_comments text,
+    counted_days numeric(5,1),
     created_at timestamptz NOT NULL DEFAULT now(),
     created_by uuid,
     updated_at timestamptz NOT NULL DEFAULT now(),
@@ -202,6 +205,7 @@ COMMENT ON COLUMN hr.leave_application.status IS 'Decision state.';
 COMMENT ON COLUMN hr.leave_application.decided_by_user_id IS 'Approver.';
 COMMENT ON COLUMN hr.leave_application.decided_on IS 'Decision date.';
 COMMENT ON COLUMN hr.leave_application.decision_comments IS 'Approver comments.';
+COMMENT ON COLUMN hr.leave_application.counted_days IS 'Days hr.ApproveLeave counted against the leave balance (working days on the calendar of that moment); hr.CancelLeave gives back exactly these, whatever the calendar has become. NULL until approved. Written by the workflow only.';
 COMMENT ON COLUMN hr.leave_application.created_at IS 'Row creation time.';
 COMMENT ON COLUMN hr.leave_application.created_by IS 'User account that created the row (audit reference to iam.user_account; not FK-constrained).';
 COMMENT ON COLUMN hr.leave_application.updated_at IS 'Last update time.';
@@ -471,6 +475,37 @@ ALTER TABLE hr.number_sequence ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hr.number_sequence FORCE ROW LEVEL SECURITY;
 CREATE POLICY tenant_isolation ON hr.number_sequence USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
 CREATE INDEX ix_number_sequence_institution_id ON hr.number_sequence (institution_id);
+
+-- === BE-6: the holiday calendar hrms counts working days against (a copy kept from org.holiday events) ===
+CREATE TABLE hr.holiday_record (
+    tenant_id uuid NOT NULL,
+    holiday_id uuid NOT NULL,
+    institution_id uuid,
+    title varchar(200) NOT NULL,
+    start_date date NOT NULL,
+    end_date date NOT NULL,
+    is_deleted boolean NOT NULL DEFAULT false,
+    source_version integer NOT NULL,
+    synced_at timestamptz NOT NULL,
+    CONSTRAINT pk_hr_holiday_record PRIMARY KEY (tenant_id, holiday_id),
+    CONSTRAINT ck_holiday_record_dates CHECK (end_date >= start_date),
+    CONSTRAINT ck_holiday_record_source_version CHECK (source_version >= 1)
+);
+COMMENT ON TABLE hr.holiday_record IS 'Each holiday or closure of the tenant''s institutions, kept from org.holiday created/updated/deleted events (hrms never reads org''s schema), so leave days and unpaid-leave pay count working days only (LeaveLedgerRepository, PayslipRunRepository, WorkingDays). When org''s holidays move to master.holiday (ROADMAP ARC-8) only the feed of this copy changes.';
+COMMENT ON COLUMN hr.holiday_record.tenant_id IS 'Owning tenant (customer organisation). Row-level security key.';
+COMMENT ON COLUMN hr.holiday_record.holiday_id IS 'org.holiday.id (logical, maintained from its events).';
+COMMENT ON COLUMN hr.holiday_record.institution_id IS 'Institution the holiday closes (org.institution.id); NULL = every institution of the tenant.';
+COMMENT ON COLUMN hr.holiday_record.title IS 'Holiday name.';
+COMMENT ON COLUMN hr.holiday_record.start_date IS 'First day.';
+COMMENT ON COLUMN hr.holiday_record.end_date IS 'Last day.';
+COMMENT ON COLUMN hr.holiday_record.is_deleted IS 'The holiday was deleted in org (it no longer closes any day); kept so a late event cannot restore it.';
+COMMENT ON COLUMN hr.holiday_record.source_version IS 'Row version of the org.holiday row this entry reflects; an event with an older or equal version is ignored.';
+COMMENT ON COLUMN hr.holiday_record.synced_at IS 'When the row was last changed by an event.';
+CREATE INDEX ix_hr_holiday_record_days ON hr.holiday_record (tenant_id, end_date) WHERE NOT is_deleted;
+COMMENT ON INDEX hr.ix_hr_holiday_record_days IS 'Working-day counts: the live holidays that end on or after a day.';
+ALTER TABLE hr.holiday_record ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr.holiday_record FORCE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation ON hr.holiday_record USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
 
 -- === Privacy tasks (design PRIVACY-AND-CONSENT-CENTRE §9.1, §10) and the module's scheduled jobs (core JobSchedule) ===
 CREATE TABLE hr.privacy_task_receipt (

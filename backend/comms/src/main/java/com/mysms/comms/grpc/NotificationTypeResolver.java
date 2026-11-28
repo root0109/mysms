@@ -1,13 +1,9 @@
 package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.NotificationCohortSetting;
-import com.mysms.comms.api.model.NotificationCohortSettingUpdate;
 import com.mysms.comms.api.model.NotificationRule;
-import com.mysms.comms.api.model.NotificationRuleUpdate;
 import com.mysms.comms.api.model.NotificationType;
 import com.mysms.comms.api.model.NotificationTypeProperty;
-import com.mysms.comms.api.model.NotificationTypePropertyUpdate;
-import com.mysms.comms.api.model.NotificationTypeUpdate;
 import com.mysms.comms.business.NotificationTypeService;
 import com.mysms.comms.v1.CreateNotificationCohortSettingRequest;
 import com.mysms.comms.v1.CreateNotificationCohortSettingResponse;
@@ -41,14 +37,14 @@ import com.mysms.comms.v1.ListNotificationTypePropertiesRequest;
 import com.mysms.comms.v1.ListNotificationTypePropertiesResponse;
 import com.mysms.comms.v1.ListNotificationTypesRequest;
 import com.mysms.comms.v1.ListNotificationTypesResponse;
+import com.mysms.comms.v1.NotificationCohortSettingUpdate;
+import com.mysms.comms.v1.NotificationRuleUpdate;
+import com.mysms.comms.v1.NotificationTypePropertyUpdate;
 import com.mysms.comms.v1.NotificationTypeServiceGrpc;
-import com.mysms.comms.v1.UpdateNotificationCohortSettingRequest;
+import com.mysms.comms.v1.NotificationTypeUpdate;
 import com.mysms.comms.v1.UpdateNotificationCohortSettingResponse;
-import com.mysms.comms.v1.UpdateNotificationRuleRequest;
 import com.mysms.comms.v1.UpdateNotificationRuleResponse;
-import com.mysms.comms.v1.UpdateNotificationTypePropertyRequest;
 import com.mysms.comms.v1.UpdateNotificationTypePropertyResponse;
-import com.mysms.comms.v1.UpdateNotificationTypeRequest;
 import com.mysms.comms.v1.UpdateNotificationTypeResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -93,12 +89,12 @@ public class NotificationTypeResolver extends NotificationTypeServiceGrpc.Notifi
     }
 
     @Override
-    public void updateNotificationType(UpdateNotificationTypeRequest request,
+    public void updateNotificationType(NotificationTypeUpdate request,
             StreamObserver<UpdateNotificationTypeResponse> out) {
         NotificationType updated = service.updateNotificationType(
-                bridge.id(request.getNotificationType().getId(), "id"),
-                bridge.requiredIfMatch(request.getNotificationType().getEtag()),
-                bridge.changes(request.getNotificationType(), request.getUpdateMask(), NotificationTypeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NotificationTypeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNotificationTypeResponse.newBuilder(), "notification_type", updated).build());
     }
@@ -140,14 +136,13 @@ public class NotificationTypeResolver extends NotificationTypeServiceGrpc.Notifi
     }
 
     @Override
-    public void updateNotificationTypeProperty(UpdateNotificationTypePropertyRequest request,
+    public void updateNotificationTypeProperty(NotificationTypePropertyUpdate request,
             StreamObserver<UpdateNotificationTypePropertyResponse> out) {
         NotificationTypeProperty updated = service.updateNotificationTypeProperty(
                 bridge.id(request.getNotificationTypeId(), "notificationTypeId"),
-                bridge.id(request.getNotificationTypeProperty().getId(), "id"),
-                bridge.requiredIfMatch(request.getNotificationTypeProperty().getEtag()),
-                bridge.changes(request.getNotificationTypeProperty(), request.getUpdateMask(),
-                NotificationTypePropertyUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NotificationTypePropertyProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationTypePropertyResponse.newBuilder(), "notification_type_property", updated).build());
     }
@@ -187,13 +182,13 @@ public class NotificationTypeResolver extends NotificationTypeServiceGrpc.Notifi
     }
 
     @Override
-    public void updateNotificationRule(UpdateNotificationRuleRequest request,
+    public void updateNotificationRule(NotificationRuleUpdate request,
             StreamObserver<UpdateNotificationRuleResponse> out) {
         NotificationRule updated = service.updateNotificationRule(
                 bridge.id(request.getNotificationTypeId(), "notificationTypeId"),
-                bridge.id(request.getNotificationRule().getId(), "id"),
-                bridge.requiredIfMatch(request.getNotificationRule().getEtag()),
-                bridge.changes(request.getNotificationRule(), request.getUpdateMask(), NotificationRuleUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NotificationRuleProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateNotificationRuleResponse.newBuilder(), "notification_rule", updated).build());
     }
@@ -238,14 +233,13 @@ public class NotificationTypeResolver extends NotificationTypeServiceGrpc.Notifi
     }
 
     @Override
-    public void updateNotificationCohortSetting(UpdateNotificationCohortSettingRequest request,
+    public void updateNotificationCohortSetting(NotificationCohortSettingUpdate request,
             StreamObserver<UpdateNotificationCohortSettingResponse> out) {
         NotificationCohortSetting updated = service.updateNotificationCohortSetting(
                 bridge.id(request.getNotificationTypeId(), "notificationTypeId"),
-                bridge.id(request.getNotificationCohortSetting().getId(), "id"),
-                bridge.requiredIfMatch(request.getNotificationCohortSetting().getEtag()),
-                bridge.changes(request.getNotificationCohortSetting(), request.getUpdateMask(),
-                NotificationCohortSettingUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                NotificationCohortSettingProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateNotificationCohortSettingResponse.newBuilder(), "notification_cohort_setting",
                 updated).build());

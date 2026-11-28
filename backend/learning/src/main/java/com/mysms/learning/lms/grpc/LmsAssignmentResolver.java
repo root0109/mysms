@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.LmsAssignment;
-import com.mysms.learning.lms.api.model.LmsAssignmentUpdate;
 import com.mysms.learning.lms.business.LmsAssignmentService;
 import com.mysms.lms.v1.CreateLmsAssignmentRequest;
 import com.mysms.lms.v1.CreateLmsAssignmentResponse;
@@ -14,7 +13,7 @@ import com.mysms.lms.v1.GetLmsAssignmentResponse;
 import com.mysms.lms.v1.ListLmsAssignmentsRequest;
 import com.mysms.lms.v1.ListLmsAssignmentsResponse;
 import com.mysms.lms.v1.LmsAssignmentServiceGrpc;
-import com.mysms.lms.v1.UpdateLmsAssignmentRequest;
+import com.mysms.lms.v1.LmsAssignmentUpdate;
 import com.mysms.lms.v1.UpdateLmsAssignmentResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,10 +55,10 @@ public class LmsAssignmentResolver extends LmsAssignmentServiceGrpc.LmsAssignmen
     }
 
     @Override
-    public void updateLmsAssignment(UpdateLmsAssignmentRequest request, StreamObserver<UpdateLmsAssignmentResponse> out) {
-        LmsAssignment updated = service.updateLmsAssignment(bridge.id(request.getAssignment().getId(), "id"),
-                bridge.requiredIfMatch(request.getAssignment().getEtag()),
-                bridge.changes(request.getAssignment(), request.getUpdateMask(), LmsAssignmentUpdate.class),
+    public void updateLmsAssignment(LmsAssignmentUpdate request, StreamObserver<UpdateLmsAssignmentResponse> out) {
+        LmsAssignment updated = service.updateLmsAssignment(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LmsAssignmentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLmsAssignmentResponse.newBuilder(), "assignment", updated).build());
     }

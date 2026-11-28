@@ -2,6 +2,7 @@ package com.mysms.hrms.hr.mapper;
 
 import com.mysms.hrms.hr.api.model.LeaveApplication;
 import com.mysms.core.web.Etags;
+import com.mysms.core.mapping.WireValues;
 import com.mysms.hrms.hr.domain.LeaveApplicationEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -10,7 +11,7 @@ import org.mapstruct.Mapping;
  * Maps hr.leave_application to and from its contract DTO. The way in ignores id, tenant, audit and read-only fields, so
  * a request cannot set them; the ETag comes from row_version.
  */
-@Mapper(config = HrMapperConfig.class, imports = {Etags.class})
+@Mapper(config = HrMapperConfig.class, imports = {Etags.class, WireValues.class})
 public interface LeaveApplicationMapper {
 
     @Mapping(target = "dayPart", expression =
@@ -18,6 +19,7 @@ public interface LeaveApplicationMapper {
     @Mapping(target = "status", expression =
             "java(entity.getStatus() == null ? null : LeaveApplication.StatusEnum.fromValue(entity.getStatus()))")
 
+    @Mapping(target = "countedDays", expression = "java(WireValues.decimal(entity.getCountedDays()))")
     @Mapping(target = "createTime", source = "createdAt")
     @Mapping(target = "updateTime", source = "updatedAt")
     @Mapping(target = "etag", expression = "java(Etags.of(entity.getRowVersion()))")
@@ -36,5 +38,6 @@ public interface LeaveApplicationMapper {
     @Mapping(target = "decidedByUserId", ignore = true)
     @Mapping(target = "decidedOn", ignore = true)
     @Mapping(target = "decisionComments", ignore = true)
+    @Mapping(target = "countedDays", ignore = true)
     LeaveApplicationEntity toEntity(LeaveApplication dto);
 }

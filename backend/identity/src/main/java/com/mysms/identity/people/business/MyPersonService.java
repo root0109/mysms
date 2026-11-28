@@ -86,6 +86,9 @@ public class MyPersonService extends AppTransactionManager {
             }
             List<String> fields = apply(entity, changes);
             assertValid(entity);
+            if (fields.isEmpty()) {
+                return selfView(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (!validateOnly) {
                 if (repository.updateSelfEditable(entity, expected) == 0) {

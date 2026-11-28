@@ -7,6 +7,7 @@ import com.mysms.academics.config.AcademicsEventsConfig;
 import com.mysms.academics.domain.TeacherSubjectEntity;
 import com.mysms.academics.events.AcademicsEvents;
 import com.mysms.academics.mapper.TeacherSubjectMapper;
+import com.mysms.academics.repository.StaffRecordRepository;
 import com.mysms.academics.repository.TeacherSubjectRepository;
 import com.mysms.authclient.DataScope;
 import com.mysms.core.context.Actor;
@@ -41,9 +42,9 @@ import org.springframework.transaction.PlatformTransactionManager;
  * Business service of academics.teacher_subject, the subjects a teacher is competent to teach (the teacher profile,
  * moved from hr's staff record in ARC-7): audit and domain event in the same transaction as every change; a row belongs
  * to its subject's institution, so rows outside the caller's institutions are invisible. The teacher is a logical
- * reference to hr.staff in another module (database/README "logical references"), not checked when written, like
- * teaching_assignment.staff_id; {@code hr.staff.deleted} archives the rows (AcademicsReferenceCleanup), where hr used
- * to refuse deleting a staff record that still had subjects.
+ * reference to hr.staff in another module, checked when written against the tenant's live staff records kept from hr's
+ * events (academics.staff_record; a deleted one no longer counts); {@code hr.staff.deleted} archives the rows
+ * (AcademicsReferenceCleanup), where hr used to refuse deleting a staff record that still had subjects.
  */
 @Service
 public class TeacherSubjectService extends AppTransactionManager {
@@ -56,12 +57,14 @@ public class TeacherSubjectService extends AppTransactionManager {
 
     private final TeacherSubjectRepository repository;
     private final TeacherSubjectMapper mapper;
+    private final StaffRecordRepository staffRecords;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
 
     public TeacherSubjectService(TeacherSubjectRepository repository, TeacherSubjectMapper mapper,
+            StaffRecordRepository staffRecords,
             @Qualifier(AcademicsDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(AcademicsDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(AcademicsEventsConfig.OUTBOX) OutboxWriter outbox,
@@ -70,6 +73,7 @@ public class TeacherSubjectService extends AppTransactionManager {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
+        this.staffRecords = staffRecords;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -131,6 +135,9 @@ public class TeacherSubjectService extends AppTransactionManager {
             assertValid(entity);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -191,6 +198,8 @@ public class TeacherSubjectService extends AppTransactionManager {
         List<FieldError> errors = new ArrayList<>();
         if (entity.getStaffId() == null) {
             errors.add(new FieldError("staffId", "must not be null", "NotNull"));
+        } else if (!staffRecords.live(entity.getStaffId())) {
+            errors.add(new FieldError("staffId", "staff does not exist", "NOT_FOUND"));
         }
         if (entity.getSubjectId() == null) {
             errors.add(new FieldError("subjectId", "must not be null", "NotNull"));

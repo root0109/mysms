@@ -155,6 +155,9 @@ public class ResultTemplateService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -219,7 +222,6 @@ public class ResultTemplateService extends AppTransactionManager {
         patch.apply("gradingSchemeId", changes.getGradingSchemeId(), entity::setGradingSchemeId);
         patch.apply("name", changes.getName(), entity::setName);
         patch.apply("resultDate", changes.getResultDate(), entity::setResultDate);
-        patch.apply("status", changes.getStatus(), v -> entity.setStatus(v == null ? null : v.getValue()));
         return patch.applied();
     }
 
@@ -234,9 +236,6 @@ public class ResultTemplateService extends AppTransactionManager {
         }
         if (entity.getResultDate() == null) {
             errors.add(new FieldError("resultDate", "must not be null", "NotNull"));
-        }
-        if (!creating && entity.getStatus() == null) {
-            errors.add(new FieldError("status", "must not be null", "NotNull"));
         }
         if (entity.getExamSessionId() != null && !repository.existsExamSessionId(entity.getExamSessionId())) {
             errors.add(new FieldError("examSessionId", "exam session does not exist", "NOT_FOUND"));
@@ -328,6 +327,9 @@ public class ResultTemplateService extends AppTransactionManager {
             assertValidResultTemplateBand(entity, false);
             scope.requireWritable(institutionOfResultTemplateBand(entity));
             assertUniqueResultTemplateBand(entity);
+            if (fields.isEmpty()) {
+                return resultTemplateBandMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return resultTemplateBandMapper.toDto(entity);

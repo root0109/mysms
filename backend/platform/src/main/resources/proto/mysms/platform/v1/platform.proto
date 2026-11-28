@@ -3,10 +3,10 @@ syntax = "proto3";
 
 package mysms.platform.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "PlatformProto";
@@ -21,7 +21,7 @@ service TenantService {
   // Create Tenant.
   rpc CreateTenant(CreateTenantRequest) returns (CreateTenantResponse);
   // Update Tenant.
-  rpc UpdateTenant(UpdateTenantRequest) returns (UpdateTenantResponse);
+  rpc UpdateTenant(TenantUpdate) returns (UpdateTenantResponse);
   // Soft-delete Tenant.
   rpc DeleteTenant(DeleteTenantRequest) returns (DeleteTenantResponse);
   // Public branding and locale for login pages and the PWA manifest. Public.
@@ -51,7 +51,7 @@ service SaasPlanService {
   // Create SaasPlan.
   rpc CreateSaasPlan(CreateSaasPlanRequest) returns (CreateSaasPlanResponse);
   // Update SaasPlan.
-  rpc UpdateSaasPlan(UpdateSaasPlanRequest) returns (UpdateSaasPlanResponse);
+  rpc UpdateSaasPlan(SaasPlanUpdate) returns (UpdateSaasPlanResponse);
   // Soft-delete SaasPlan.
   rpc DeleteSaasPlan(DeleteSaasPlanRequest) returns (DeleteSaasPlanResponse);
 }
@@ -109,7 +109,7 @@ service TagService {
   // Create Tag.
   rpc CreateTag(CreateTagRequest) returns (CreateTagResponse);
   // Update Tag.
-  rpc UpdateTag(UpdateTagRequest) returns (UpdateTagResponse);
+  rpc UpdateTag(TagUpdate) returns (UpdateTagResponse);
   // Soft-delete Tag.
   rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
 }
@@ -133,7 +133,7 @@ service EntityNoteService {
   // Create EntityNote.
   rpc CreateEntityNote(CreateEntityNoteRequest) returns (CreateEntityNoteResponse);
   // Update EntityNote.
-  rpc UpdateEntityNote(UpdateEntityNoteRequest) returns (UpdateEntityNoteResponse);
+  rpc UpdateEntityNote(EntityNoteUpdate) returns (UpdateEntityNoteResponse);
   // Soft-delete EntityNote.
   rpc DeleteEntityNote(DeleteEntityNoteRequest) returns (DeleteEntityNoteResponse);
 }
@@ -155,7 +155,7 @@ service ReservedKeywordService {
   // Create ReservedKeyword.
   rpc CreateReservedKeyword(CreateReservedKeywordRequest) returns (CreateReservedKeywordResponse);
   // Update ReservedKeyword.
-  rpc UpdateReservedKeyword(UpdateReservedKeywordRequest) returns (UpdateReservedKeywordResponse);
+  rpc UpdateReservedKeyword(ReservedKeywordUpdate) returns (UpdateReservedKeywordResponse);
   // Soft-delete ReservedKeyword.
   rpc DeleteReservedKeyword(DeleteReservedKeywordRequest) returns (DeleteReservedKeywordResponse);
 }
@@ -169,7 +169,7 @@ service SalesEnquiryService {
   // Create SalesEnquiry.
   rpc CreateSalesEnquiry(CreateSalesEnquiryRequest) returns (CreateSalesEnquiryResponse);
   // Update SalesEnquiry.
-  rpc UpdateSalesEnquiry(UpdateSalesEnquiryRequest) returns (UpdateSalesEnquiryResponse);
+  rpc UpdateSalesEnquiry(SalesEnquiryUpdate) returns (UpdateSalesEnquiryResponse);
   // Soft-delete SalesEnquiry.
   rpc DeleteSalesEnquiry(DeleteSalesEnquiryRequest) returns (DeleteSalesEnquiryResponse);
   // Record follow-up.
@@ -185,7 +185,7 @@ service SystemSettingService {
   // Create SystemSetting.
   rpc CreateSystemSetting(CreateSystemSettingRequest) returns (CreateSystemSettingResponse);
   // Update SystemSetting.
-  rpc UpdateSystemSetting(UpdateSystemSettingRequest) returns (UpdateSystemSettingResponse);
+  rpc UpdateSystemSetting(SystemSettingUpdate) returns (UpdateSystemSettingResponse);
   // Soft-delete SystemSetting.
   rpc DeleteSystemSetting(DeleteSystemSettingRequest) returns (DeleteSystemSettingResponse);
 }
@@ -199,7 +199,7 @@ service ThemeService {
   // Create Theme.
   rpc CreateTheme(CreateThemeRequest) returns (CreateThemeResponse);
   // Update Theme.
-  rpc UpdateTheme(UpdateThemeRequest) returns (UpdateThemeResponse);
+  rpc UpdateTheme(ThemeUpdate) returns (UpdateThemeResponse);
   // Soft-delete Theme.
   rpc DeleteTheme(DeleteThemeRequest) returns (DeleteThemeResponse);
 }
@@ -213,7 +213,7 @@ service UploadPolicyService {
   // Create UploadPolicy.
   rpc CreateUploadPolicy(CreateUploadPolicyRequest) returns (CreateUploadPolicyResponse);
   // Update UploadPolicy.
-  rpc UpdateUploadPolicy(UpdateUploadPolicyRequest) returns (UpdateUploadPolicyResponse);
+  rpc UpdateUploadPolicy(UploadPolicyUpdate) returns (UpdateUploadPolicyResponse);
   // Soft-delete UploadPolicy.
   rpc DeleteUploadPolicy(DeleteUploadPolicyRequest) returns (DeleteUploadPolicyResponse);
 }
@@ -237,7 +237,7 @@ service StorageQuotaService {
   // Create StorageQuota.
   rpc CreateStorageQuota(CreateStorageQuotaRequest) returns (CreateStorageQuotaResponse);
   // Update StorageQuota.
-  rpc UpdateStorageQuota(UpdateStorageQuotaRequest) returns (UpdateStorageQuotaResponse);
+  rpc UpdateStorageQuota(StorageQuotaUpdate) returns (UpdateStorageQuotaResponse);
   // Soft-delete StorageQuota.
   rpc DeleteStorageQuota(DeleteStorageQuotaRequest) returns (DeleteStorageQuotaResponse);
 }
@@ -291,13 +291,35 @@ message CreateTenantResponse {
   Tenant tenant = 1;
 }
 
-message UpdateTenantRequest {
-  // Resource with id and etag set.
-  Tenant tenant = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateTenant (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message TenantUpdate {
+  // Tenant id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Short unique tenant code used in URLs and logins.
+  optional string code = 4;
+  // Display name.
+  optional string name = 5;
+  // Registered legal name.
+  mysms.common.v1.NullableString legal_name = 6;
+  // Tenant lifecycle state.
+  optional Tenant.Status status = 7;
+  // Main contact e-mail.
+  mysms.common.v1.NullableString primary_email = 8;
+  // Main contact phone.
+  mysms.common.v1.NullableString primary_phone = 9;
+  // Country of registration. [UUID]
+  mysms.common.v1.NullableString country_id = 10;
+  // Default currency for fees and payments. [UUID]
+  mysms.common.v1.NullableString default_currency_id = 11;
+  // IANA time zone, e.g. Asia/Kolkata.
+  optional string timezone = 12;
+  // Default locale.
+  optional string locale = 13;
 }
 message UpdateTenantResponse {
   Tenant tenant = 1;
@@ -351,13 +373,45 @@ message CreateSaasPlanResponse {
   SaasPlan saas_plan = 1;
 }
 
-message UpdateSaasPlanRequest {
-  // Resource with id and etag set.
-  SaasPlan saas_plan = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateSaasPlan (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SaasPlanUpdate {
+  // SaasPlan id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Unique plan code.
+  optional string code = 4;
+  // Plan name shown to customers.
+  optional string display_name = 5;
+  // Billing cycle length in months.
+  optional int32 billing_cycle_months = 6;
+  // Price per billing cycle. [Decimal string]
+  optional string price = 7;
+  // Currency of the price. [UUID]
+  mysms.common.v1.NullableString currency_id = 8;
+  // Display order.
+  optional int32 sort_order = 9;
+  // Whether the plan can be purchased.
+  optional bool is_active = 10;
+  // Member (user) limit; NULL = unlimited.
+  mysms.common.v1.NullableInt32 max_members = 11;
+  // Event limit.
+  mysms.common.v1.NullableInt32 max_events = 12;
+  // Folder limit.
+  mysms.common.v1.NullableInt32 max_folders = 13;
+  // File limit.
+  mysms.common.v1.NullableInt32 max_files = 14;
+  // Video limit.
+  mysms.common.v1.NullableInt32 max_videos = 15;
+  // Audio limit.
+  mysms.common.v1.NullableInt32 max_audios = 16;
+  // Bulletin/magazine limit.
+  mysms.common.v1.NullableInt32 max_bulletins = 17;
+  // Group limit.
+  mysms.common.v1.NullableInt32 max_groups = 18;
 }
 message UpdateSaasPlanResponse {
   SaasPlan saas_plan = 1;
@@ -516,13 +570,27 @@ message CreateTagResponse {
   Tag tag = 1;
 }
 
-message UpdateTagRequest {
-  // Resource with id and etag set.
-  Tag tag = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateTag (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message TagUpdate {
+  // Tag id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Tag family, e.g. general, post, library_media, lms_course.
+  optional string tag_type = 4;
+  // Tag label.
+  optional string name = 5;
+  // URL-safe tag key.
+  optional string slug = 6;
+  // Localised name/slug values keyed by locale.
+  google.protobuf.Value translations = 7;
+  // Display order.
+  mysms.common.v1.NullableInt32 sort_order = 8;
+  // Short code (e.g. subject tag code).
+  mysms.common.v1.NullableString code = 9;
 }
 message UpdateTagResponse {
   Tag tag = 1;
@@ -616,13 +684,23 @@ message CreateEntityNoteResponse {
   EntityNote entity_note = 1;
 }
 
-message UpdateEntityNoteRequest {
-  // Resource with id and etag set.
-  EntityNote entity_note = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateEntityNote (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message EntityNoteUpdate {
+  // EntityNote id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution scope. [UUID]
+  optional string institution_id = 4;
+  // Polymorphic target table name.
+  optional string entity_type = 5;
+  // Polymorphic target record id. [UUID]
+  optional string entity_id = 6;
+  // Note content.
+  optional string note_text = 7;
 }
 message UpdateEntityNoteResponse {
   EntityNote entity_note = 1;
@@ -704,13 +782,17 @@ message CreateReservedKeywordResponse {
   ReservedKeyword reserved_keyword = 1;
 }
 
-message UpdateReservedKeywordRequest {
-  // Resource with id and etag set.
-  ReservedKeyword reserved_keyword = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateReservedKeyword (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ReservedKeywordUpdate {
+  // ReservedKeyword id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Reserved word.
+  optional string keyword = 4;
 }
 message UpdateReservedKeywordResponse {
   ReservedKeyword reserved_keyword = 1;
@@ -764,13 +846,31 @@ message CreateSalesEnquiryResponse {
   SalesEnquiry sales_enquiry = 1;
 }
 
-message UpdateSalesEnquiryRequest {
-  // Resource with id and etag set.
-  SalesEnquiry sales_enquiry = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateSalesEnquiry (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SalesEnquiryUpdate {
+  // SalesEnquiry id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Person making the enquiry.
+  optional string contact_name = 4;
+  // Contact e-mail.
+  optional string email = 5;
+  // Contact phone.
+  optional string phone = 6;
+  // School / organisation name.
+  optional string organisation_name = 7;
+  // Contact's role.
+  optional string designation = 8;
+  // How the enquiry arrived (web, phone, event).
+  mysms.common.v1.NullableString channel = 9;
+  // Enquiry text.
+  mysms.common.v1.NullableString message = 10;
+  // Sales follow-up state.
+  optional SalesEnquiry.Status status = 11;
 }
 message UpdateSalesEnquiryResponse {
   SalesEnquiry sales_enquiry = 1;
@@ -824,13 +924,27 @@ message CreateSystemSettingResponse {
   SystemSetting system_setting = 1;
 }
 
-message UpdateSystemSettingRequest {
-  // Resource with id and etag set.
-  SystemSetting system_setting = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateSystemSetting (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SystemSettingUpdate {
+  // SystemSetting id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Unique key.
+  optional string setting_key = 4;
+  // Display name.
+  optional string name = 5;
+  // Explanation.
+  mysms.common.v1.NullableString description = 6;
+  // Current value (serialised).
+  mysms.common.v1.NullableString value = 7;
+  // Editor control used for the value (text, bool, select, json).
+  optional string input_type = 8;
+  // Whether the setting is in effect.
+  optional bool is_active = 9;
 }
 message UpdateSystemSettingResponse {
   SystemSetting system_setting = 1;
@@ -884,13 +998,29 @@ message CreateThemeResponse {
   Theme theme = 1;
 }
 
-message UpdateThemeRequest {
-  // Resource with id and etag set.
-  Theme theme = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateTheme (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ThemeUpdate {
+  // Theme id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Theme name.
+  optional string name = 4;
+  // Description.
+  mysms.common.v1.NullableString description = 5;
+  // Preview image. [UUID]
+  mysms.common.v1.NullableString thumbnail_file_id = 6;
+  // Second preview image (e.g. dark variant). [UUID]
+  mysms.common.v1.NullableString thumbnail_alt_file_id = 7;
+  // Logo shown on sign-in pages, the app shell and the PWA manifest (the branding of the tenant's default theme). [UUID]
+  mysms.common.v1.NullableString logo_file_id = 8;
+  // The tenant's own theme, the one public branding uses. At most one per tenant; setting it moves the mark.
+  optional bool is_default = 9;
+  // Design tokens (colours, fonts) applied by the web and mobile apps.
+  google.protobuf.Value tokens = 10;
 }
 message UpdateThemeResponse {
   Theme theme = 1;
@@ -944,13 +1074,25 @@ message CreateUploadPolicyResponse {
   UploadPolicy upload_policy = 1;
 }
 
-message UpdateUploadPolicyRequest {
-  // Resource with id and etag set.
-  UploadPolicy upload_policy = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateUploadPolicy (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message UploadPolicyUpdate {
+  // UploadPolicy id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Role the limit applies to (NULL = everyone). [UUID]
+  mysms.common.v1.NullableString role_id = 4;
+  // Feature area (assignments, quiz media, profile picture...).
+  optional string module_code = 5;
+  // Specific operation within the feature (e.g. create_question_image).
+  mysms.common.v1.NullableString operation_code = 6;
+  // Maximum file size in bytes (NULL = platform default).
+  mysms.common.v1.NullableInt64 max_size_bytes = 7;
+  // Comma-separated allowed extensions (NULL = platform default list).
+  mysms.common.v1.NullableString allowed_extensions = 8;
 }
 message UpdateUploadPolicyResponse {
   UploadPolicy upload_policy = 1;
@@ -1032,13 +1174,25 @@ message CreateStorageQuotaResponse {
   StorageQuota storage_quota = 1;
 }
 
-message UpdateStorageQuotaRequest {
-  // Resource with id and etag set.
-  StorageQuota storage_quota = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStorageQuota (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StorageQuotaUpdate {
+  // StorageQuota id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // User the quota belongs to. [UUID]
+  mysms.common.v1.NullableString user_id = 4;
+  // Institution the quota belongs to (institution-wide pool). [UUID]
+  mysms.common.v1.NullableString institution_id = 5;
+  // Allowed bytes.
+  optional int64 quota_bytes = 6;
+  // Bytes in use (maintained by the application).
+  optional int64 used_bytes = 7;
+  // Quota is enforced.
+  optional bool is_active = 8;
 }
 message UpdateStorageQuotaResponse {
   StorageQuota storage_quota = 1;

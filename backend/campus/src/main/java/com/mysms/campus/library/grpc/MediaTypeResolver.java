@@ -3,7 +3,6 @@ package com.mysms.campus.library.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.library.api.model.MediaType;
-import com.mysms.campus.library.api.model.MediaTypeUpdate;
 import com.mysms.campus.library.business.MediaTypeService;
 import com.mysms.library.v1.CreateMediaTypeRequest;
 import com.mysms.library.v1.CreateMediaTypeResponse;
@@ -14,7 +13,7 @@ import com.mysms.library.v1.GetMediaTypeResponse;
 import com.mysms.library.v1.ListMediaTypesRequest;
 import com.mysms.library.v1.ListMediaTypesResponse;
 import com.mysms.library.v1.MediaTypeServiceGrpc;
-import com.mysms.library.v1.UpdateMediaTypeRequest;
+import com.mysms.library.v1.MediaTypeUpdate;
 import com.mysms.library.v1.UpdateMediaTypeResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,11 +56,11 @@ public class MediaTypeResolver extends MediaTypeServiceGrpc.MediaTypeServiceImpl
     }
 
     @Override
-    public void updateMediaType(UpdateMediaTypeRequest request, StreamObserver<UpdateMediaTypeResponse> out) {
+    public void updateMediaType(MediaTypeUpdate request, StreamObserver<UpdateMediaTypeResponse> out) {
         MediaType updated = service.updateMediaType(
-                bridge.id(request.getMediaType().getId(), "id"),
-                bridge.requiredIfMatch(request.getMediaType().getEtag()),
-                bridge.changes(request.getMediaType(), request.getUpdateMask(), MediaTypeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MediaTypeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMediaTypeResponse.newBuilder(), "media_type", updated).build());
     }

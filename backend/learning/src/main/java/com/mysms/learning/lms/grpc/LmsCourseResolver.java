@@ -17,29 +17,17 @@ import com.mysms.core.error.InvalidArgumentException;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.CatalogBanner;
-import com.mysms.learning.lms.api.model.CatalogBannerUpdate;
 import com.mysms.learning.lms.api.model.Chapter;
-import com.mysms.learning.lms.api.model.ChapterUpdate;
 import com.mysms.learning.lms.api.model.CourseAuthorProfile;
-import com.mysms.learning.lms.api.model.CourseAuthorProfileUpdate;
 import com.mysms.learning.lms.api.model.CourseInterest;
-import com.mysms.learning.lms.api.model.CourseInterestUpdate;
 import com.mysms.learning.lms.api.model.CourseMentor;
-import com.mysms.learning.lms.api.model.CourseMentorUpdate;
 import com.mysms.learning.lms.api.model.CoursePreview;
-import com.mysms.learning.lms.api.model.CoursePreviewUpdate;
 import com.mysms.learning.lms.api.model.CourseReview;
-import com.mysms.learning.lms.api.model.CourseReviewUpdate;
 import com.mysms.learning.lms.api.model.CourseTeacher;
-import com.mysms.learning.lms.api.model.CourseTeacherUpdate;
 import com.mysms.learning.lms.api.model.CourseTestimonial;
-import com.mysms.learning.lms.api.model.CourseTestimonialUpdate;
 import com.mysms.learning.lms.api.model.EnrollmentRequest;
-import com.mysms.learning.lms.api.model.EnrollmentRequestUpdate;
 import com.mysms.learning.lms.api.model.LmsCourse;
-import com.mysms.learning.lms.api.model.LmsCourseUpdate;
 import com.mysms.learning.lms.api.model.RelatedCourse;
-import com.mysms.learning.lms.api.model.RelatedCourseUpdate;
 import com.mysms.learning.lms.business.LmsCourseService;
 import com.mysms.lms.v1.ApproveCourseRequest;
 import com.mysms.lms.v1.ApproveCourseResponse;
@@ -47,10 +35,19 @@ import com.mysms.lms.v1.ApproveEnrollmentRequestRequest;
 import com.mysms.lms.v1.ApproveEnrollmentRequestResponse;
 import com.mysms.lms.v1.BatchEnrollInCourseRequest;
 import com.mysms.lms.v1.BatchEnrollInCourseResponse;
+import com.mysms.lms.v1.CatalogBannerUpdate;
+import com.mysms.lms.v1.ChapterUpdate;
 import com.mysms.lms.v1.CheckCourseDependenciesRequest;
 import com.mysms.lms.v1.CheckCourseDependenciesResponse;
 import com.mysms.lms.v1.CompareCoursesRequest;
 import com.mysms.lms.v1.CompareCoursesResponse;
+import com.mysms.lms.v1.CourseAuthorProfileUpdate;
+import com.mysms.lms.v1.CourseInterestUpdate;
+import com.mysms.lms.v1.CourseMentorUpdate;
+import com.mysms.lms.v1.CoursePreviewUpdate;
+import com.mysms.lms.v1.CourseReviewUpdate;
+import com.mysms.lms.v1.CourseTeacherUpdate;
+import com.mysms.lms.v1.CourseTestimonialUpdate;
 import com.mysms.lms.v1.CreateCatalogBannerRequest;
 import com.mysms.lms.v1.CreateCatalogBannerResponse;
 import com.mysms.lms.v1.CreateChapterRequest;
@@ -105,6 +102,7 @@ import com.mysms.lms.v1.DeleteRelatedCourseRequest;
 import com.mysms.lms.v1.DeleteRelatedCourseResponse;
 import com.mysms.lms.v1.EnrollInCourseRequest;
 import com.mysms.lms.v1.EnrollInCourseResponse;
+import com.mysms.lms.v1.EnrollmentRequestUpdate;
 import com.mysms.lms.v1.ExportCourseRequest;
 import com.mysms.lms.v1.ExportCourseResponse;
 import com.mysms.lms.v1.ImportCoursePackageRequest;
@@ -176,6 +174,7 @@ import com.mysms.lms.v1.ListLmsCoursesResponse;
 import com.mysms.lms.v1.ListRelatedCoursesRequest;
 import com.mysms.lms.v1.ListRelatedCoursesResponse;
 import com.mysms.lms.v1.LmsCourseServiceGrpc;
+import com.mysms.lms.v1.LmsCourseUpdate;
 import com.mysms.lms.v1.MoveChapterRequest;
 import com.mysms.lms.v1.MoveChapterResponse;
 import com.mysms.lms.v1.PublishCatalogListingRequest;
@@ -186,6 +185,7 @@ import com.mysms.lms.v1.ReactivateCourseRequest;
 import com.mysms.lms.v1.ReactivateCourseResponse;
 import com.mysms.lms.v1.RejectEnrollmentRequestRequest;
 import com.mysms.lms.v1.RejectEnrollmentRequestResponse;
+import com.mysms.lms.v1.RelatedCourseUpdate;
 import com.mysms.lms.v1.ReorderChaptersRequest;
 import com.mysms.lms.v1.ReorderChaptersResponse;
 import com.mysms.lms.v1.SaveScormProgressRequest;
@@ -194,29 +194,17 @@ import com.mysms.lms.v1.SubmitCourseForReviewRequest;
 import com.mysms.lms.v1.SubmitCourseForReviewResponse;
 import com.mysms.lms.v1.UnpublishCourseRequest;
 import com.mysms.lms.v1.UnpublishCourseResponse;
-import com.mysms.lms.v1.UpdateCatalogBannerRequest;
 import com.mysms.lms.v1.UpdateCatalogBannerResponse;
-import com.mysms.lms.v1.UpdateChapterRequest;
 import com.mysms.lms.v1.UpdateChapterResponse;
-import com.mysms.lms.v1.UpdateCourseAuthorProfileRequest;
 import com.mysms.lms.v1.UpdateCourseAuthorProfileResponse;
-import com.mysms.lms.v1.UpdateCourseInterestRequest;
 import com.mysms.lms.v1.UpdateCourseInterestResponse;
-import com.mysms.lms.v1.UpdateCourseMentorRequest;
 import com.mysms.lms.v1.UpdateCourseMentorResponse;
-import com.mysms.lms.v1.UpdateCoursePreviewRequest;
 import com.mysms.lms.v1.UpdateCoursePreviewResponse;
-import com.mysms.lms.v1.UpdateCourseReviewRequest;
 import com.mysms.lms.v1.UpdateCourseReviewResponse;
-import com.mysms.lms.v1.UpdateCourseTeacherRequest;
 import com.mysms.lms.v1.UpdateCourseTeacherResponse;
-import com.mysms.lms.v1.UpdateCourseTestimonialRequest;
 import com.mysms.lms.v1.UpdateCourseTestimonialResponse;
-import com.mysms.lms.v1.UpdateEnrollmentRequestRequest;
 import com.mysms.lms.v1.UpdateEnrollmentRequestResponse;
-import com.mysms.lms.v1.UpdateLmsCourseRequest;
 import com.mysms.lms.v1.UpdateLmsCourseResponse;
-import com.mysms.lms.v1.UpdateRelatedCourseRequest;
 import com.mysms.lms.v1.UpdateRelatedCourseResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -264,10 +252,10 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateLmsCourse(UpdateLmsCourseRequest request, StreamObserver<UpdateLmsCourseResponse> out) {
-        LmsCourse updated = service.updateLmsCourse(bridge.id(request.getCourse().getId(), "id"),
-                bridge.requiredIfMatch(request.getCourse().getEtag()),
-                bridge.changes(request.getCourse(), request.getUpdateMask(), LmsCourseUpdate.class), request.getValidateOnly());
+    public void updateLmsCourse(LmsCourseUpdate request, StreamObserver<UpdateLmsCourseResponse> out) {
+        LmsCourse updated = service.updateLmsCourse(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LmsCourseProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLmsCourseResponse.newBuilder(), "course", updated).build());
     }
 
@@ -300,10 +288,10 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateCourseTeacher(UpdateCourseTeacherRequest request, StreamObserver<UpdateCourseTeacherResponse> out) {
+    public void updateCourseTeacher(CourseTeacherUpdate request, StreamObserver<UpdateCourseTeacherResponse> out) {
         CourseTeacher updated = service.updateCourseTeacher(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getCourseTeacher().getId(), "id"), bridge.requiredIfMatch(request.getCourseTeacher().getEtag()),
-                bridge.changes(request.getCourseTeacher(), request.getUpdateMask(), CourseTeacherUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CourseTeacherProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCourseTeacherResponse.newBuilder(), "course_teacher", updated).build());
     }
@@ -339,10 +327,10 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateRelatedCourse(UpdateRelatedCourseRequest request, StreamObserver<UpdateRelatedCourseResponse> out) {
+    public void updateRelatedCourse(RelatedCourseUpdate request, StreamObserver<UpdateRelatedCourseResponse> out) {
         RelatedCourse updated = service.updateRelatedCourse(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getRelatedCourse().getId(), "id"), bridge.requiredIfMatch(request.getRelatedCourse().getEtag()),
-                bridge.changes(request.getRelatedCourse(), request.getUpdateMask(), RelatedCourseUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                RelatedCourseProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRelatedCourseResponse.newBuilder(), "related_course", updated).build());
     }
@@ -377,10 +365,10 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateCourseMentor(UpdateCourseMentorRequest request, StreamObserver<UpdateCourseMentorResponse> out) {
+    public void updateCourseMentor(CourseMentorUpdate request, StreamObserver<UpdateCourseMentorResponse> out) {
         CourseMentor updated = service.updateCourseMentor(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getCourseMentor().getId(), "id"), bridge.requiredIfMatch(request.getCourseMentor().getEtag()),
-                bridge.changes(request.getCourseMentor(), request.getUpdateMask(), CourseMentorUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CourseMentorProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCourseMentorResponse.newBuilder(), "course_mentor", updated).build());
     }
@@ -414,10 +402,10 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateChapter(UpdateChapterRequest request, StreamObserver<UpdateChapterResponse> out) {
+    public void updateChapter(ChapterUpdate request, StreamObserver<UpdateChapterResponse> out) {
         Chapter updated = service.updateChapter(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getChapter().getId(), "id"), bridge.requiredIfMatch(request.getChapter().getEtag()),
-                bridge.changes(request.getChapter(), request.getUpdateMask(), ChapterUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                ChapterProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateChapterResponse.newBuilder(), "chapter", updated).build());
     }
 
@@ -452,10 +440,10 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateCourseReview(UpdateCourseReviewRequest request, StreamObserver<UpdateCourseReviewResponse> out) {
+    public void updateCourseReview(CourseReviewUpdate request, StreamObserver<UpdateCourseReviewResponse> out) {
         CourseReview updated = service.updateCourseReview(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getCourseReview().getId(), "id"), bridge.requiredIfMatch(request.getCourseReview().getEtag()),
-                bridge.changes(request.getCourseReview(), request.getUpdateMask(), CourseReviewUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CourseReviewProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCourseReviewResponse.newBuilder(), "course_review", updated).build());
     }
@@ -490,11 +478,11 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateCourseInterest(UpdateCourseInterestRequest request, StreamObserver<UpdateCourseInterestResponse> out) {
+    public void updateCourseInterest(CourseInterestUpdate request, StreamObserver<UpdateCourseInterestResponse> out) {
         CourseInterest updated = service.updateCourseInterest(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getCourseInterest().getId(), "id"),
-                bridge.requiredIfMatch(request.getCourseInterest().getEtag()),
-                bridge.changes(request.getCourseInterest(), request.getUpdateMask(), CourseInterestUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CourseInterestProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCourseInterestResponse.newBuilder(), "course_interest", updated).build());
     }
@@ -534,12 +522,12 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateCourseAuthorProfile(UpdateCourseAuthorProfileRequest request,
+    public void updateCourseAuthorProfile(CourseAuthorProfileUpdate request,
             StreamObserver<UpdateCourseAuthorProfileResponse> out) {
         CourseAuthorProfile updated = service.updateCourseAuthorProfile(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getCourseAuthorProfile().getId(), "id"),
-                bridge.requiredIfMatch(request.getCourseAuthorProfile().getEtag()),
-                bridge.changes(request.getCourseAuthorProfile(), request.getUpdateMask(), CourseAuthorProfileUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CourseAuthorProfileProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateCourseAuthorProfileResponse.newBuilder(), "course_author_profile", updated).build());
@@ -577,10 +565,10 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateCoursePreview(UpdateCoursePreviewRequest request, StreamObserver<UpdateCoursePreviewResponse> out) {
+    public void updateCoursePreview(CoursePreviewUpdate request, StreamObserver<UpdateCoursePreviewResponse> out) {
         CoursePreview updated = service.updateCoursePreview(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getCoursePreview().getId(), "id"), bridge.requiredIfMatch(request.getCoursePreview().getEtag()),
-                bridge.changes(request.getCoursePreview(), request.getUpdateMask(), CoursePreviewUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CoursePreviewProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCoursePreviewResponse.newBuilder(), "course_preview", updated).build());
     }
@@ -618,12 +606,12 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateCourseTestimonial(UpdateCourseTestimonialRequest request,
+    public void updateCourseTestimonial(CourseTestimonialUpdate request,
             StreamObserver<UpdateCourseTestimonialResponse> out) {
         CourseTestimonial updated = service.updateCourseTestimonial(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getCourseTestimonial().getId(), "id"),
-                bridge.requiredIfMatch(request.getCourseTestimonial().getEtag()),
-                bridge.changes(request.getCourseTestimonial(), request.getUpdateMask(), CourseTestimonialUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CourseTestimonialProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCourseTestimonialResponse.newBuilder(), "course_testimonial", updated).build());
     }
@@ -660,10 +648,10 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateCatalogBanner(UpdateCatalogBannerRequest request, StreamObserver<UpdateCatalogBannerResponse> out) {
+    public void updateCatalogBanner(CatalogBannerUpdate request, StreamObserver<UpdateCatalogBannerResponse> out) {
         CatalogBanner updated = service.updateCatalogBanner(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getCatalogBanner().getId(), "id"), bridge.requiredIfMatch(request.getCatalogBanner().getEtag()),
-                bridge.changes(request.getCatalogBanner(), request.getUpdateMask(), CatalogBannerUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                CatalogBannerProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCatalogBannerResponse.newBuilder(), "catalog_banner", updated).build());
     }
@@ -700,12 +688,12 @@ public class LmsCourseResolver extends LmsCourseServiceGrpc.LmsCourseServiceImpl
     }
 
     @Override
-    public void updateEnrollmentRequest(UpdateEnrollmentRequestRequest request,
+    public void updateEnrollmentRequest(EnrollmentRequestUpdate request,
             StreamObserver<UpdateEnrollmentRequestResponse> out) {
         EnrollmentRequest updated = service.updateEnrollmentRequest(bridge.id(request.getCourseId(), "courseId"),
-                bridge.id(request.getEnrollmentRequest().getId(), "id"),
-                bridge.requiredIfMatch(request.getEnrollmentRequest().getEtag()),
-                bridge.changes(request.getEnrollmentRequest(), request.getUpdateMask(), EnrollmentRequestUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EnrollmentRequestProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEnrollmentRequestResponse.newBuilder(), "enrollment_request", updated).build());
     }

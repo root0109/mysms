@@ -3,7 +3,6 @@ package com.mysms.identity.people.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.identity.people.api.model.Honorific;
-import com.mysms.identity.people.api.model.HonorificUpdate;
 import com.mysms.identity.people.business.HonorificService;
 import com.mysms.people.v1.CreateHonorificRequest;
 import com.mysms.people.v1.CreateHonorificResponse;
@@ -12,9 +11,9 @@ import com.mysms.people.v1.DeleteHonorificResponse;
 import com.mysms.people.v1.GetHonorificRequest;
 import com.mysms.people.v1.GetHonorificResponse;
 import com.mysms.people.v1.HonorificServiceGrpc;
+import com.mysms.people.v1.HonorificUpdate;
 import com.mysms.people.v1.ListHonorificsRequest;
 import com.mysms.people.v1.ListHonorificsResponse;
-import com.mysms.people.v1.UpdateHonorificRequest;
 import com.mysms.people.v1.UpdateHonorificResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,10 +55,10 @@ public class HonorificResolver extends HonorificServiceGrpc.HonorificServiceImpl
     }
 
     @Override
-    public void updateHonorific(UpdateHonorificRequest request, StreamObserver<UpdateHonorificResponse> out) {
+    public void updateHonorific(HonorificUpdate request, StreamObserver<UpdateHonorificResponse> out) {
         Honorific updated = service.updateHonorific(
-                bridge.id(request.getHonorific().getId(), "id"), bridge.requiredIfMatch(request.getHonorific().getEtag()),
-                bridge.changes(request.getHonorific(), request.getUpdateMask(), HonorificUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                HonorificProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateHonorificResponse.newBuilder(), "honorific", updated).build());
     }

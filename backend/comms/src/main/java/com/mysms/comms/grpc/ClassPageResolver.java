@@ -2,12 +2,12 @@ package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.ClassPage;
 import com.mysms.comms.api.model.ClassPageAttachment;
-import com.mysms.comms.api.model.ClassPageAttachmentUpdate;
 import com.mysms.comms.api.model.ClassPageMember;
-import com.mysms.comms.api.model.ClassPageMemberUpdate;
-import com.mysms.comms.api.model.ClassPageUpdate;
 import com.mysms.comms.business.ClassPageService;
+import com.mysms.comms.v1.ClassPageAttachmentUpdate;
+import com.mysms.comms.v1.ClassPageMemberUpdate;
 import com.mysms.comms.v1.ClassPageServiceGrpc;
+import com.mysms.comms.v1.ClassPageUpdate;
 import com.mysms.comms.v1.CreateClassPageAttachmentRequest;
 import com.mysms.comms.v1.CreateClassPageAttachmentResponse;
 import com.mysms.comms.v1.CreateClassPageMemberRequest;
@@ -34,11 +34,8 @@ import com.mysms.comms.v1.ListClassPageMembersRequest;
 import com.mysms.comms.v1.ListClassPageMembersResponse;
 import com.mysms.comms.v1.ListClassPagesRequest;
 import com.mysms.comms.v1.ListClassPagesResponse;
-import com.mysms.comms.v1.UpdateClassPageAttachmentRequest;
 import com.mysms.comms.v1.UpdateClassPageAttachmentResponse;
-import com.mysms.comms.v1.UpdateClassPageMemberRequest;
 import com.mysms.comms.v1.UpdateClassPageMemberResponse;
-import com.mysms.comms.v1.UpdateClassPageRequest;
 import com.mysms.comms.v1.UpdateClassPageResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -82,10 +79,10 @@ public class ClassPageResolver extends ClassPageServiceGrpc.ClassPageServiceImpl
     }
 
     @Override
-    public void updateClassPage(UpdateClassPageRequest request, StreamObserver<UpdateClassPageResponse> out) {
+    public void updateClassPage(ClassPageUpdate request, StreamObserver<UpdateClassPageResponse> out) {
         ClassPage updated = service.updateClassPage(
-                bridge.id(request.getClassPage().getId(), "id"), bridge.requiredIfMatch(request.getClassPage().getEtag()),
-                bridge.changes(request.getClassPage(), request.getUpdateMask(), ClassPageUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                ClassPageProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateClassPageResponse.newBuilder(), "class_page", updated).build());
     }
@@ -125,12 +122,12 @@ public class ClassPageResolver extends ClassPageServiceGrpc.ClassPageServiceImpl
     }
 
     @Override
-    public void updateClassPageAttachment(UpdateClassPageAttachmentRequest request,
+    public void updateClassPageAttachment(ClassPageAttachmentUpdate request,
             StreamObserver<UpdateClassPageAttachmentResponse> out) {
         ClassPageAttachment updated = service.updateClassPageAttachment(
-                bridge.id(request.getClassPageId(), "classPageId"), bridge.id(request.getClassPageAttachment().getId(), "id"),
-                bridge.requiredIfMatch(request.getClassPageAttachment().getEtag()),
-                bridge.changes(request.getClassPageAttachment(), request.getUpdateMask(), ClassPageAttachmentUpdate.class),
+                bridge.id(request.getClassPageId(), "classPageId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ClassPageAttachmentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateClassPageAttachmentResponse.newBuilder(), "class_page_attachment", updated).build());
@@ -170,11 +167,11 @@ public class ClassPageResolver extends ClassPageServiceGrpc.ClassPageServiceImpl
     }
 
     @Override
-    public void updateClassPageMember(UpdateClassPageMemberRequest request, StreamObserver<UpdateClassPageMemberResponse> out) {
+    public void updateClassPageMember(ClassPageMemberUpdate request, StreamObserver<UpdateClassPageMemberResponse> out) {
         ClassPageMember updated = service.updateClassPageMember(
-                bridge.id(request.getClassPageId(), "classPageId"), bridge.id(request.getClassPageMember().getId(), "id"),
-                bridge.requiredIfMatch(request.getClassPageMember().getEtag()),
-                bridge.changes(request.getClassPageMember(), request.getUpdateMask(), ClassPageMemberUpdate.class),
+                bridge.id(request.getClassPageId(), "classPageId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ClassPageMemberProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateClassPageMemberResponse.newBuilder(), "class_page_member", updated).build());
     }

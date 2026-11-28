@@ -3,7 +3,6 @@ package com.mysms.campus.frontoffice.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.frontoffice.api.model.VisitorLog;
-import com.mysms.campus.frontoffice.api.model.VisitorLogUpdate;
 import com.mysms.campus.frontoffice.business.VisitorLogService;
 import com.mysms.frontoffice.v1.CheckOutVisitorRequest;
 import com.mysms.frontoffice.v1.CheckOutVisitorResponse;
@@ -15,9 +14,9 @@ import com.mysms.frontoffice.v1.GetVisitorLogRequest;
 import com.mysms.frontoffice.v1.GetVisitorLogResponse;
 import com.mysms.frontoffice.v1.ListVisitorLogsRequest;
 import com.mysms.frontoffice.v1.ListVisitorLogsResponse;
-import com.mysms.frontoffice.v1.UpdateVisitorLogRequest;
 import com.mysms.frontoffice.v1.UpdateVisitorLogResponse;
 import com.mysms.frontoffice.v1.VisitorLogServiceGrpc;
+import com.mysms.frontoffice.v1.VisitorLogUpdate;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 
@@ -58,11 +57,11 @@ public class VisitorLogResolver extends VisitorLogServiceGrpc.VisitorLogServiceI
     }
 
     @Override
-    public void updateVisitorLog(UpdateVisitorLogRequest request, StreamObserver<UpdateVisitorLogResponse> out) {
+    public void updateVisitorLog(VisitorLogUpdate request, StreamObserver<UpdateVisitorLogResponse> out) {
         VisitorLog updated = visitorLogService.updateVisitorLog(
-                bridge.id(request.getVisitorLog().getId(), "id"),
-                bridge.requiredIfMatch(request.getVisitorLog().getEtag()),
-                bridge.changes(request.getVisitorLog(), request.getUpdateMask(), VisitorLogUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                VisitorLogProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateVisitorLogResponse.newBuilder(), "visitor_log", updated).build());
     }

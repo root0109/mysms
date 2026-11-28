@@ -37,44 +37,6 @@ public class ResultTemplateUpdate {
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
   private @Nullable Optional<@NotNull LocalDate> resultDate;
 
-  /**
-   * State.
-   */
-  public enum StatusEnum {
-    DRAFT("draft"),
-    
-    RESULT_GENERATED("result_generated");
-
-    private final String value;
-
-    StatusEnum(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static StatusEnum fromValue(String value) {
-      for (StatusEnum b : StatusEnum.values()) {
-        if (b.value.equals(value)) {
-          return b;
-        }
-      }
-      throw new IllegalArgumentException("Unexpected value '" + value + "'");
-    }
-  }
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private @Nullable Optional<@NotNull StatusEnum> status;
-
   public ResultTemplateUpdate examSessionId(@Nullable Optional<UUID> examSessionId) {
     this.examSessionId = examSessionId;
     return this;
@@ -155,26 +117,6 @@ public class ResultTemplateUpdate {
     this.resultDate = resultDate;
   }
 
-  public ResultTemplateUpdate status(@Nullable Optional<StatusEnum> status) {
-    this.status = status;
-    return this;
-  }
-
-  /**
-   * State.
-   * @return status
-   */
-  
-  @JsonProperty("status")
-  public @Nullable Optional<StatusEnum> getStatus() {
-    return status;
-  }
-
-  @JsonProperty("status")
-  public void setStatus(@Nullable Optional<StatusEnum> status) {
-    this.status = status;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -187,13 +129,12 @@ public class ResultTemplateUpdate {
     return Objects.equals(this.examSessionId, resultTemplateUpdate.examSessionId) &&
         Objects.equals(this.gradingSchemeId, resultTemplateUpdate.gradingSchemeId) &&
         Objects.equals(this.name, resultTemplateUpdate.name) &&
-        Objects.equals(this.resultDate, resultTemplateUpdate.resultDate) &&
-        Objects.equals(this.status, resultTemplateUpdate.status);
+        Objects.equals(this.resultDate, resultTemplateUpdate.resultDate);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(examSessionId, gradingSchemeId, name, resultDate, status);
+    return Objects.hash(examSessionId, gradingSchemeId, name, resultDate);
   }
 
   @Override
@@ -204,7 +145,6 @@ public class ResultTemplateUpdate {
     sb.append("    gradingSchemeId: ").append(toIndentedString(gradingSchemeId)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    resultDate: ").append(toIndentedString(resultDate)).append("\n");
-    sb.append("    status: ").append(toIndentedString(status)).append("\n");
     sb.append("}");
     return sb.toString();
   }

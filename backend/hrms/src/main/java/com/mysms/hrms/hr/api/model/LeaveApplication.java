@@ -152,6 +152,9 @@ public class LeaveApplication {
   private @Nullable String decisionComments;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
+  private @Nullable String countedDays;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private @Nullable OffsetDateTime createTime;
 
@@ -463,6 +466,26 @@ public class LeaveApplication {
     this.decidedOn = decidedOn;
   }
 
+  public LeaveApplication countedDays(@Nullable String countedDays) {
+    this.countedDays = countedDays;
+    return this;
+  }
+
+  /**
+   * Days the approval counted against the leave balance (its working days on the calendar of that moment); cancelling gives back exactly these. Output only.
+   * @return countedDays
+   */
+  
+  @JsonProperty("countedDays")
+  public @Nullable String getCountedDays() {
+    return countedDays;
+  }
+
+  @JsonProperty("countedDays")
+  public void setCountedDays(@Nullable String countedDays) {
+    this.countedDays = countedDays;
+  }
+
   public LeaveApplication decisionComments(@Nullable String decisionComments) {
     this.decisionComments = decisionComments;
     return this;
@@ -607,6 +630,7 @@ public class LeaveApplication {
         Objects.equals(this.decidedByUserId, leaveApplication.decidedByUserId) &&
         Objects.equals(this.decidedOn, leaveApplication.decidedOn) &&
         Objects.equals(this.decisionComments, leaveApplication.decisionComments) &&
+        Objects.equals(this.countedDays, leaveApplication.countedDays) &&
         Objects.equals(this.createTime, leaveApplication.createTime) &&
         Objects.equals(this.createdBy, leaveApplication.createdBy) &&
         Objects.equals(this.updateTime, leaveApplication.updateTime) &&
@@ -616,7 +640,7 @@ public class LeaveApplication {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, institutionId, academicYearId, staffId, leaveTypeId, absenceReasonId, classSectionId, fromAt, toAt, dayPart, remarks, status, decidedByUserId, decidedOn, decisionComments, createTime, createdBy, updateTime, updatedBy, etag);
+    return Objects.hash(id, institutionId, academicYearId, staffId, leaveTypeId, absenceReasonId, classSectionId, fromAt, toAt, dayPart, remarks, status, decidedByUserId, decidedOn, decisionComments, countedDays, createTime, createdBy, updateTime, updatedBy, etag);
   }
 
   @Override
@@ -638,6 +662,7 @@ public class LeaveApplication {
     sb.append("    decidedByUserId: ").append(toIndentedString(decidedByUserId)).append("\n");
     sb.append("    decidedOn: ").append(toIndentedString(decidedOn)).append("\n");
     sb.append("    decisionComments: ").append(toIndentedString(decisionComments)).append("\n");
+    sb.append("    countedDays: ").append(toIndentedString(countedDays)).append("\n");
     sb.append("    createTime: ").append(toIndentedString(createTime)).append("\n");
     sb.append("    createdBy: ").append(toIndentedString(createdBy)).append("\n");
     sb.append("    updateTime: ").append(toIndentedString(updateTime)).append("\n");

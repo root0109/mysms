@@ -3,7 +3,7 @@ package com.mysms.academics.attendance.repository;
 /**
  * The statements of attendance's privacy tasks and retention sweep (design PRIVACY-AND-CONSENT-CENTRE §9.1, §10), run
  * by its {@code AttendancePrivacyTaskHandler} through privacy-client. attendance knows a data principal through the
- * person of each staff and student record (attendance.member_record, kept from hr's and sis's events). An erasure
+ * person of each student record (attendance.member_record, kept from sis's events). An erasure
  * keeps the registers under attendance.after_leaving and counts the subject's rows (soft-deleted ones included); the
  * sweep anonymises the student records of the students gone before the cutoff.
  */
@@ -16,14 +16,6 @@ public final class PrivacyErasureRepository {
               JOIN attendance.member_record m ON m.record_id = r.student_id AND m.tenant_id = :tenantId
                    AND m.record_type = 'student'
              WHERE r.tenant_id = :tenantId AND m.person_id = :subjectId
-            """;
-    /** The subject's attendance as staff, kept under attendance.after_leaving. */
-    public static final String STAFF_ATTENDANCE_KEPT = """
-            SELECT count(*)
-              FROM attendance.staff_attendance a
-              JOIN attendance.member_record m ON m.record_id = a.staff_id AND m.tenant_id = :tenantId
-                   AND m.record_type = 'staff'
-             WHERE a.tenant_id = :tenantId AND m.person_id = :subjectId
             """;
 
     /**

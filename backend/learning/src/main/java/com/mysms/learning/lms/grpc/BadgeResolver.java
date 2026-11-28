@@ -4,11 +4,11 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Badge;
 import com.mysms.learning.lms.api.model.BadgeAward;
-import com.mysms.learning.lms.api.model.BadgeUpdate;
 import com.mysms.learning.lms.business.BadgeService;
 import com.mysms.lms.v1.AwardBadgeRequest;
 import com.mysms.lms.v1.AwardBadgeResponse;
 import com.mysms.lms.v1.BadgeServiceGrpc;
+import com.mysms.lms.v1.BadgeUpdate;
 import com.mysms.lms.v1.CreateBadgeRequest;
 import com.mysms.lms.v1.CreateBadgeResponse;
 import com.mysms.lms.v1.DeleteBadgeRequest;
@@ -17,7 +17,6 @@ import com.mysms.lms.v1.GetBadgeRequest;
 import com.mysms.lms.v1.GetBadgeResponse;
 import com.mysms.lms.v1.ListBadgesRequest;
 import com.mysms.lms.v1.ListBadgesResponse;
-import com.mysms.lms.v1.UpdateBadgeRequest;
 import com.mysms.lms.v1.UpdateBadgeResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -58,10 +57,10 @@ public class BadgeResolver extends BadgeServiceGrpc.BadgeServiceImplBase {
     }
 
     @Override
-    public void updateBadge(UpdateBadgeRequest request, StreamObserver<UpdateBadgeResponse> out) {
-        Badge updated = service.updateBadge(bridge.id(request.getBadge().getId(), "id"),
-                bridge.requiredIfMatch(request.getBadge().getEtag()),
-                bridge.changes(request.getBadge(), request.getUpdateMask(), BadgeUpdate.class), request.getValidateOnly());
+    public void updateBadge(BadgeUpdate request, StreamObserver<UpdateBadgeResponse> out) {
+        Badge updated = service.updateBadge(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                BadgeProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateBadgeResponse.newBuilder(), "badge", updated).build());
     }
 

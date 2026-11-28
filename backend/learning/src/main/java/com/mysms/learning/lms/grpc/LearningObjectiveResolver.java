@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.LearningObjective;
-import com.mysms.learning.lms.api.model.LearningObjectiveUpdate;
 import com.mysms.learning.lms.business.LearningObjectiveService;
 import com.mysms.lms.v1.CreateLearningObjectiveRequest;
 import com.mysms.lms.v1.CreateLearningObjectiveResponse;
@@ -12,9 +11,9 @@ import com.mysms.lms.v1.DeleteLearningObjectiveResponse;
 import com.mysms.lms.v1.GetLearningObjectiveRequest;
 import com.mysms.lms.v1.GetLearningObjectiveResponse;
 import com.mysms.lms.v1.LearningObjectiveServiceGrpc;
+import com.mysms.lms.v1.LearningObjectiveUpdate;
 import com.mysms.lms.v1.ListLearningObjectivesRequest;
 import com.mysms.lms.v1.ListLearningObjectivesResponse;
-import com.mysms.lms.v1.UpdateLearningObjectiveRequest;
 import com.mysms.lms.v1.UpdateLearningObjectiveResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -59,11 +58,11 @@ public class LearningObjectiveResolver extends LearningObjectiveServiceGrpc.Lear
     }
 
     @Override
-    public void updateLearningObjective(UpdateLearningObjectiveRequest request,
+    public void updateLearningObjective(LearningObjectiveUpdate request,
             StreamObserver<UpdateLearningObjectiveResponse> out) {
-        LearningObjective updated = service.updateLearningObjective(bridge.id(request.getLearningObjective().getId(), "id"),
-                bridge.requiredIfMatch(request.getLearningObjective().getEtag()),
-                bridge.changes(request.getLearningObjective(), request.getUpdateMask(), LearningObjectiveUpdate.class),
+        LearningObjective updated = service.updateLearningObjective(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LearningObjectiveProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateLearningObjectiveResponse.newBuilder(), "learning_objective",
                 updated).build());

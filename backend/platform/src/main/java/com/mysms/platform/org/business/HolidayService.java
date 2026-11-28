@@ -31,6 +31,7 @@ import com.mysms.platform.org.repository.HolidayRepository;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -109,7 +110,7 @@ public class HolidayService extends AppTransactionManager {
             }
             HolidayEntity stored = repository.insert(entity);
             audit.recordCreate(AGGREGATE, stored.getId());
-            outbox.publish(AGGREGATE + OrgEvents.CREATED, AGGREGATE, stored.getId(), OrgEvents.payload(stored.getId()));
+            outbox.publish(AGGREGATE + OrgEvents.CREATED, AGGREGATE, stored.getId(), event(stored));
             return mapper.toDto(stored);
         });
     }
@@ -132,6 +133,9 @@ public class HolidayService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -141,7 +145,7 @@ public class HolidayService extends AppTransactionManager {
             }
             entity.setRowVersion(expected + 1);
             audit.recordUpdate(AGGREGATE, id, fields);
-            outbox.publish(AGGREGATE + OrgEvents.UPDATED, AGGREGATE, id, OrgEvents.payload(id));
+            outbox.publish(AGGREGATE + OrgEvents.UPDATED, AGGREGATE, id, event(entity));
             return mapper.toDto(entity);
         });
     }
@@ -160,8 +164,9 @@ public class HolidayService extends AppTransactionManager {
             if (repository.softDelete(entity, expected) == 0) {
                 throw new PreconditionFailedException("If-Match does not match the current ETag.");
             }
+            entity.setRowVersion(expected + 1);
             audit.recordDelete(AGGREGATE, id);
-            outbox.publish(AGGREGATE + OrgEvents.DELETED, AGGREGATE, id, OrgEvents.payload(id));
+            outbox.publish(AGGREGATE + OrgEvents.DELETED, AGGREGATE, id, event(entity));
         });
     }
 
@@ -172,6 +177,12 @@ public class HolidayService extends AppTransactionManager {
             throw new ResourceNotFoundException(AGGREGATE, id);
         }
         return entity;
+    }
+
+    /** The payload of the holiday's events: the row as it now is, with its row version. */
+    private static Map<String, Object> event(HolidayEntity entity) {
+        return OrgEvents.holiday(entity.getId(), entity.getInstitutionId(), entity.getTitle(), entity.getStartDate(),
+                entity.getEndDate(), entity.getRowVersion());
     }
 
     /** The institution that owns the row (its own institution column). */

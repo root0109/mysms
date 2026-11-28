@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.TimetableTemplate;
-import com.mysms.learning.lms.api.model.TimetableTemplateUpdate;
 import com.mysms.learning.lms.business.TimetableTemplateService;
 import com.mysms.lms.v1.CreateTimetableTemplateRequest;
 import com.mysms.lms.v1.CreateTimetableTemplateResponse;
@@ -14,7 +13,7 @@ import com.mysms.lms.v1.GetTimetableTemplateResponse;
 import com.mysms.lms.v1.ListTimetableTemplatesRequest;
 import com.mysms.lms.v1.ListTimetableTemplatesResponse;
 import com.mysms.lms.v1.TimetableTemplateServiceGrpc;
-import com.mysms.lms.v1.UpdateTimetableTemplateRequest;
+import com.mysms.lms.v1.TimetableTemplateUpdate;
 import com.mysms.lms.v1.UpdateTimetableTemplateResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -59,11 +58,11 @@ public class TimetableTemplateResolver extends TimetableTemplateServiceGrpc.Time
     }
 
     @Override
-    public void updateTimetableTemplate(UpdateTimetableTemplateRequest request,
+    public void updateTimetableTemplate(TimetableTemplateUpdate request,
             StreamObserver<UpdateTimetableTemplateResponse> out) {
-        TimetableTemplate updated = service.updateTimetableTemplate(bridge.id(request.getTimetableTemplate().getId(), "id"),
-                bridge.requiredIfMatch(request.getTimetableTemplate().getEtag()),
-                bridge.changes(request.getTimetableTemplate(), request.getUpdateMask(), TimetableTemplateUpdate.class),
+        TimetableTemplate updated = service.updateTimetableTemplate(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                TimetableTemplateProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateTimetableTemplateResponse.newBuilder(), "timetable_template", updated).build());
     }

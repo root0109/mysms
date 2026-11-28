@@ -4,9 +4,7 @@ import com.mysms.learning.lms.business.ExerciseSubmissionService;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ExerciseTestCase;
-import com.mysms.learning.lms.api.model.ExerciseTestCaseUpdate;
 import com.mysms.learning.lms.api.model.ProgrammingExercise;
-import com.mysms.learning.lms.api.model.ProgrammingExerciseUpdate;
 import com.mysms.learning.lms.business.ProgrammingExerciseService;
 import com.mysms.lms.v1.CreateExerciseTestCaseRequest;
 import com.mysms.lms.v1.CreateExerciseTestCaseResponse;
@@ -16,6 +14,7 @@ import com.mysms.lms.v1.DeleteExerciseTestCaseRequest;
 import com.mysms.lms.v1.DeleteExerciseTestCaseResponse;
 import com.mysms.lms.v1.DeleteProgrammingExerciseRequest;
 import com.mysms.lms.v1.DeleteProgrammingExerciseResponse;
+import com.mysms.lms.v1.ExerciseTestCaseUpdate;
 import com.mysms.lms.v1.GetExerciseTestCaseRequest;
 import com.mysms.lms.v1.GetExerciseTestCaseResponse;
 import com.mysms.lms.v1.GetProgrammingExerciseRequest;
@@ -25,11 +24,10 @@ import com.mysms.lms.v1.ListExerciseTestCasesResponse;
 import com.mysms.lms.v1.ListProgrammingExercisesRequest;
 import com.mysms.lms.v1.ListProgrammingExercisesResponse;
 import com.mysms.lms.v1.ProgrammingExerciseServiceGrpc;
+import com.mysms.lms.v1.ProgrammingExerciseUpdate;
 import com.mysms.lms.v1.SubmitExerciseRequest;
 import com.mysms.lms.v1.SubmitExerciseResponse;
-import com.mysms.lms.v1.UpdateExerciseTestCaseRequest;
 import com.mysms.lms.v1.UpdateExerciseTestCaseResponse;
-import com.mysms.lms.v1.UpdateProgrammingExerciseRequest;
 import com.mysms.lms.v1.UpdateProgrammingExerciseResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -79,11 +77,11 @@ public class ProgrammingExerciseResolver extends ProgrammingExerciseServiceGrpc.
     }
 
     @Override
-    public void updateProgrammingExercise(UpdateProgrammingExerciseRequest request,
+    public void updateProgrammingExercise(ProgrammingExerciseUpdate request,
             StreamObserver<UpdateProgrammingExerciseResponse> out) {
-        ProgrammingExercise updated = service.updateProgrammingExercise(bridge.id(request.getProgrammingExercise().getId(), "id"),
-                bridge.requiredIfMatch(request.getProgrammingExercise().getEtag()),
-                bridge.changes(request.getProgrammingExercise(), request.getUpdateMask(), ProgrammingExerciseUpdate.class),
+        ProgrammingExercise updated = service.updateProgrammingExercise(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ProgrammingExerciseProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out,
                 bridge.reply(UpdateProgrammingExerciseResponse.newBuilder(), "programming_exercise", updated).build());
@@ -122,13 +120,13 @@ public class ProgrammingExerciseResolver extends ProgrammingExerciseServiceGrpc.
     }
 
     @Override
-    public void updateExerciseTestCase(UpdateExerciseTestCaseRequest request,
+    public void updateExerciseTestCase(ExerciseTestCaseUpdate request,
             StreamObserver<UpdateExerciseTestCaseResponse> out) {
         ExerciseTestCase updated = service.updateExerciseTestCase(
                 bridge.id(request.getProgrammingExerciseId(), "programmingExerciseId"),
-                bridge.id(request.getExerciseTestCase().getId(), "id"),
-                bridge.requiredIfMatch(request.getExerciseTestCase().getEtag()),
-                bridge.changes(request.getExerciseTestCase(), request.getUpdateMask(), ExerciseTestCaseUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExerciseTestCaseProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateExerciseTestCaseResponse.newBuilder(), "exercise_test_case", updated).build());
     }

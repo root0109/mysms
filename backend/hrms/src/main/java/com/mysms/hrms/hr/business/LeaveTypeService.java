@@ -134,6 +134,9 @@ public class LeaveTypeService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -199,6 +202,7 @@ public class LeaveTypeService extends AppTransactionManager {
         patch.apply("academicYearId", changes.getAcademicYearId(), entity::setAcademicYearId);
         patch.apply("name", changes.getName(), entity::setName);
         patch.apply("maxDaysPerYear", changes.getMaxDaysPerYear(), v -> entity.setMaxDaysPerYear(WireValues.decimal(v)));
+        patch.apply("isPaid", changes.getIsPaid(), entity::setIsPaid);
         patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
         return patch.applied();
     }
@@ -222,6 +226,9 @@ public class LeaveTypeService extends AppTransactionManager {
             errors.add(new FieldError("maxDaysPerYear", "must not be null", "NotNull"));
         }
         WireValues.checkDecimal("maxDaysPerYear", WireValues.decimal(entity.getMaxDaysPerYear()), 5, 1, errors);
+        if (!creating && entity.getIsPaid() == null) {
+            errors.add(new FieldError("isPaid", "must not be null", "NotNull"));
+        }
         if (!creating && entity.getIsActive() == null) {
             errors.add(new FieldError("isActive", "must not be null", "NotNull"));
         }

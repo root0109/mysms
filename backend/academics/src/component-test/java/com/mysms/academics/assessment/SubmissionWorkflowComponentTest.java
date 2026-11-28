@@ -55,6 +55,7 @@ class SubmissionWorkflowComponentTest {
     private AssessmentFixtures fx;
     private UUID tenant;
     private UUID institution;
+    private UUID adminId;
     private String admin;
     private String teacher;
     private String student;
@@ -71,7 +72,8 @@ class SubmissionWorkflowComponentTest {
         fx = new AssessmentFixtures(TOKENS, database, port);
         tenant = UUID.randomUUID();
         institution = UUID.randomUUID();
-        admin = fx.admin(tenant);
+        adminId = UUID.randomUUID();
+        admin = fx.token(adminId, tenant, List.of("*"), List.of("*"), "*");
         teacher = fx.member(tenant, institution, "assessment.assignment_submission.read",
                 "assessment.assignment_submission.update", GRADE,
                 "assessment.assignment_submission.accept_assignment_submission",
@@ -185,7 +187,18 @@ class SubmissionWorkflowComponentTest {
         String assignment = assignment("draft", "10");
         String item = ASSIGNMENTS + "/" + assignment;
         expect(fx.call("POST", item + ":reject", admin, "{}"), 409);
-        expect(fx.call("POST", item + "/approvals", admin, "{\"decision\":\"pending\"}"), 201);
+        Reply requested = expect(fx.call("POST", item + ":requestApproval", admin, "{}"), 200);
+        assertThat(requested.body().path("status").asString()).as("the draft itself does not move").isEqualTo("draft");
+        expect(fx.call("POST", item + ":requestApproval", admin, "{}"), 409);
+        expect(fx.call("POST", item + ":requestApproval", fx.member(tenant, UUID.randomUUID(),
+                "assessment.assignment.request_assignment_approval"), "{}"), 404);
+        JsonNode pending = expect(fx.call("GET", item + "/approvals", admin, null), 200).body().path("data");
+        assertThat(pending).hasSize(1);
+        assertThat(pending.get(0).path("decision").asString()).isEqualTo("pending");
+        assertThat(pending.get(0).path("createdBy").asString()).as("requested in the caller's name")
+                .isEqualTo(adminId.toString());
+        assertThat(pending.get(0).has("decidedByUserId")).isFalse();
+        expect(fx.call("POST", item + "/approvals", admin, "{\"decision\":\"approved\"}"), 404);
 
         Reply rejected = expect(fx.call("POST", item + ":reject", admin, "{\"reason\":\"Add a rubric\"}"), 200);
         assertThat(rejected.body().path("status").asString()).isEqualTo("draft");
@@ -194,7 +207,7 @@ class SubmissionWorkflowComponentTest {
         assertThat(approval.path("comments").asString()).isEqualTo("Add a rubric");
         assertThat(events(assignment)).as("the assignment itself did not change").isEmpty();
 
-        expect(fx.call("POST", item + "/approvals", admin, "{\"decision\":\"pending\"}"), 201);
+        expect(fx.call("POST", item + ":requestApproval", admin, "{}"), 200);
         Reply approved = expect(fx.call("POST", item + ":approve", admin, "{}"), 200);
         assertThat(approved.body().path("status").asString()).isEqualTo("published");
         expect(fx.call("POST", item + ":approve", admin, "{}"), 409);

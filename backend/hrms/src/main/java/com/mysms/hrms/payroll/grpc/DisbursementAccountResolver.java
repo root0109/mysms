@@ -3,18 +3,17 @@ package com.mysms.hrms.payroll.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.payroll.api.model.DisbursementAccount;
-import com.mysms.hrms.payroll.api.model.DisbursementAccountUpdate;
 import com.mysms.hrms.payroll.business.DisbursementAccountService;
 import com.mysms.payroll.v1.CreateDisbursementAccountRequest;
 import com.mysms.payroll.v1.CreateDisbursementAccountResponse;
 import com.mysms.payroll.v1.DeleteDisbursementAccountRequest;
 import com.mysms.payroll.v1.DeleteDisbursementAccountResponse;
 import com.mysms.payroll.v1.DisbursementAccountServiceGrpc;
+import com.mysms.payroll.v1.DisbursementAccountUpdate;
 import com.mysms.payroll.v1.GetDisbursementAccountRequest;
 import com.mysms.payroll.v1.GetDisbursementAccountResponse;
 import com.mysms.payroll.v1.ListDisbursementAccountsRequest;
 import com.mysms.payroll.v1.ListDisbursementAccountsResponse;
-import com.mysms.payroll.v1.UpdateDisbursementAccountRequest;
 import com.mysms.payroll.v1.UpdateDisbursementAccountResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -62,13 +61,12 @@ public class DisbursementAccountResolver extends DisbursementAccountServiceGrpc.
     }
 
     @Override
-    public void updateDisbursementAccount(UpdateDisbursementAccountRequest request,
+    public void updateDisbursementAccount(DisbursementAccountUpdate request,
             StreamObserver<UpdateDisbursementAccountResponse> out) {
         DisbursementAccount updated = disbursementAccountService.updateDisbursementAccount(
-                bridge.id(request.getDisbursementAccount().getId(), "id"),
-                bridge.requiredIfMatch(request.getDisbursementAccount().getEtag()),
-                bridge.changes(request.getDisbursementAccount(), request.getUpdateMask(),
-                        DisbursementAccountUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                DisbursementAccountProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateDisbursementAccountResponse.newBuilder(),
                 "disbursement_account", updated).build());
     }

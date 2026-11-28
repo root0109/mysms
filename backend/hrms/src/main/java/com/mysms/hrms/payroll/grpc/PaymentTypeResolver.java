@@ -3,7 +3,6 @@ package com.mysms.hrms.payroll.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.hrms.payroll.api.model.PaymentType;
-import com.mysms.hrms.payroll.api.model.PaymentTypeUpdate;
 import com.mysms.hrms.payroll.business.PaymentTypeService;
 import com.mysms.payroll.v1.CreatePaymentTypeRequest;
 import com.mysms.payroll.v1.CreatePaymentTypeResponse;
@@ -14,7 +13,7 @@ import com.mysms.payroll.v1.GetPaymentTypeResponse;
 import com.mysms.payroll.v1.ListPaymentTypesRequest;
 import com.mysms.payroll.v1.ListPaymentTypesResponse;
 import com.mysms.payroll.v1.PaymentTypeServiceGrpc;
-import com.mysms.payroll.v1.UpdatePaymentTypeRequest;
+import com.mysms.payroll.v1.PaymentTypeUpdate;
 import com.mysms.payroll.v1.UpdatePaymentTypeResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class PaymentTypeResolver extends PaymentTypeServiceGrpc.PaymentTypeServi
     }
 
     @Override
-    public void updatePaymentType(UpdatePaymentTypeRequest request, StreamObserver<UpdatePaymentTypeResponse> out) {
+    public void updatePaymentType(PaymentTypeUpdate request, StreamObserver<UpdatePaymentTypeResponse> out) {
         PaymentType updated = paymentTypeService.updatePaymentType(
-                bridge.id(request.getPaymentType().getId(), "id"),
-                bridge.requiredIfMatch(request.getPaymentType().getEtag()),
-                bridge.changes(request.getPaymentType(), request.getUpdateMask(), PaymentTypeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PaymentTypeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePaymentTypeResponse.newBuilder(), "payment_type", updated).build());
     }

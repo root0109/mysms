@@ -1,7 +1,6 @@
 package com.mysms.academics.assessment.grpc;
 
 import com.mysms.academics.assessment.api.model.GradingScheme;
-import com.mysms.academics.assessment.api.model.GradingSchemeUpdate;
 import com.mysms.academics.assessment.business.GradingSchemeService;
 import com.mysms.assessment.v1.CreateGradingSchemeRequest;
 import com.mysms.assessment.v1.CreateGradingSchemeResponse;
@@ -10,9 +9,9 @@ import com.mysms.assessment.v1.DeleteGradingSchemeResponse;
 import com.mysms.assessment.v1.GetGradingSchemeRequest;
 import com.mysms.assessment.v1.GetGradingSchemeResponse;
 import com.mysms.assessment.v1.GradingSchemeServiceGrpc;
+import com.mysms.assessment.v1.GradingSchemeUpdate;
 import com.mysms.assessment.v1.ListGradingSchemesRequest;
 import com.mysms.assessment.v1.ListGradingSchemesResponse;
-import com.mysms.assessment.v1.UpdateGradingSchemeRequest;
 import com.mysms.assessment.v1.UpdateGradingSchemeResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -59,12 +58,12 @@ public class GradingSchemeResolver extends GradingSchemeServiceGrpc.GradingSchem
     }
 
     @Override
-    public void updateGradingScheme(UpdateGradingSchemeRequest request,
+    public void updateGradingScheme(GradingSchemeUpdate request,
             StreamObserver<UpdateGradingSchemeResponse> out) {
         GradingScheme updated = service.updateGradingScheme(
-                bridge.id(request.getGradingScheme().getId(), "id"),
-                bridge.requiredIfMatch(request.getGradingScheme().getEtag()),
-                bridge.changes(request.getGradingScheme(), request.getUpdateMask(), GradingSchemeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                GradingSchemeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateGradingSchemeResponse.newBuilder(),
                 "grading_scheme", updated).build());

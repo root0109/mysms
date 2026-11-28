@@ -16,6 +16,8 @@ import com.mysms.core.testkit.TestTransactions;
 import com.mysms.messaging.events.EventEnvelope;
 import com.mysms.messaging.events.InboxProcessor;
 import com.mysms.messaging.events.RejectedEventException;
+import com.mysms.platform.PlatformTenants;
+import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.org.config.OrgDatabaseConfig;
 import com.mysms.platform.org.events.OrgImportHandler;
 import java.time.Clock;
@@ -53,6 +55,9 @@ class OrgImportsComponentTest {
     @Autowired
     @Qualifier(OrgDatabaseConfig.DATABASE)
     private ModuleDatabase database;
+    @Autowired
+    @Qualifier(PlatformDatabaseConfig.DATABASE)
+    private ModuleDatabase platform;
 
     @Autowired
     private OrgImportHandler imports;
@@ -138,6 +143,7 @@ class OrgImportsComponentTest {
     }
 
     private void write(UUID tenant, String statement, Map<String, Object> params) {
+        PlatformTenants.register(platform, tenant);
         CallContextHolder.callAs(CallContext.anonymous(TRACE).withIdentity(tenant, null),
                 () -> TestTransactions.of(database).write(() -> database.jdbc().sql(statement).params(params)
                         .update()));

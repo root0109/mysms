@@ -180,7 +180,8 @@ class MasterApiComponentTest {
         assertThat(required.status()).isEqualTo(422);
         Reply kept = call("PATCH", path, OPERATOR, "{\"id\":\"" + UUID.randomUUID() + "\"}", "If-Match", "\"3\"");
         assertThat(kept.body().path("id").asString()).as("an output-only field is ignored").isEqualTo(id);
-        Reply dryRun = call("PATCH", path + "?validateOnly=true", OPERATOR, "{\"name\":\"Dry\"}", "If-Match", "\"4\"");
+        assertThat(kept.etag()).as("a body with nothing to change writes no new version").isEqualTo("\"3\"");
+        Reply dryRun = call("PATCH", path + "?validateOnly=true", OPERATOR, "{\"name\":\"Dry\"}", "If-Match", "\"3\"");
         assertThat(dryRun.status()).isEqualTo(200);
         assertThat(call("GET", path, null, null).body().path("name").asString()).isEqualTo("Bharat");
     }

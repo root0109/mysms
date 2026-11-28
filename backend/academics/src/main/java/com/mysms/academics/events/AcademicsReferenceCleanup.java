@@ -10,6 +10,7 @@ import com.mysms.academics.repository.ReferenceCleanupRepository;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,8 +31,10 @@ public class AcademicsReferenceCleanup implements EventSubscriptions {
     record Step(String statement, String entity, String field) {
     }
 
+    static final String STAFF_DELETED = "hr.staff.deleted";
+
     static final Map<String, List<Step>> STEPS = Map.ofEntries(
-        Map.entry("hr.staff.deleted", List.of(
+        Map.entry(STAFF_DELETED, List.of(
             new Step(ReferenceCleanupRepository.CLEAR_CLASS_SECTION_CLASS_TEACHER_STAFF_ID,
                     "academics.class_section", "classTeacherStaffId"),
             new Step(ReferenceCleanupRepository.ARCHIVE_TEACHER_SUBJECT_STAFF_ID,
@@ -41,14 +44,16 @@ public class AcademicsReferenceCleanup implements EventSubscriptions {
                     "academics.program", "imageFileId"))));
 
     private final ReferenceCleanupRepository repository;
+    private final StaffRecordSync staffRecords;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final Clock clock;
 
-    public AcademicsReferenceCleanup(ReferenceCleanupRepository repository,
+    public AcademicsReferenceCleanup(ReferenceCleanupRepository repository, StaffRecordSync staffRecords,
             @Qualifier(AcademicsEventsConfig.OUTBOX) OutboxWriter outbox,
             @Qualifier(AcademicsEventsConfig.AUDIT) AuditWriter audit, Clock clock) {
         this.repository = repository;
+        this.staffRecords = staffRecords;
         this.outbox = outbox;
         this.audit = audit;
         this.clock = clock;
@@ -61,7 +66,14 @@ public class AcademicsReferenceCleanup implements EventSubscriptions {
 
     @Override
     public Map<String, EventHandler> handlers() {
-        return STEPS.keySet().stream().collect(Collectors.toMap(type -> type, type -> (EventHandler) this::handle));
+        Map<String, EventHandler> handlers = new HashMap<>(STEPS.keySet().stream()
+                .collect(Collectors.toMap(type -> type, type -> (EventHandler) this::handle)));
+        // a module subscribes once per event type: the staff copy learns of the deletion in the same transaction
+        handlers.put(STAFF_DELETED, event -> {
+            staffRecords.apply(event);
+            handle(event);
+        });
+        return handlers;
     }
 
     /** Applies every step of the deleted owner; returns how many rows changed. */

@@ -8,7 +8,6 @@ import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.Descriptors.ServiceDescriptor;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.FieldMask;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.testkit.GrpcParity.Answer;
 import io.grpc.Channel;
@@ -392,25 +391,88 @@ public final class GrpcParityContract {
         return key + " >= \"" + from + "\" AND " + key + " <= \"" + to + "\"";
     }
 
-    /** Update under its refusals (a stale etag, none, no permission), then over gRPC alike; the row as reread. */
+    /**
+     * Update under its refusals (a stale etag, none, no permission), then over gRPC alike, and the three states of a
+     * PATCH field over the {@code <Resource>Update} message (§7.2): an empty message changes
+     * nothing (the version stays), the spec's {@code patch.clears} field is cleared by a wrapper holding null, and a
+     * required enum ({@code patch.keeps}) sent UNSPECIFIED is refused like REST's null ({@link #patchStates}). The row
+     * as reread.
+     */
     private Answer updated(Resource resource, String id, String etag) throws Exception {
         String name = resource.name();
         String item = resource.collection() + "/" + id;
         MethodDescriptor update = rpc("Update" + name);
-        String field = resourceField(update.getInputType());
         ObjectNode changes = resource.update();
         assertSameAnswer(rest.call("PATCH", item, callers.admin(), changes.toString(), "If-Match", "\"99\""),
-                grpc(update, updateRequest(update, field, resource, id, changes, "99"), callers.admin()));
+                grpc(update, updateRequest(update, resource, id, changes, "99"), callers.admin()));
         assertSameAnswer(rest.call("PATCH", item, callers.admin(), changes.toString()),
-                grpc(update, updateRequest(update, field, resource, id, changes, ""), callers.admin()));
+                grpc(update, updateRequest(update, resource, id, changes, ""), callers.admin()));
         assertSameAnswer(rest.call("PATCH", item, callers.nobody(), changes.toString(), "If-Match", etag),
-                grpc(update, updateRequest(update, field, resource, id, changes, etag), callers.nobody()));
-        Answer updated = grpc(update, updateRequest(update, field, resource, id, changes, etag), callers.admin());
+                grpc(update, updateRequest(update, resource, id, changes, etag), callers.nobody()));
+        Answer updated = grpc(update, updateRequest(update, resource, id, changes, etag), callers.admin());
         assertThat(updated.status()).as("%s update: %s", name, updated.code()).isEqualTo(200);
+        String answered = json(update.getOutputType(), resourceField(update.getOutputType()));
         Answer reread = rest.call("GET", item, callers.admin(), null);
-        GrpcParity.assertSameResource(reread.body(), updated.body().path(json(update.getOutputType(),
-                resourceField(update.getOutputType()))));
-        return reread;
+        GrpcParity.assertSameResource(reread.body(), updated.body().path(answered));
+        patchStates(resource, id, reread.body().path("etag").asString());
+        return rest.call("GET", item, callers.admin(), null);
+    }
+
+    /**
+     * The three states of a PATCH field over the {@code <Resource>Update} message (§7.2) on a row at version
+     * {@code etag}: an empty message answers the row unchanged (the version stays), a required field of the spec's
+     * {@code patch.keeps} sent as null (a wrapper's null, an enum's UNSPECIFIED) is refused like REST's null, and the
+     * spec's {@code patch.clears} field is cleared by a wrapper holding null — or, where the row's state refuses it,
+     * refused like REST with nothing changed. Run by {@link #verify} after the update step, and by the tests of
+     * resources outside the standard flow after their own; a resource without Get is judged by the answers alone.
+     * The row's ETag afterwards.
+     */
+    public String patchStates(Resource resource, String id, String etag) throws Exception {
+        String name = resource.name();
+        String item = resource.collection() + "/" + id;
+        MethodDescriptor update = rpc("Update" + name);
+        String answered = json(update.getOutputType(), resourceField(update.getOutputType()));
+        boolean readable = resource.serves("Get");
+        Answer empty = grpc(update, updateRequest(update, resource, id, JSON.createObjectNode(), etag),
+                callers.admin());
+        assertThat(empty.status()).as("%s empty update: %s", name, empty.code()).isEqualTo(200);
+        assertThat(empty.body().path(answered).path("etag").asString()).as("%s: an empty update changes nothing", name)
+                .isEqualTo(etag);
+        if (readable) {
+            Answer reread = rest.call("GET", item, callers.admin(), null);
+            GrpcParity.assertSameResource(reread.body(), empty.body().path(answered));
+            assertThat(reread.body().path("etag").asString()).as("%s: an empty update changes nothing", name)
+                    .isEqualTo(etag);
+        }
+        JsonNode patch = resource.described().path("patch");
+        if (patch.hasNonNull("keeps") && carriesNull(update, patch.path("keeps").asString())) {
+            ObjectNode keep = JSON.createObjectNode().putNull(patch.path("keeps").asString());
+            assertSameAnswer(rest.call("PATCH", item, callers.admin(), keep.toString(), "If-Match", etag),
+                    grpc(update, updateRequest(update, resource, id, keep, etag), callers.admin()));
+        }
+        if (patch.hasNonNull("clears")) {
+            String optional = patch.path("clears").asString();
+            ObjectNode clear = JSON.createObjectNode().putNull(optional);
+            Answer cleared = grpc(update, updateRequest(update, resource, id, clear, etag), callers.admin());
+            if (cleared.status() != 200) { // a rule of the row's state (a now-duplicate key): REST refuses alike
+                assertThat(cleared.status()).as("%s clear %s: %s", name, optional, cleared.code()).isIn(409, 422);
+                assertSameAnswer(rest.call("PATCH", item, callers.admin(), clear.toString(), "If-Match", etag),
+                        cleared);
+                Answer after = grpc(update, updateRequest(update, resource, id, JSON.createObjectNode(), etag),
+                        callers.admin());
+                assertThat(after.body().path(answered).path("etag").asString())
+                        .as("%s: a refused clear changes nothing", name).isEqualTo(etag);
+                return etag;
+            }
+            JsonNode value = cleared.body().path(answered).path(optional);
+            assertThat(value.isNull() || value.isMissingNode()).as("%s: %s is cleared", name, optional).isTrue();
+            if (readable) {
+                GrpcParity.assertSameResource(rest.call("GET", item, callers.admin(), null).body(),
+                        cleared.body().path(answered));
+            }
+            return cleared.body().path(answered).path("etag").asString();
+        }
+        return etag;
     }
 
     /** Delete under its refusals (a stale etag, none, no permission); the row is gone on both afterwards. */
@@ -465,15 +527,15 @@ public final class GrpcParityContract {
 
     /**
      * The request with the parent ids REST carries in the path: a parent-id field ({@code <name>_id}, not the request
-     * id) takes the create body's value of the same name, or else the id following the collection path's segment
-     * naming that parent ({@code audience_group_id} ← {@code /audience-groups/<id>/members}, {@code user_account_id} ←
-     * {@code /users/<id>/roles}).
+     * id, nor a change of a {@code <Resource>Update} message, which has presence) takes the create body's value of the
+     * same name, or else the id following the collection path's segment naming that parent ({@code audience_group_id}
+     * ← {@code /audience-groups/<id>/members}, {@code user_account_id} ← {@code /users/<id>/roles}).
      */
     private static DynamicMessage.Builder withPathIds(DynamicMessage.Builder request, Resource resource) {
         ObjectNode body = resource.create();
         for (FieldDescriptor field : request.getDescriptorForType().getFields()) {
             if (!field.getName().endsWith("_id") || "request_id".equals(field.getName()) || field.isRepeated()
-                    || field.getJavaType() != FieldDescriptor.JavaType.STRING) {
+                    || field.getJavaType() != FieldDescriptor.JavaType.STRING || field.hasPresence()) {
                 continue;
             }
             if (body.has(field.getJsonName())) {
@@ -505,20 +567,72 @@ public final class GrpcParityContract {
         return singular.equals(parent) || singular.endsWith("_" + parent) || parent.startsWith(singular + "_");
     }
 
-    /** An update request: the row's id and etag in the resource, the changes, and a mask naming them. */
-    @SuppressWarnings("unchecked")
-    private DynamicMessage updateRequest(MethodDescriptor update, String field, Resource resource, String id,
-                                         ObjectNode changes, String etag) {
-        ObjectNode changed = changes.deepCopy();
-        changed.put("id", id);
-        changed.put("etag", etag);
-        DynamicMessage.Builder request = withPathIds(bridge.reply(request(update), field,
-                JSON.convertValue(changed, Map.class)), resource);
-        FieldMask.Builder mask = FieldMask.newBuilder();
-        Descriptor type = update.getInputType().findFieldByName(field).getMessageType();
-        changes.propertyNames().forEach(name -> type.getFields().stream()
-                .filter(f -> f.getJsonName().equals(name)).forEach(f -> mask.addPaths(f.getName())));
-        return set(request, "update_mask", mask.build()).build();
+    /** Whether a {@code <Resource>Update} field can carry REST's null: a wrapper, an enum (UNSPECIFIED) or a JSON value. */
+    private static boolean carriesNull(MethodDescriptor update, String property) {
+        FieldDescriptor field = byJsonName(update.getInputType(), property);
+        return field.getJavaType() == FieldDescriptor.JavaType.ENUM || nullable(field)
+                || isMessage(field, "google.protobuf.Value");
+    }
+
+    private static boolean isMessage(FieldDescriptor field, String type) {
+        return field.getJavaType() == FieldDescriptor.JavaType.MESSAGE && type.equals(field.getMessageType().getFullName());
+    }
+
+    /**
+     * An update request for the row: its id, etag and parent ids, and the changes of a REST PATCH body as a
+     * {@code <Resource>Update} message.
+     */
+    public DynamicMessage updateRequest(MethodDescriptor update, Resource resource, String id, ObjectNode changes,
+                                        String etag) {
+        DynamicMessage.Builder request = changes(update, changes);
+        withPathIds(request, resource);
+        if (request.getDescriptorForType().findFieldByName("id") != null) {
+            set(request, "id", id);
+        }
+        return set(request, "etag", etag).build();
+    }
+
+    /**
+     * A {@code <Resource>Update} message holding the changes of a REST PATCH body (§7.2): a property set to null is a
+     * wrapper holding null (an enum's UNSPECIFIED, a JSON null value), a value is the wrapper's value; a list is its
+     * {@code StringList}. A null the message cannot carry (a field never cleared) is left unset.
+     */
+    public DynamicMessage.Builder changes(MethodDescriptor update, ObjectNode changes) {
+        DynamicMessage.Builder request = request(update);
+        for (String property : changes.propertyNames()) {
+            FieldDescriptor field = byJsonName(update.getInputType(), property);
+            JsonNode value = changes.get(property);
+            Object wire;
+            if (nullable(field)) {
+                wire = value.isNull() ? Map.of("null", "NULL_VALUE")
+                        : Map.of("value", JSON.convertValue(value, Object.class));
+            } else if (isMessage(field, "mysms.common.v1.StringList")) {
+                wire = Map.of("values", JSON.convertValue(value, Object.class));
+            } else if (value.isNull() && field.getJavaType() == FieldDescriptor.JavaType.ENUM) {
+                request.setField(field, field.getEnumType().findValueByNumber(0));
+                continue;
+            } else if (value.isNull() && !isMessage(field, "google.protobuf.Value")) {
+                continue;
+            } else {
+                wire = value; // a JSON null of a google.protobuf.Value field is its null_value
+            }
+            bridge.reply(request, field.getName(), wire);
+        }
+        return request;
+    }
+
+    private static boolean nullable(FieldDescriptor field) {
+        return field.getJavaType() == FieldDescriptor.JavaType.MESSAGE
+                && field.getMessageType().getFullName().startsWith("mysms.common.v1.Nullable");
+    }
+
+    private static FieldDescriptor byJsonName(Descriptor type, String property) {
+        for (FieldDescriptor field : type.getFields()) {
+            if (field.getJsonName().equals(property)) {
+                return field;
+            }
+        }
+        throw new IllegalArgumentException(type.getFullName() + " has no field " + property);
     }
 
     private static DynamicMessage pageable(MethodDescriptor list, int page, int size, String cursor) {

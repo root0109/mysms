@@ -6,9 +6,12 @@ import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.util.JsonFormat;
 import com.mysms.authclient.testing.TestTokens;
+import com.mysms.core.context.CallContext;
+import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.GrpcParity;
 import com.mysms.core.testkit.TestDatabase;
+import com.mysms.core.testkit.TestTransactions;
 import com.mysms.privacy.config.PrivacyDatabaseConfig;
 import com.mysms.privacy.events.GuardianLinkSync;
 import com.mysms.privacy.events.SubjectSync;
@@ -44,13 +47,14 @@ import tools.jackson.databind.json.JsonMapper;
  * ConsentService, PurposeService's UpdatePurpose, each RPC of ProcessingActivityService, ConsentDecisionService (as
  * another module's service calls it), BreachService, ConsentCoverageService, LegalHoldService (its holds check as a
  * module calls it) and RetentionService, and RightsRequestService's requester RPCs, staff steps, fulfilment steps and
- * access summaries serve the same business service as REST, path ids, etags, update masks and filters included.
+ * access summaries serve the same business service as REST, path ids, etags, update messages and filters included.
  */
 @SpringBootTest(classes = PrivacyApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = GrpcParity.IN_PROCESS_SERVER + "=PrivacyGrpcComponentTest")
 class PrivacyGrpcComponentTest {
 
     private static final TestDatabase DATABASE = TestDatabase.createDropOnExit();
+    private static final String TRACE = "4bf92f3577b34da6a3ce929d0e0e4736";
     private static final TestTokens TOKENS = new TestTokens();
     private static final JsonMapper JSON = JsonMapper.builder().build();
     private static final String NOTICES = "NoticeService";
@@ -99,6 +103,14 @@ class PrivacyGrpcComponentTest {
         return call(service, method, request, token, null);
     }
 
+    /** The rows of a tenant's privacy table keyed by {@code column} = {@code id}, read under the tenant's RLS. */
+    private int rows(UUID tenant, String table, String column, String id) {
+        return CallContextHolder.callAs(CallContext.anonymous(TRACE).withIdentity(tenant, null),
+                () -> TestTransactions.of(database).read(() -> database.jdbc().sql("SELECT count(*) FROM privacy."
+                        + table + " WHERE " + column + " = CAST(:id AS uuid)").param("id", id).query(Integer.class)
+                        .single()));
+    }
+
     /** {@link #call} as another module's service would, in the tenant sent as x-tenant-id (null: none sent). */
     private static JsonNode call(String service, String method, Map<String, ?> request, String token, UUID tenant)
             throws Exception {
@@ -122,15 +134,18 @@ class PrivacyGrpcComponentTest {
     @Test
     void everyNoticeRpcAndTheSwitchServeLikeRest() throws Exception {
         PrivacyCalls calls = new PrivacyCalls(port, TOKENS);
-        String admin = calls.administrator(UUID.randomUUID(), PERMISSIONS);
+        UUID tenant = UUID.randomUUID();
+        String admin = calls.administrator(tenant, PERMISSIONS);
 
         String noticeId = call(NOTICES, "CreateNotice", Map.of("notice", Map.of("code", "grpc_notice",
                 "title", "Over gRPC")), admin).path("notice").path("id").asString();
         assertThat(call(NOTICES, "GetNotice", Map.of("id", noticeId), admin).path("notice").path("code").asString())
                 .isEqualTo("grpc_notice");
         assertThat(call(NOTICES, "ListNotices", Map.of(), admin).path("items")).hasSize(1);
-        assertThat(call(NOTICES, "UpdateNotice", Map.of("notice", Map.of("id", noticeId, "etag", "1",
-                "title", "Renamed")), admin).path("notice").path("title").asString()).isEqualTo("Renamed");
+        assertThat(call(NOTICES, "UpdateNotice", Map.of("id", noticeId, "etag", "1", "title", "Renamed"), admin)
+                .path("notice").path("title").asString()).isEqualTo("Renamed");
+        assertThat(call(NOTICES, "UpdateNotice", Map.of("id", noticeId, "etag", "2"), admin).path("notice")
+                .path("etag").asString()).as("an empty update changes nothing").isEqualTo("\"2\"");
 
         Map<String, ?> contact = Map.of("name", "Grievance Officer", "email", "grievance@school.example");
         String versionId = call(NOTICES, "CreateNoticeVersion", Map.of("noticeId", noticeId, "noticeVersion",
@@ -140,9 +155,16 @@ class PrivacyGrpcComponentTest {
         assertThat(call(NOTICES, "GetNoticeVersion", version, admin).path("noticeVersion").path("status").asString())
                 .isEqualTo("STATUS_DRAFT");
         assertThat(call(NOTICES, "ListNoticeVersions", Map.of("noticeId", noticeId), admin).path("items")).hasSize(1);
-        assertThat(call(NOTICES, "UpdateNoticeVersion", Map.of("noticeId", noticeId, "noticeVersion",
-                Map.of("id", versionId, "etag", "1", "requiresReconsent", true), "updateMask", "requiresReconsent"),
-                admin).path("noticeVersion").path("requiresReconsent").asBoolean()).isTrue();
+        assertThat(call(NOTICES, "UpdateNoticeVersion", Map.of("noticeId", noticeId, "id", versionId, "etag", "1",
+                "requiresReconsent", true), admin).path("noticeVersion").path("requiresReconsent").asBoolean())
+                .isTrue();
+        assertThat(call(NOTICES, "UpdateNoticeVersion", Map.of("noticeId", noticeId, "id", versionId, "etag", "2"),
+                admin).path("noticeVersion").path("etag").asString()).as("an empty update").isEqualTo("\"2\"");
+        JsonNode undocumented = call(NOTICES, "UpdateNoticeVersion", Map.of("noticeId", noticeId, "id", versionId,
+                "etag", "2", "documentFileId", Map.of("null", "NULL_VALUE")), admin).path("noticeVersion");
+        assertThat(undocumented.has("documentFileId")).as("a wrapper holding null clears").isFalse();
+        assertThat(undocumented.path("requiresReconsent").asBoolean()).as("unset keeps").isTrue();
+        assertThat(undocumented.path("etag").asString()).isEqualTo("\"3\"");
 
         Map<String, String> parent = Map.of("noticeId", noticeId, "noticeVersionId", versionId);
         String translationId = call(NOTICES, "CreateNoticeTranslation", Map.of("noticeId", noticeId,
@@ -152,9 +174,21 @@ class PrivacyGrpcComponentTest {
                 "id", translationId), admin).path("noticeTranslation").path("contentSha256").asString()).hasSize(64);
         assertThat(call(NOTICES, "ListNoticeTranslations", parent, admin).path("items")).hasSize(1);
         assertThat(call(NOTICES, "UpdateNoticeTranslation", Map.of("noticeId", noticeId, "noticeVersionId",
-                versionId, "noticeTranslation", Map.of("id", translationId, "etag", "1", "language", "hi"),
-                "updateMask", "language"), admin).path("noticeTranslation").path("language").asString())
-                .isEqualTo("hi");
+                versionId, "id", translationId, "etag", "1", "language", "hi"), admin).path("noticeTranslation")
+                .path("language").asString()).isEqualTo("hi");
+        Map<String, Object> translation = new HashMap<>(Map.of("noticeId", noticeId, "noticeVersionId", versionId,
+                "id", translationId, "etag", "2"));
+        translation.put("summaryForChildren", Map.of("value", "We send news."));
+        assertThat(call(NOTICES, "UpdateNoticeTranslation", translation, admin).path("noticeTranslation")
+                .path("summaryForChildren").asString()).isEqualTo("We send news.");
+        translation.remove("summaryForChildren");
+        translation.put("etag", "3");
+        assertThat(call(NOTICES, "UpdateNoticeTranslation", translation, admin).path("noticeTranslation")
+                .path("etag").asString()).as("an empty update").isEqualTo("\"3\"");
+        translation.put("summaryForChildren", Map.of("null", "NULL_VALUE"));
+        JsonNode plain = call(NOTICES, "UpdateNoticeTranslation", translation, admin).path("noticeTranslation");
+        assertThat(plain.has("summaryForChildren")).as("cleared").isFalse();
+        assertThat(plain.path("language").asString()).as("unset keeps").isEqualTo("hi");
         String extra = call(NOTICES, "CreateNoticeTranslation", Map.of("noticeId", noticeId, "noticeVersionId",
                 versionId, "noticeTranslation", Map.of("language", "en", "bodyMarkdown", "Draft.")), admin)
                 .path("noticeTranslation").path("id").asString();
@@ -169,11 +203,17 @@ class PrivacyGrpcComponentTest {
                 purposeId = purpose.path("id").asString();
             }
         }
-        JsonNode switched = call("PurposeService", "UpdatePurpose", Map.of("purpose", Map.of("id", purposeId,
-                "etag", "0", "enabled", true, "noticeId", noticeId), "updateMask", "enabled,noticeId"), admin)
+        JsonNode untouched = call("PurposeService", "UpdatePurpose", Map.of("id", purposeId, "etag", "0"), admin)
                 .path("purpose");
+        assertThat(untouched.path("etag").asString()).as("an empty update of a never-set purpose").isEqualTo("\"0\"");
+        assertThat(rows(tenant, "tenant_purpose", "purpose_id", purposeId)).as("no tenant setting inserted").isZero();
+        JsonNode switched = call("PurposeService", "UpdatePurpose", Map.of("id", purposeId, "etag", "0",
+                "enabled", true, "noticeId", Map.of("value", noticeId)), admin).path("purpose");
         assertThat(switched.path("enabled").asBoolean()).isTrue();
         assertThat(switched.path("etag").asString()).isEqualTo("\"1\"");
+        assertThat(rows(tenant, "tenant_purpose", "purpose_id", purposeId)).isOne();
+        assertThat(call("PurposeService", "UpdatePurpose", Map.of("id", purposeId, "etag", "1"), admin)
+                .path("purpose").path("etag").asString()).as("an empty update of a set purpose").isEqualTo("\"1\"");
 
         String spare = call(NOTICES, "CreateNotice", Map.of("notice", Map.of("code", "spare_notice",
                 "title", "Unused")), admin).path("notice").path("id").asString();
@@ -316,9 +356,11 @@ class PrivacyGrpcComponentTest {
         assertThat(call(holds, "GetLegalHold", Map.of("id", id), officer).path("legalHold").path("reviewBy")
                 .asString()).isEqualTo(today.plusMonths(3).toString());
         assertThat(call(holds, "ListLegalHolds", Map.of("filter", "active = true"), officer).path("items")).hasSize(1);
-        assertThat(call(holds, "UpdateLegalHold", Map.of("legalHold", Map.of("id", id, "etag", "1", "reviewBy",
-                today.plusMonths(6).toString())), officer).path("legalHold").path("reviewBy").asString())
+        assertThat(call(holds, "UpdateLegalHold", Map.of("id", id, "etag", "1", "reviewBy",
+                today.plusMonths(6).toString()), officer).path("legalHold").path("reviewBy").asString())
                 .isEqualTo(today.plusMonths(6).toString());
+        assertThat(call(holds, "UpdateLegalHold", Map.of("id", id, "etag", "2"), officer).path("legalHold")
+                .path("etag").asString()).as("an empty update changes nothing").isEqualTo("\"2\"");
         assertThat(call(holds, "ListActiveHolds", Map.of("subjectPersonId", subject.toString(), "module", "sis"),
                 TOKENS.service("sis", "privacy.legal_hold.check"), tenant).path("holds").findValuesAsString("id"))
                 .containsExactly(id);
@@ -328,7 +370,8 @@ class PrivacyGrpcComponentTest {
 
     @Test
     void everyRetentionRpcServesLikeRest() throws Exception {
-        String admin = new PrivacyCalls(port, TOKENS).administrator(UUID.randomUUID(), "privacy.retention_policy.read",
+        UUID tenant = UUID.randomUUID();
+        String admin = new PrivacyCalls(port, TOKENS).administrator(tenant, "privacy.retention_policy.read",
                 "privacy.retention_policy.update", "privacy.retention_run.read");
         String retention = "RetentionService";
 
@@ -337,10 +380,18 @@ class PrivacyGrpcComponentTest {
         assertThat(attendance.path("trigger").asString()).isEqualTo("TRIGGER_AFTER_LEAVING");
         String id = attendance.path("id").asString();
         int longer = attendance.path("minimumPeriodDays").asInt() + 30;
-        assertThat(call(retention, "UpdateRetentionPolicy", Map.of("retentionPolicy", Map.of("id", id, "etag", "0",
-                "periodDays", longer)), admin).path("retentionPolicy").path("overridden").asBoolean()).isTrue();
+        JsonNode untouched = call(retention, "UpdateRetentionPolicy", Map.of("id", id, "etag", "0"), admin)
+                .path("retentionPolicy");
+        assertThat(untouched.path("etag").asString()).as("an empty update of a default policy").isEqualTo("\"0\"");
+        assertThat(untouched.path("overridden").asBoolean()).isFalse();
+        assertThat(rows(tenant, "tenant_retention_policy", "policy_id", id)).as("no tenant setting inserted").isZero();
+        assertThat(call(retention, "UpdateRetentionPolicy", Map.of("id", id, "etag", "0", "periodDays", longer),
+                admin).path("retentionPolicy").path("overridden").asBoolean()).isTrue();
         assertThat(call(retention, "GetRetentionPolicy", Map.of("id", id), admin).path("retentionPolicy")
                 .path("periodDays").asInt()).isEqualTo(longer);
+        assertThat(rows(tenant, "tenant_retention_policy", "policy_id", id)).isOne();
+        assertThat(call(retention, "UpdateRetentionPolicy", Map.of("id", id, "etag", "1"), admin)
+                .path("retentionPolicy").path("periodDays").asInt()).as("an empty update keeps it").isEqualTo(longer);
         assertThat(call(retention, "ListRetentionRuns", Map.of(), admin).path("items")).isEmpty();
     }
 
@@ -443,10 +494,16 @@ class PrivacyGrpcComponentTest {
                 .matches("PRB-\\d{4}-\\d{6}");
         assertThat(call(breaches, "ListBreaches", Map.of("filter", "status = \"reported\""), officer)
                 .path("items")).hasSize(1);
-        assertThat(call(breaches, "UpdateBreach", Map.of("breach", Map.of("id", id, "etag", "1",
-                "estimatedPrincipals", 412)), officer).path("breach").path("estimatedPrincipals").asInt())
-                .isEqualTo(412);
-        assertThat(call(breaches, "TriageBreach", Map.of("breachId", id, "etag", "2"), officer).path("breach")
+        assertThat(call(breaches, "UpdateBreach", Map.of("id", id, "etag", "1",
+                "estimatedPrincipals", Map.of("value", 412), "mitigation", Map.of("value", "Passwords reset")), officer)
+                .path("breach").path("mitigation").asString()).isEqualTo("Passwords reset");
+        assertThat(call(breaches, "UpdateBreach", Map.of("id", id, "etag", "2"), officer).path("breach").path("etag")
+                .asString()).as("an empty update changes nothing").isEqualTo("\"2\"");
+        JsonNode cleared = call(breaches, "UpdateBreach", Map.of("id", id, "etag", "2", "mitigation",
+                Map.of("null", "NULL_VALUE")), officer).path("breach");
+        assertThat(cleared.has("mitigation")).as("a wrapper holding null clears").isFalse();
+        assertThat(cleared.path("estimatedPrincipals").asInt()).as("an unset field keeps its value").isEqualTo(412);
+        assertThat(call(breaches, "TriageBreach", Map.of("breachId", id, "etag", "3"), officer).path("breach")
                 .path("status").asString()).isEqualTo("STATUS_TRIAGED");
         call(breaches, "ContainBreach", Map.of("breachId", id), officer);
         for (String[] notice : new String[][] {{"AUDIENCE_BOARD", "KIND_INITIAL"}, {"AUDIENCE_BOARD", "KIND_DETAILED"},

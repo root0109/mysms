@@ -35,5 +35,6 @@ public interface ExamMapper {
     @Mapping(target = "totalMarks", expression = "java(WireValues.decimal(dto.getTotalMarks()))")
     @Mapping(target = "passMarks", expression = "java(WireValues.decimal(dto.getPassMarks()))")
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "resultsEntered", ignore = true)
     ExamEntity toEntity(Exam dto);
 }

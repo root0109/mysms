@@ -198,6 +198,9 @@ public class StaffService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -538,6 +541,9 @@ public class StaffService extends AppTransactionManager {
             assertValidStaffDepartment(entity, false);
             scope.requireWritable(institutionOfStaffDepartment(entity));
             assertUniqueStaffDepartment(entity);
+            if (fields.isEmpty()) {
+                return staffDepartmentMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return staffDepartmentMapper.toDto(entity);

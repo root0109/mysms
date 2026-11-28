@@ -1,18 +1,17 @@
 package com.mysms.academics.grpc;
 
 import com.mysms.academics.api.model.CurriculumUnit;
-import com.mysms.academics.api.model.CurriculumUnitUpdate;
 import com.mysms.academics.business.CurriculumUnitService;
 import com.mysms.academics.v1.CreateCurriculumUnitRequest;
 import com.mysms.academics.v1.CreateCurriculumUnitResponse;
 import com.mysms.academics.v1.CurriculumUnitServiceGrpc;
+import com.mysms.academics.v1.CurriculumUnitUpdate;
 import com.mysms.academics.v1.DeleteCurriculumUnitRequest;
 import com.mysms.academics.v1.DeleteCurriculumUnitResponse;
 import com.mysms.academics.v1.GetCurriculumUnitRequest;
 import com.mysms.academics.v1.GetCurriculumUnitResponse;
 import com.mysms.academics.v1.ListCurriculumUnitsRequest;
 import com.mysms.academics.v1.ListCurriculumUnitsResponse;
-import com.mysms.academics.v1.UpdateCurriculumUnitRequest;
 import com.mysms.academics.v1.UpdateCurriculumUnitResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,10 +55,10 @@ public class CurriculumUnitResolver extends CurriculumUnitServiceGrpc.Curriculum
     }
 
     @Override
-    public void updateCurriculumUnit(UpdateCurriculumUnitRequest request, StreamObserver<UpdateCurriculumUnitResponse> out) {
-        CurriculumUnit updated = service.updateCurriculumUnit(bridge.id(request.getCurriculumUnit().getId(), "id"),
-                bridge.requiredIfMatch(request.getCurriculumUnit().getEtag()),
-                bridge.changes(request.getCurriculumUnit(), request.getUpdateMask(), CurriculumUnitUpdate.class),
+    public void updateCurriculumUnit(CurriculumUnitUpdate request, StreamObserver<UpdateCurriculumUnitResponse> out) {
+        CurriculumUnit updated = service.updateCurriculumUnit(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CurriculumUnitProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCurriculumUnitResponse.newBuilder(), "curriculum_unit", updated).build());
     }

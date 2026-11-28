@@ -38,6 +38,7 @@ public class LeaveTypeRepository {
             field("academicYearId", "r.academic_year_id", ValueType.UUID),
             field("name", "r.name", ValueType.STRING),
             field("maxDaysPerYear", "r.max_days_per_year", ValueType.DECIMAL),
+            field("isPaid", "r.is_paid", ValueType.BOOLEAN),
             field("isActive", "r.is_active", ValueType.BOOLEAN),
             field("createTime", "r.created_at", ValueType.TIMESTAMP),
             field("updateTime", "r.updated_at", ValueType.TIMESTAMP));
@@ -62,7 +63,7 @@ public class LeaveTypeRepository {
 
     private static final String SELECT_LIVE = """
             SELECT r.id, r.tenant_id, r.code, r.sort_order, r.institution_id, r.academic_year_id, r.name,
-                   r.max_days_per_year, r.is_active, r.created_at, r.created_by, r.updated_at, r.updated_by,
+                   r.max_days_per_year, r.is_paid, r.is_active, r.created_at, r.created_by, r.updated_at, r.updated_by,
                    r.deleted_at, r.row_version
               FROM hr.leave_type r
              WHERE r.tenant_id = :tenantId
@@ -71,13 +72,13 @@ public class LeaveTypeRepository {
     private static final String FIND_BY_ID = SELECT_LIVE + " AND r.id = :id";
     private static final String INSERT = """
             INSERT INTO hr.leave_type
-            (id, tenant_id, code, sort_order, institution_id, academic_year_id, name, max_days_per_year, is_active,
-             created_at, created_by, updated_at, updated_by, row_version)
+            (id, tenant_id, code, sort_order, institution_id, academic_year_id, name, max_days_per_year, is_paid,
+             is_active, created_at, created_by, updated_at, updated_by, row_version)
             VALUES (:id, :tenantId, :code, COALESCE(:sortOrder, 0), :institutionId, :academicYearId, :name,
-                    :maxDaysPerYear, COALESCE(:isActive, true), :createdAt, :createdBy, :updatedAt, :updatedBy,
-                    :rowVersion)
+                    :maxDaysPerYear, COALESCE(:isPaid, true), COALESCE(:isActive, true), :createdAt, :createdBy,
+                    :updatedAt, :updatedBy, :rowVersion)
             RETURNING id, tenant_id, code, sort_order, institution_id, academic_year_id, name, max_days_per_year,
-                      is_active, created_at, created_by, updated_at, updated_by, deleted_at, row_version
+                      is_paid, is_active, created_at, created_by, updated_at, updated_by, deleted_at, row_version
             """;
     private static final String SOFT_DELETE = """
             UPDATE hr.leave_type
@@ -96,6 +97,7 @@ public class LeaveTypeRepository {
                    academic_year_id = :academicYearId,
                    name = :name,
                    max_days_per_year = :maxDaysPerYear,
+                   is_paid = :isPaid,
                    is_active = :isActive,
                    updated_at = :updatedAt,
                    updated_by = :updatedBy,
@@ -150,6 +152,7 @@ public class LeaveTypeRepository {
                 .param("academicYearId", e.getAcademicYearId())
                 .param("name", e.getName())
                 .param("maxDaysPerYear", e.getMaxDaysPerYear())
+                .param("isPaid", e.getIsPaid())
                 .param("isActive", e.getIsActive())
                 .param("createdAt", e.getCreatedAt())
                 .param("createdBy", e.getCreatedBy())
@@ -169,6 +172,7 @@ public class LeaveTypeRepository {
                 .param("academicYearId", e.getAcademicYearId())
                 .param("name", e.getName())
                 .param("maxDaysPerYear", e.getMaxDaysPerYear())
+                .param("isPaid", e.getIsPaid())
                 .param("isActive", e.getIsActive())
                 .param("updatedAt", e.getUpdatedAt())
                 .param("updatedBy", e.getUpdatedBy())
@@ -226,6 +230,7 @@ public class LeaveTypeRepository {
                 .academicYearId(rs.getObject("academic_year_id", UUID.class))
                 .name(rs.getString("name"))
                 .maxDaysPerYear(rs.getBigDecimal("max_days_per_year"))
+                .isPaid(rs.getObject("is_paid", Boolean.class))
                 .isActive(rs.getObject("is_active", Boolean.class))
                 .createdAt(rs.getObject("created_at", OffsetDateTime.class))
                 .createdBy(rs.getObject("created_by", UUID.class))

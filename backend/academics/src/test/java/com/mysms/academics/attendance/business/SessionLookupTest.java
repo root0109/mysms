@@ -11,15 +11,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.protobuf.Timestamp;
 import com.mysms.academics.attendance.integration.OrgGrpcClient;
 import com.mysms.academics.attendance.integration.SisGrpcClient;
-import com.mysms.academics.attendance.integration.TimetableGrpcClient;
+import com.mysms.academics.timetable.api.model.Session;
+import com.mysms.academics.timetable.api.model.SessionStudent;
+import com.mysms.academics.timetable.business.SessionService;
+import com.mysms.authclient.SiblingAccess;
 import com.mysms.common.v1.Pagination;
 import com.mysms.core.error.InvalidStateException;
 import com.mysms.core.error.PermissionDeniedException;
+import com.mysms.core.error.ResourceNotFoundException;
 import com.mysms.core.error.UnavailableException;
 import com.mysms.core.error.ValidationFailedException;
+import com.mysms.core.paging.Page;
 import com.mysms.core.testkit.GrpcRefusals;
 import com.mysms.org.v1.GetInstitutionResponse;
 import com.mysms.org.v1.Institution;
@@ -29,22 +33,19 @@ import com.mysms.sis.v1.ListStudentsRequest;
 import com.mysms.sis.v1.ListStudentsResponse;
 import com.mysms.sis.v1.Student;
 import com.mysms.sis.v1.StudentEnrollment;
-import com.mysms.timetable.v1.GetSessionResponse;
-import com.mysms.timetable.v1.ListSessionStudentsResponse;
-import com.mysms.timetable.v1.Session;
-import com.mysms.timetable.v1.SessionStudent;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
 
 /**
- * The session lookup against stand-ins of the three gRPC clients: which students are expected, on which date, and how
- * the other modules' refusals become this operation's errors.
+ * The session lookup against stand-ins of the sibling timetable service and the sis and org gRPC clients: which
+ * students are expected, on which date, and how refusals become this operation's errors.
  */
 class SessionLookupTest {
 
@@ -54,22 +55,26 @@ class SessionLookupTest {
     private static final UUID SUBJECT = UUID.randomUUID();
     private static final UUID STAFF = UUID.randomUUID();
 
-    private final TimetableGrpcClient timetable = mock(TimetableGrpcClient.class);
+    private final SessionService timetable = mock(SessionService.class);
+    private final SiblingAccess sibling = mock(SiblingAccess.class);
     private final SisGrpcClient sis = mock(SisGrpcClient.class);
     private final OrgGrpcClient org = mock(OrgGrpcClient.class);
-    private final SessionLookup lookup = new SessionLookup(timetable, sis, org);
+    private final SessionLookup lookup = new SessionLookup(timetable, sibling, sis, org);
 
-    private static Session.Builder session(String startAt) {
-        Instant start = Instant.parse(startAt);
-        return Session.newBuilder().setId(SESSION.toString()).setInstitutionId(INSTITUTION.toString())
-                .setStartAt(Timestamp.newBuilder().setSeconds(start.getEpochSecond()))
-                .setClassSectionId(CLASS_SECTION.toString()).setSubjectId(SUBJECT.toString())
-                .setStaffId(STAFF.toString()).setStatus(Session.Status.STATUS_CONFIRMED);
+    @BeforeEach
+    void callerMayReadTimetable() {
+        when(sibling.permits(any())).thenReturn(true);
     }
 
-    private void given(Session.Builder session, String timezone) {
+    private static Session session(String startAt) {
+        OffsetDateTime start = OffsetDateTime.parse(startAt);
+        return new Session(INSTITUTION, start, start.plusMinutes(45), SUBJECT, STAFF).id(SESSION)
+                .classSectionId(CLASS_SECTION).status(Session.StatusEnum.CONFIRMED);
+    }
+
+    private void given(Session session, String timezone) {
         // doReturn: a stand-in already told to fail must not fail while it is being told otherwise
-        doReturn(GetSessionResponse.newBuilder().setSession(session).build()).when(timetable).getSession(any());
+        doReturn(session).when(timetable).getSession(SESSION);
         Institution.Builder institution = Institution.newBuilder().setId(INSTITUTION.toString());
         if (timezone != null) {
             institution.setTimezone(timezone);
@@ -79,12 +84,9 @@ class SessionLookupTest {
     }
 
     private void givenSessionStudents(UUID... students) {
-        ListSessionStudentsResponse.Builder list = ListSessionStudentsResponse.newBuilder()
-                .setPagination(Pagination.newBuilder().setPage(1));
-        for (UUID student : students) {
-            list.addItems(SessionStudent.newBuilder().setStudentId(student.toString()));
-        }
-        when(timetable.listSessionStudents(any())).thenReturn(list.build());
+        List<SessionStudent> rows = Stream.of(students).map(SessionStudent::new).toList();
+        when(timetable.listSessionStudents(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new Page<>(rows, 1, SessionLookup.PAGE_SIZE, ""));
     }
 
     private static StudentEnrollment enrollment(UUID student, LocalDate from, LocalDate to) {
@@ -165,46 +167,65 @@ class SessionLookupTest {
 
     @Test
     void anUnknownSessionIsAFieldErrorAndACancelledOneAConflict() {
-        when(timetable.getSession(any())).thenThrow(GrpcRefusals.refused("timetable", HttpStatus.NOT_FOUND,
-                "NOT_FOUND"));
+        when(timetable.getSession(SESSION)).thenThrow(new ResourceNotFoundException("timetable.session", SESSION));
         assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOfSatisfying(ValidationFailedException.class,
                 e -> assertThat(e.errors()).singleElement().satisfies(error -> {
                     assertThat(error.field()).isEqualTo("timetableSessionId");
                     assertThat(error.code()).isEqualTo("NOT_FOUND");
                 }));
 
-        given(session("2026-03-02T03:30:00Z").setStatus(Session.Status.STATUS_CANCELLED), "UTC");
+        given(session("2026-03-02T03:30:00Z").status(Session.StatusEnum.CANCELLED), "UTC");
         assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOf(InvalidStateException.class);
     }
 
     @Test
-    void aRefusalInAnotherModuleIsThisOperationsRefusalNamingThePermission() {
-        when(timetable.getSession(any())).thenThrow(GrpcRefusals.refused("timetable", HttpStatus.FORBIDDEN,
-                "PERMISSION_DENIED"));
-        assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOf(PermissionDeniedException.class)
-                .hasMessageContaining("timetable.session.read");
+    void timetablesOwnRefusalsAnswerAsTheGrpcHopDid() {
+        when(timetable.getSession(SESSION)).thenThrow(new PermissionDeniedException("outside the caller's scope"));
+        assertThatThrownBy(() -> lookup.plan(SESSION)).as("a scope refusal names the permission")
+                .isInstanceOf(PermissionDeniedException.class)
+                .hasMessage("Taking attendance for a session also needs timetable.session.read.");
 
         given(session("2026-03-02T03:30:00Z"), "UTC");
+        when(timetable.listSessionStudents(any(), any(), any(), any(), any(), any()))
+                .thenThrow(new ResourceNotFoundException("timetable.session", SESSION));
+        assertThatThrownBy(() -> lookup.plan(SESSION)).as("a session gone between the two reads")
+                .isInstanceOf(UnavailableException.class);
+        doThrow(new InvalidStateException("timetable refused")).when(timetable)
+                .listSessionStudents(any(), any(), any(), any(), any(), any());
+        assertThatThrownBy(() -> lookup.plan(SESSION)).as("timetable's message never reaches the client")
+                .isInstanceOf(UnavailableException.class).hasMessageNotContaining("timetable refused");
+    }
+
+    @Test
+    void aRefusalInTimetableOrAnotherModuleIsThisOperationsRefusalNamingThePermission() {
+        when(sibling.permits(SessionLookup.PERMISSION_SESSION_READ)).thenReturn(false);
+        assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOf(PermissionDeniedException.class)
+                .hasMessageContaining("timetable.session.read");
+        verify(timetable, never()).getSession(any());
+
+        when(sibling.permits(SessionLookup.PERMISSION_SESSION_READ)).thenReturn(true);
+        when(sibling.permits(SessionLookup.PERMISSION_SESSION_STUDENT_READ)).thenReturn(false);
+        given(session("2026-03-02T03:30:00Z"), "UTC");
+        assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOf(PermissionDeniedException.class)
+                .hasMessageContaining("timetable.session_student.read");
+
+        when(sibling.permits(SessionLookup.PERMISSION_SESSION_STUDENT_READ)).thenReturn(true);
         doThrow(GrpcRefusals.refused("org", HttpStatus.NOT_FOUND, "NOT_FOUND")).when(org).getInstitution(any());
         assertThatThrownBy(() -> lookup.plan(SESSION)).as("an institution the caller cannot see")
                 .isInstanceOf(PermissionDeniedException.class);
     }
 
     @Test
-    void aFailingOrUnreachableServiceIsUnavailableWithoutItsDetails() {
-        when(timetable.getSession(any())).thenThrow(GrpcRefusals.refused("timetable",
-                HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL"));
+    void aFailingOrUnreachableModuleIsUnavailableWithoutItsDetails() {
+        given(session("2026-03-02T03:30:00Z"), "UTC");
+        doThrow(GrpcRefusals.refused("org", HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL")).when(org)
+                .getInstitution(any());
         assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOf(UnavailableException.class)
-                .hasMessage("The timetable service could not answer.");
+                .hasMessage("The org service could not answer.");
 
-        doThrow(GrpcRefusals.unreachable("timetable")).when(timetable).getSession(any());
+        doThrow(GrpcRefusals.unreachable("org")).when(org).getInstitution(any());
         assertThatThrownBy(() -> lookup.plan(SESSION)).isInstanceOf(UnavailableException.class)
-                .hasMessage("The timetable service could not answer.");
-
-        doReturn(GetSessionResponse.newBuilder().setSession(session("2026-03-02T03:30:00Z").clearStartAt()).build())
-                .when(timetable).getSession(any());
-        assertThatThrownBy(() -> lookup.plan(SESSION)).as("a session without its start")
-                .isInstanceOf(UnavailableException.class);
+                .hasMessage("The org service could not answer.");
     }
 
     private static Student student(UUID id, UUID institution) {

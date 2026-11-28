@@ -159,6 +159,9 @@ public class LearningProgramService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -390,6 +393,9 @@ public class LearningProgramService extends AppTransactionManager {
             assertValidLearningProgramCourse(entity, false);
             scope.requireWritable(institutionOfLearningProgramCourse(entity));
             assertUniqueLearningProgramCourse(entity);
+            if (fields.isEmpty()) {
+                return learningProgramCourseMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return learningProgramCourseMapper.toDto(entity);
@@ -551,6 +557,9 @@ public class LearningProgramService extends AppTransactionManager {
             assertValidLearningProgramMember(entity, false);
             scope.requireWritable(institutionOfLearningProgramMember(entity));
             assertUniqueLearningProgramMember(entity);
+            if (fields.isEmpty()) {
+                return learningProgramMemberMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return learningProgramMemberMapper.toDto(entity);

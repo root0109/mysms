@@ -161,6 +161,9 @@ public class ReservationService extends AppTransactionManager {
                 requestedForSelfUnlessStaff(entity);
             }
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);

@@ -67,7 +67,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The monolith assembles all 22 modules, each on its own database with its own migrations, all 743 tables present,
+ * The monolith assembles all 23 areas, each on its own database with its own migrations, all 749 tables present,
  * every operation routed at the edge — and a real cross-module flow: sign-in at iam, GetMe reading the person from
  * people over in-process gRPC with the caller's token, a profile update at people.
  */
@@ -85,6 +85,7 @@ class MySmsApplicationComponentTest {
             "sis",
             "hr",
             "payroll",
+            "time_attendance",
             "admission",
             "attendance",
             "facility",
@@ -352,26 +353,31 @@ class MySmsApplicationComponentTest {
 
     @Test
     void everyModuleOwnsItsDatabaseAndSchema() {
-        assertThat(databases).hasSize(22);
+        assertThat(databases).hasSize(23);
         ModuleDatabase any = databases.get("masterDatabase");
         Integer tables = any.jdbc().sql(
                 "SELECT count(*) FROM information_schema.tables WHERE table_name <> 'flyway_schema_history'"
                         + " AND table_schema = ANY(:schemas)")
                 .param("schemas", MODULES).query(Integer.class).single();
-        assertThat(tables).as("every CREATE TABLE of database/migrations").isEqualTo(742);
+        assertThat(tables).as("every CREATE TABLE of database/migrations").isEqualTo(749);
         Integer histories = any.jdbc().sql(
                 // the catalog, not information_schema: the application role has no privilege on the Flyway history
                 "SELECT count(*) FROM pg_catalog.pg_class WHERE relname = 'flyway_schema_history' AND relkind = 'r'")
                 .query(Integer.class).single();
-        assertThat(histories).isEqualTo(22);
-        assertThat(operations.size()).isEqualTo(2123);
+        assertThat(histories).isEqualTo(23);
+        assertThat(operations.size()).isEqualTo(2121);
     }
 
     @Test
     void healthCoversEveryModuleDatabase() throws Exception {
         JsonNode components = call("GET", "/actuator/health", null, null, 200).path("components");
         for (String module : MODULES) {
-            assertThat(components.path(module + "Database").path("status").asString()).as(module).isEqualTo("UP");
+            // the health component is the database bean's name: lower camel case (time_attendance → timeAttendance)
+            StringBuilder bean = new StringBuilder();
+            for (String word : module.split("_")) {
+                bean.append(bean.length() == 0 ? word : Character.toUpperCase(word.charAt(0)) + word.substring(1));
+            }
+            assertThat(components.path(bean + "Database").path("status").asString()).as(module).isEqualTo("UP");
         }
     }
 

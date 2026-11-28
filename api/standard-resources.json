@@ -549,11 +549,8 @@
       "parent": "assignmentId",
       "scope": "chain",
       "operations": {
-        "Create": "assessment.CreateAssignmentApproval",
-        "Delete": "assessment.DeleteAssignmentApproval",
         "Get": "assessment.GetAssignmentApproval",
-        "List": "assessment.ListAssignmentApprovals",
-        "Update": "assessment.UpdateAssignmentApproval"
+        "List": "assessment.ListAssignmentApprovals"
       },
       "partition": null,
       "booleanDefaults": {},
@@ -1082,21 +1079,6 @@
         "countsLate": false,
         "isActive": true
       },
-      "transitions": []
-    },
-    {
-      "module": "attendance",
-      "resource": "StaffAttendance",
-      "parent": null,
-      "scope": "tenant",
-      "operations": {
-        "Create": "attendance.CreateStaffAttendance",
-        "Get": "attendance.GetStaffAttendance",
-        "List": "attendance.ListStaffAttendances",
-        "Update": "attendance.UpdateStaffAttendance"
-      },
-      "partition": "attendanceDate",
-      "booleanDefaults": {},
       "transitions": []
     },
     {
@@ -6577,6 +6559,21 @@
         "Update": "sis.UpdateSubjectRegistrationLine"
       },
       "partition": null,
+      "booleanDefaults": {},
+      "transitions": []
+    },
+    {
+      "module": "time_attendance",
+      "resource": "StaffAttendance",
+      "parent": null,
+      "scope": "tenant",
+      "operations": {
+        "Create": "time_attendance.CreateStaffAttendance",
+        "Get": "time_attendance.GetStaffAttendance",
+        "List": "time_attendance.ListStaffAttendances",
+        "Update": "time_attendance.UpdateStaffAttendance"
+      },
+      "partition": "attendanceDate",
       "booleanDefaults": {},
       "transitions": []
     },

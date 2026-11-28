@@ -4,9 +4,7 @@ import com.mysms.learning.lms.business.ExternalToolWorkflowService;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ExternalToolLink;
-import com.mysms.learning.lms.api.model.ExternalToolLinkUpdate;
 import com.mysms.learning.lms.api.model.ExternalToolResource;
-import com.mysms.learning.lms.api.model.ExternalToolResourceUpdate;
 import com.mysms.learning.lms.business.ExternalToolResourceService;
 import com.mysms.lms.v1.CreateExternalToolLinkRequest;
 import com.mysms.lms.v1.CreateExternalToolLinkResponse;
@@ -16,7 +14,9 @@ import com.mysms.lms.v1.DeleteExternalToolLinkRequest;
 import com.mysms.lms.v1.DeleteExternalToolLinkResponse;
 import com.mysms.lms.v1.DeleteExternalToolResourceRequest;
 import com.mysms.lms.v1.DeleteExternalToolResourceResponse;
+import com.mysms.lms.v1.ExternalToolLinkUpdate;
 import com.mysms.lms.v1.ExternalToolResourceServiceGrpc;
+import com.mysms.lms.v1.ExternalToolResourceUpdate;
 import com.mysms.lms.v1.GetExternalToolLinkRequest;
 import com.mysms.lms.v1.GetExternalToolLinkResponse;
 import com.mysms.lms.v1.GetExternalToolResourceRequest;
@@ -29,9 +29,7 @@ import com.mysms.lms.v1.ListExternalToolResourcesRequest;
 import com.mysms.lms.v1.ListExternalToolResourcesResponse;
 import com.mysms.lms.v1.ReceiveToolOutcomeRequest;
 import com.mysms.lms.v1.ReceiveToolOutcomeResponse;
-import com.mysms.lms.v1.UpdateExternalToolLinkRequest;
 import com.mysms.lms.v1.UpdateExternalToolLinkResponse;
-import com.mysms.lms.v1.UpdateExternalToolResourceRequest;
 import com.mysms.lms.v1.UpdateExternalToolResourceResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -81,13 +79,12 @@ public class ExternalToolResourceResolver extends ExternalToolResourceServiceGrp
     }
 
     @Override
-    public void updateExternalToolResource(UpdateExternalToolResourceRequest request,
+    public void updateExternalToolResource(ExternalToolResourceUpdate request,
             StreamObserver<UpdateExternalToolResourceResponse> out) {
         ExternalToolResource updated = service.updateExternalToolResource(
-                bridge.id(request.getExternalToolResource().getId(), "id"),
-                bridge.requiredIfMatch(request.getExternalToolResource().getEtag()),
-                bridge.changes(request.getExternalToolResource(), request.getUpdateMask(),
-                        ExternalToolResourceUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExternalToolResourceProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateExternalToolResourceResponse.newBuilder(), "external_tool_resource", updated).build());
     }
@@ -130,13 +127,13 @@ public class ExternalToolResourceResolver extends ExternalToolResourceServiceGrp
     }
 
     @Override
-    public void updateExternalToolLink(UpdateExternalToolLinkRequest request,
+    public void updateExternalToolLink(ExternalToolLinkUpdate request,
             StreamObserver<UpdateExternalToolLinkResponse> out) {
         ExternalToolLink updated = service.updateExternalToolLink(
                 bridge.id(request.getExternalToolResourceId(), "externalToolResourceId"),
-                bridge.id(request.getExternalToolLink().getId(), "id"),
-                bridge.requiredIfMatch(request.getExternalToolLink().getEtag()),
-                bridge.changes(request.getExternalToolLink(), request.getUpdateMask(), ExternalToolLinkUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ExternalToolLinkProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateExternalToolLinkResponse.newBuilder(), "external_tool_link", updated).build());

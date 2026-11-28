@@ -9,14 +9,9 @@ import com.mysms.comms.api.model.CalendarItem;
 import com.mysms.comms.business.MyCalendarService;
 import com.mysms.comms.api.model.Event;
 import com.mysms.comms.api.model.EventAttendee;
-import com.mysms.comms.api.model.EventAttendeeUpdate;
 import com.mysms.comms.api.model.EventGalleryItem;
-import com.mysms.comms.api.model.EventGalleryItemUpdate;
 import com.mysms.comms.api.model.EventInstitution;
-import com.mysms.comms.api.model.EventInstitutionUpdate;
 import com.mysms.comms.api.model.EventOccurrence;
-import com.mysms.comms.api.model.EventOccurrenceUpdate;
-import com.mysms.comms.api.model.EventUpdate;
 import com.mysms.comms.business.EventService;
 import com.mysms.comms.v1.ActivateEventRequest;
 import com.mysms.comms.v1.ActivateEventResponse;
@@ -46,7 +41,12 @@ import com.mysms.comms.v1.DeleteEventOccurrenceRequest;
 import com.mysms.comms.v1.DeleteEventOccurrenceResponse;
 import com.mysms.comms.v1.DeleteEventRequest;
 import com.mysms.comms.v1.DeleteEventResponse;
+import com.mysms.comms.v1.EventAttendeeUpdate;
+import com.mysms.comms.v1.EventGalleryItemUpdate;
+import com.mysms.comms.v1.EventInstitutionUpdate;
+import com.mysms.comms.v1.EventOccurrenceUpdate;
 import com.mysms.comms.v1.EventServiceGrpc;
+import com.mysms.comms.v1.EventUpdate;
 import com.mysms.comms.v1.GetEventAttendeeRequest;
 import com.mysms.comms.v1.GetEventAttendeeResponse;
 import com.mysms.comms.v1.GetEventGalleryItemRequest;
@@ -69,15 +69,10 @@ import com.mysms.comms.v1.ListEventOccurrencesRequest;
 import com.mysms.comms.v1.ListEventOccurrencesResponse;
 import com.mysms.comms.v1.ListEventsRequest;
 import com.mysms.comms.v1.ListEventsResponse;
-import com.mysms.comms.v1.UpdateEventAttendeeRequest;
 import com.mysms.comms.v1.UpdateEventAttendeeResponse;
-import com.mysms.comms.v1.UpdateEventGalleryItemRequest;
 import com.mysms.comms.v1.UpdateEventGalleryItemResponse;
-import com.mysms.comms.v1.UpdateEventInstitutionRequest;
 import com.mysms.comms.v1.UpdateEventInstitutionResponse;
-import com.mysms.comms.v1.UpdateEventOccurrenceRequest;
 import com.mysms.comms.v1.UpdateEventOccurrenceResponse;
-import com.mysms.comms.v1.UpdateEventRequest;
 import com.mysms.comms.v1.UpdateEventResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -122,10 +117,10 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
     }
 
     @Override
-    public void updateEvent(UpdateEventRequest request, StreamObserver<UpdateEventResponse> out) {
+    public void updateEvent(EventUpdate request, StreamObserver<UpdateEventResponse> out) {
         Event updated = service.updateEvent(
-                bridge.id(request.getEvent().getId(), "id"), bridge.requiredIfMatch(request.getEvent().getEtag()),
-                bridge.changes(request.getEvent(), request.getUpdateMask(), EventUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                EventProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEventResponse.newBuilder(), "event", updated).build());
     }
 
@@ -161,12 +156,12 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
     }
 
     @Override
-    public void updateEventGalleryItem(UpdateEventGalleryItemRequest request,
+    public void updateEventGalleryItem(EventGalleryItemUpdate request,
             StreamObserver<UpdateEventGalleryItemResponse> out) {
         EventGalleryItem updated = service.updateEventGalleryItem(
-                bridge.id(request.getEventId(), "eventId"), bridge.id(request.getEventGalleryItem().getId(), "id"),
-                bridge.requiredIfMatch(request.getEventGalleryItem().getEtag()),
-                bridge.changes(request.getEventGalleryItem(), request.getUpdateMask(), EventGalleryItemUpdate.class),
+                bridge.id(request.getEventId(), "eventId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EventGalleryItemProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEventGalleryItemResponse.newBuilder(), "event_gallery_item", updated).build());
     }
@@ -206,12 +201,12 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
     }
 
     @Override
-    public void updateEventInstitution(UpdateEventInstitutionRequest request,
+    public void updateEventInstitution(EventInstitutionUpdate request,
             StreamObserver<UpdateEventInstitutionResponse> out) {
         EventInstitution updated = service.updateEventInstitution(
-                bridge.id(request.getEventId(), "eventId"), bridge.id(request.getEventInstitution().getId(), "id"),
-                bridge.requiredIfMatch(request.getEventInstitution().getEtag()),
-                bridge.changes(request.getEventInstitution(), request.getUpdateMask(), EventInstitutionUpdate.class),
+                bridge.id(request.getEventId(), "eventId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EventInstitutionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEventInstitutionResponse.newBuilder(), "event_institution", updated).build());
     }
@@ -250,11 +245,11 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
     }
 
     @Override
-    public void updateEventOccurrence(UpdateEventOccurrenceRequest request, StreamObserver<UpdateEventOccurrenceResponse> out) {
+    public void updateEventOccurrence(EventOccurrenceUpdate request, StreamObserver<UpdateEventOccurrenceResponse> out) {
         EventOccurrence updated = service.updateEventOccurrence(
-                bridge.id(request.getEventId(), "eventId"), bridge.id(request.getEventOccurrence().getId(), "id"),
-                bridge.requiredIfMatch(request.getEventOccurrence().getEtag()),
-                bridge.changes(request.getEventOccurrence(), request.getUpdateMask(), EventOccurrenceUpdate.class),
+                bridge.id(request.getEventId(), "eventId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EventOccurrenceProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEventOccurrenceResponse.newBuilder(), "event_occurrence", updated).build());
     }
@@ -292,11 +287,11 @@ public class EventResolver extends EventServiceGrpc.EventServiceImplBase {
     }
 
     @Override
-    public void updateEventAttendee(UpdateEventAttendeeRequest request, StreamObserver<UpdateEventAttendeeResponse> out) {
+    public void updateEventAttendee(EventAttendeeUpdate request, StreamObserver<UpdateEventAttendeeResponse> out) {
         EventAttendee updated = service.updateEventAttendee(
-                bridge.id(request.getEventId(), "eventId"), bridge.id(request.getEventAttendee().getId(), "id"),
-                bridge.requiredIfMatch(request.getEventAttendee().getEtag()),
-                bridge.changes(request.getEventAttendee(), request.getUpdateMask(), EventAttendeeUpdate.class),
+                bridge.id(request.getEventId(), "eventId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EventAttendeeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEventAttendeeResponse.newBuilder(), "event_attendee", updated).build());
     }

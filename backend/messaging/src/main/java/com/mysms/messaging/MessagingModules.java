@@ -34,7 +34,7 @@ public final class MessagingModules {
         serve(areas, "identity", "iam", "people");
         serve(areas, "privacy", "privacy");
         serve(areas, "comms", "comms");
-        serve(areas, "hrms", "hr", "payroll");
+        serve(areas, "hrms", "hr", "payroll", "time_attendance");
         serve(areas, "students", "sis", "admission", "careers");
         serve(areas, "academics", "academics", "timetable", "attendance", "assessment");
         serve(areas, "finance", "finance");

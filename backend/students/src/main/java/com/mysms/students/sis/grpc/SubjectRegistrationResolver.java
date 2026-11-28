@@ -4,8 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.SubjectRegistration;
 import com.mysms.students.sis.api.model.SubjectRegistrationLine;
-import com.mysms.students.sis.api.model.SubjectRegistrationLineUpdate;
-import com.mysms.students.sis.api.model.SubjectRegistrationUpdate;
 import com.mysms.students.sis.business.SubjectRegistrationService;
 import com.mysms.students.sis.business.SubjectRegistrationWorkflowService;
 import com.mysms.sis.v1.ApproveSubjectRegistrationRequest;
@@ -32,12 +30,12 @@ import com.mysms.sis.v1.RejectSubjectRegistrationRequest;
 import com.mysms.sis.v1.RejectSubjectRegistrationResponse;
 import com.mysms.sis.v1.ResetSubjectRegistrationRequest;
 import com.mysms.sis.v1.ResetSubjectRegistrationResponse;
+import com.mysms.sis.v1.SubjectRegistrationLineUpdate;
 import com.mysms.sis.v1.SubjectRegistrationServiceGrpc;
+import com.mysms.sis.v1.SubjectRegistrationUpdate;
 import com.mysms.sis.v1.SubmitSubjectRegistrationRequest;
 import com.mysms.sis.v1.SubmitSubjectRegistrationResponse;
-import com.mysms.sis.v1.UpdateSubjectRegistrationLineRequest;
 import com.mysms.sis.v1.UpdateSubjectRegistrationLineResponse;
-import com.mysms.sis.v1.UpdateSubjectRegistrationRequest;
 import com.mysms.sis.v1.UpdateSubjectRegistrationResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -87,12 +85,12 @@ public class SubjectRegistrationResolver extends SubjectRegistrationServiceGrpc.
     }
 
     @Override
-    public void updateSubjectRegistration(UpdateSubjectRegistrationRequest request,
+    public void updateSubjectRegistration(SubjectRegistrationUpdate request,
             StreamObserver<UpdateSubjectRegistrationResponse> out) {
         SubjectRegistration updated = subjectRegistrationService.updateSubjectRegistration(
-                bridge.id(request.getSubjectRegistration().getId(), "id"),
-                bridge.requiredIfMatch(request.getSubjectRegistration().getEtag()),
-                bridge.changes(request.getSubjectRegistration(), request.getUpdateMask(), SubjectRegistrationUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SubjectRegistrationProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateSubjectRegistrationResponse.newBuilder(), "subject_registration", updated).build());
@@ -136,14 +134,13 @@ public class SubjectRegistrationResolver extends SubjectRegistrationServiceGrpc.
     }
 
     @Override
-    public void updateSubjectRegistrationLine(UpdateSubjectRegistrationLineRequest request,
+    public void updateSubjectRegistrationLine(SubjectRegistrationLineUpdate request,
             StreamObserver<UpdateSubjectRegistrationLineResponse> out) {
         SubjectRegistrationLine updated = subjectRegistrationService.updateSubjectRegistrationLine(
                 bridge.id(request.getSubjectRegistrationId(), "subjectRegistrationId"),
-                bridge.id(request.getSubjectRegistrationLine().getId(), "id"),
-                bridge.requiredIfMatch(request.getSubjectRegistrationLine().getEtag()),
-                bridge.changes(request.getSubjectRegistrationLine(), request.getUpdateMask(),
-                        SubjectRegistrationLineUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                SubjectRegistrationLineProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdateSubjectRegistrationLineResponse.newBuilder(), "subject_registration_line", updated).build());
     }

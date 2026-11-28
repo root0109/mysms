@@ -4,16 +4,10 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.library.api.model.Media;
 import com.mysms.campus.library.api.model.MediaAuthor;
-import com.mysms.campus.library.api.model.MediaAuthorUpdate;
 import com.mysms.campus.library.api.model.MediaCourse;
-import com.mysms.campus.library.api.model.MediaCourseUpdate;
 import com.mysms.campus.library.api.model.MediaPublisher;
-import com.mysms.campus.library.api.model.MediaPublisherUpdate;
 import com.mysms.campus.library.api.model.MediaSubject;
-import com.mysms.campus.library.api.model.MediaSubjectUpdate;
 import com.mysms.campus.library.api.model.MediaUnit;
-import com.mysms.campus.library.api.model.MediaUnitUpdate;
-import com.mysms.campus.library.api.model.MediaUpdate;
 import com.mysms.campus.library.business.MediaService;
 import com.mysms.library.v1.CreateMediaAuthorRequest;
 import com.mysms.library.v1.CreateMediaAuthorResponse;
@@ -63,18 +57,18 @@ import com.mysms.library.v1.ListMediaSubjectsRequest;
 import com.mysms.library.v1.ListMediaSubjectsResponse;
 import com.mysms.library.v1.ListMediaUnitsRequest;
 import com.mysms.library.v1.ListMediaUnitsResponse;
+import com.mysms.library.v1.MediaAuthorUpdate;
+import com.mysms.library.v1.MediaCourseUpdate;
+import com.mysms.library.v1.MediaPublisherUpdate;
 import com.mysms.library.v1.MediaServiceGrpc;
-import com.mysms.library.v1.UpdateMediaAuthorRequest;
+import com.mysms.library.v1.MediaSubjectUpdate;
+import com.mysms.library.v1.MediaUnitUpdate;
+import com.mysms.library.v1.MediaUpdate;
 import com.mysms.library.v1.UpdateMediaAuthorResponse;
-import com.mysms.library.v1.UpdateMediaCourseRequest;
 import com.mysms.library.v1.UpdateMediaCourseResponse;
-import com.mysms.library.v1.UpdateMediaPublisherRequest;
 import com.mysms.library.v1.UpdateMediaPublisherResponse;
-import com.mysms.library.v1.UpdateMediaRequest;
 import com.mysms.library.v1.UpdateMediaResponse;
-import com.mysms.library.v1.UpdateMediaSubjectRequest;
 import com.mysms.library.v1.UpdateMediaSubjectResponse;
-import com.mysms.library.v1.UpdateMediaUnitRequest;
 import com.mysms.library.v1.UpdateMediaUnitResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -117,11 +111,11 @@ public class MediaResolver extends MediaServiceGrpc.MediaServiceImplBase {
     }
 
     @Override
-    public void updateMedia(UpdateMediaRequest request, StreamObserver<UpdateMediaResponse> out) {
+    public void updateMedia(MediaUpdate request, StreamObserver<UpdateMediaResponse> out) {
         Media updated = service.updateMedia(
-                bridge.id(request.getMedia().getId(), "id"),
-                bridge.requiredIfMatch(request.getMedia().getEtag()),
-                bridge.changes(request.getMedia(), request.getUpdateMask(), MediaUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MediaProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMediaResponse.newBuilder(), "media", updated).build());
     }
 
@@ -158,12 +152,12 @@ public class MediaResolver extends MediaServiceGrpc.MediaServiceImplBase {
     }
 
     @Override
-    public void updateMediaAuthor(UpdateMediaAuthorRequest request, StreamObserver<UpdateMediaAuthorResponse> out) {
+    public void updateMediaAuthor(MediaAuthorUpdate request, StreamObserver<UpdateMediaAuthorResponse> out) {
         MediaAuthor updated = service.updateMediaAuthor(
                 bridge.id(request.getMediaId(), "mediaId"),
-                bridge.id(request.getMediaAuthor().getId(), "id"),
-                bridge.requiredIfMatch(request.getMediaAuthor().getEtag()),
-                bridge.changes(request.getMediaAuthor(), request.getUpdateMask(), MediaAuthorUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MediaAuthorProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMediaAuthorResponse.newBuilder(), "media_author", updated).build());
     }
@@ -202,12 +196,12 @@ public class MediaResolver extends MediaServiceGrpc.MediaServiceImplBase {
     }
 
     @Override
-    public void updateMediaPublisher(UpdateMediaPublisherRequest request, StreamObserver<UpdateMediaPublisherResponse> out) {
+    public void updateMediaPublisher(MediaPublisherUpdate request, StreamObserver<UpdateMediaPublisherResponse> out) {
         MediaPublisher updated = service.updateMediaPublisher(
                 bridge.id(request.getMediaId(), "mediaId"),
-                bridge.id(request.getMediaPublisher().getId(), "id"),
-                bridge.requiredIfMatch(request.getMediaPublisher().getEtag()),
-                bridge.changes(request.getMediaPublisher(), request.getUpdateMask(), MediaPublisherUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MediaPublisherProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMediaPublisherResponse.newBuilder(), "media_publisher", updated).build());
     }
@@ -246,12 +240,12 @@ public class MediaResolver extends MediaServiceGrpc.MediaServiceImplBase {
     }
 
     @Override
-    public void updateMediaCourse(UpdateMediaCourseRequest request, StreamObserver<UpdateMediaCourseResponse> out) {
+    public void updateMediaCourse(MediaCourseUpdate request, StreamObserver<UpdateMediaCourseResponse> out) {
         MediaCourse updated = service.updateMediaCourse(
                 bridge.id(request.getMediaId(), "mediaId"),
-                bridge.id(request.getMediaCourse().getId(), "id"),
-                bridge.requiredIfMatch(request.getMediaCourse().getEtag()),
-                bridge.changes(request.getMediaCourse(), request.getUpdateMask(), MediaCourseUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MediaCourseProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMediaCourseResponse.newBuilder(), "media_course", updated).build());
     }
@@ -290,12 +284,12 @@ public class MediaResolver extends MediaServiceGrpc.MediaServiceImplBase {
     }
 
     @Override
-    public void updateMediaSubject(UpdateMediaSubjectRequest request, StreamObserver<UpdateMediaSubjectResponse> out) {
+    public void updateMediaSubject(MediaSubjectUpdate request, StreamObserver<UpdateMediaSubjectResponse> out) {
         MediaSubject updated = service.updateMediaSubject(
                 bridge.id(request.getMediaId(), "mediaId"),
-                bridge.id(request.getMediaSubject().getId(), "id"),
-                bridge.requiredIfMatch(request.getMediaSubject().getEtag()),
-                bridge.changes(request.getMediaSubject(), request.getUpdateMask(), MediaSubjectUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MediaSubjectProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMediaSubjectResponse.newBuilder(), "media_subject", updated).build());
     }
@@ -334,12 +328,12 @@ public class MediaResolver extends MediaServiceGrpc.MediaServiceImplBase {
     }
 
     @Override
-    public void updateMediaUnit(UpdateMediaUnitRequest request, StreamObserver<UpdateMediaUnitResponse> out) {
+    public void updateMediaUnit(MediaUnitUpdate request, StreamObserver<UpdateMediaUnitResponse> out) {
         MediaUnit updated = service.updateMediaUnit(
                 bridge.id(request.getMediaId(), "mediaId"),
-                bridge.id(request.getMediaUnit().getId(), "id"),
-                bridge.requiredIfMatch(request.getMediaUnit().getEtag()),
-                bridge.changes(request.getMediaUnit(), request.getUpdateMask(), MediaUnitUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                MediaUnitProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateMediaUnitResponse.newBuilder(), "media_unit", updated).build());
     }

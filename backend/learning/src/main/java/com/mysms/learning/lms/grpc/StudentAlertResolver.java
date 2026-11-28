@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.StudentAlert;
-import com.mysms.learning.lms.api.model.StudentAlertUpdate;
 import com.mysms.learning.lms.business.StudentAlertService;
 import com.mysms.lms.v1.CreateStudentAlertRequest;
 import com.mysms.lms.v1.CreateStudentAlertResponse;
@@ -14,7 +13,7 @@ import com.mysms.lms.v1.GetStudentAlertResponse;
 import com.mysms.lms.v1.ListStudentAlertsRequest;
 import com.mysms.lms.v1.ListStudentAlertsResponse;
 import com.mysms.lms.v1.StudentAlertServiceGrpc;
-import com.mysms.lms.v1.UpdateStudentAlertRequest;
+import com.mysms.lms.v1.StudentAlertUpdate;
 import com.mysms.lms.v1.UpdateStudentAlertResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,11 +55,11 @@ public class StudentAlertResolver extends StudentAlertServiceGrpc.StudentAlertSe
     }
 
     @Override
-    public void updateStudentAlert(UpdateStudentAlertRequest request, StreamObserver<UpdateStudentAlertResponse> out) {
+    public void updateStudentAlert(StudentAlertUpdate request, StreamObserver<UpdateStudentAlertResponse> out) {
         StudentAlert updated = service.updateStudentAlert(
-                bridge.id(request.getStudentAlert().getId(), "id"),
-                bridge.requiredIfMatch(request.getStudentAlert().getEtag()),
-                bridge.changes(request.getStudentAlert(), request.getUpdateMask(), StudentAlertUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StudentAlertProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStudentAlertResponse.newBuilder(), "student_alert", updated).build());
     }

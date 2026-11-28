@@ -3,7 +3,6 @@ package com.mysms.platform.org.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.org.api.model.Holiday;
-import com.mysms.platform.org.api.model.HolidayUpdate;
 import com.mysms.platform.org.business.HolidayService;
 import com.mysms.org.v1.CreateHolidayRequest;
 import com.mysms.org.v1.CreateHolidayResponse;
@@ -12,9 +11,9 @@ import com.mysms.org.v1.DeleteHolidayResponse;
 import com.mysms.org.v1.GetHolidayRequest;
 import com.mysms.org.v1.GetHolidayResponse;
 import com.mysms.org.v1.HolidayServiceGrpc;
+import com.mysms.org.v1.HolidayUpdate;
 import com.mysms.org.v1.ListHolidaysRequest;
 import com.mysms.org.v1.ListHolidaysResponse;
-import com.mysms.org.v1.UpdateHolidayRequest;
 import com.mysms.org.v1.UpdateHolidayResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -59,11 +58,11 @@ public class HolidayResolver extends HolidayServiceGrpc.HolidayServiceImplBase {
     }
 
     @Override
-    public void updateHoliday(UpdateHolidayRequest request, StreamObserver<UpdateHolidayResponse> out) {
+    public void updateHoliday(HolidayUpdate request, StreamObserver<UpdateHolidayResponse> out) {
         Holiday updated = service.updateHoliday(
-                bridge.id(request.getHoliday().getId(), "id"),
-                bridge.requiredIfMatch(request.getHoliday().getEtag()),
-                bridge.changes(request.getHoliday(), request.getUpdateMask(), HolidayUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                HolidayProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateHolidayResponse.newBuilder(), "holiday", updated).build());
     }
 

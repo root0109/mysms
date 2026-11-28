@@ -3,11 +3,11 @@ package com.mysms.privacy.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.privacy.api.model.LegalHold;
-import com.mysms.privacy.api.model.LegalHoldUpdate;
 import com.mysms.privacy.business.LegalHoldService;
 import com.mysms.privacy.v1.GetLegalHoldRequest;
 import com.mysms.privacy.v1.GetLegalHoldResponse;
 import com.mysms.privacy.v1.LegalHoldServiceGrpc;
+import com.mysms.privacy.v1.LegalHoldUpdate;
 import com.mysms.privacy.v1.ListActiveHoldsRequest;
 import com.mysms.privacy.v1.ListActiveHoldsResponse;
 import com.mysms.privacy.v1.ListLegalHoldsRequest;
@@ -16,7 +16,6 @@ import com.mysms.privacy.v1.PlaceLegalHoldRequest;
 import com.mysms.privacy.v1.PlaceLegalHoldResponse;
 import com.mysms.privacy.v1.ReleaseLegalHoldRequest;
 import com.mysms.privacy.v1.ReleaseLegalHoldResponse;
-import com.mysms.privacy.v1.UpdateLegalHoldRequest;
 import com.mysms.privacy.v1.UpdateLegalHoldResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -60,10 +59,10 @@ public class LegalHoldResolver extends LegalHoldServiceGrpc.LegalHoldServiceImpl
     }
 
     @Override
-    public void updateLegalHold(UpdateLegalHoldRequest request, StreamObserver<UpdateLegalHoldResponse> out) {
-        LegalHold updated = service.updateLegalHold(bridge.id(request.getLegalHold().getId(), "id"),
-                bridge.requiredIfMatch(request.getLegalHold().getEtag()),
-                bridge.changes(request.getLegalHold(), request.getUpdateMask(), LegalHoldUpdate.class));
+    public void updateLegalHold(LegalHoldUpdate request, StreamObserver<UpdateLegalHoldResponse> out) {
+        LegalHold updated = service.updateLegalHold(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                LegalHoldProtoBridge.changes(bridge, request));
         ProtoBridge.send(out, bridge.reply(UpdateLegalHoldResponse.newBuilder(), LEGAL_HOLD, updated).build());
     }
 

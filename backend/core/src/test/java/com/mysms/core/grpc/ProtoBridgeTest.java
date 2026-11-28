@@ -7,9 +7,20 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.FieldMask;
 import com.google.protobuf.Message;
+import com.google.protobuf.NullValue;
+import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
+import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
+import com.mysms.common.v1.NullableBool;
+import com.mysms.common.v1.NullableDuration;
+import com.mysms.common.v1.NullableInt32;
+import com.mysms.common.v1.NullableInt64;
+import com.mysms.common.v1.NullableString;
+import com.mysms.common.v1.NullableTimestamp;
+import com.mysms.common.v1.Sort;
+import com.mysms.common.v1.StringList;
 import com.mysms.core.error.InvalidArgumentException;
 import com.mysms.core.error.PreconditionRequiredException;
 import com.mysms.core.error.ValidationFailedException;
@@ -130,10 +141,6 @@ class ProtoBridgeTest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static final class WidgetUpdate {
         private Optional<@NotNull @Size(max = 10) String> name;
-        private Optional<Boolean> isActive;
-        private Optional<Integer> sortOrder;
-        private Optional<List<String>> history;
-        private Optional<String> startDate;
 
         public Optional<String> getName() {
             return name;
@@ -142,85 +149,127 @@ class ProtoBridgeTest {
         public void setName(Optional<String> name) {
             this.name = name;
         }
-
-        public Optional<Boolean> getIsActive() {
-            return isActive;
-        }
-
-        public void setIsActive(Optional<Boolean> isActive) {
-            this.isActive = isActive;
-        }
-
-        public Optional<Integer> getSortOrder() {
-            return sortOrder;
-        }
-
-        public void setSortOrder(Optional<Integer> sortOrder) {
-            this.sortOrder = sortOrder;
-        }
-
-        public Optional<List<String>> getHistory() {
-            return history;
-        }
-
-        public void setHistory(Optional<List<String>> history) {
-            this.history = history;
-        }
-
-        public Optional<String> getStartDate() {
-            return startDate;
-        }
-
-        public void setStartDate(Optional<String> startDate) {
-            this.startDate = startDate;
-        }
-    }
-
-    /** A PATCH body whose list may change but never be cleared. */
-    public static final class RequiredHistoryUpdate {
-        private Optional<@NotNull List<String>> history;
-
-        public Optional<List<String>> getHistory() {
-            return history;
-        }
-
-        public void setHistory(Optional<List<String>> history) {
-            this.history = history;
-        }
     }
 
     @Test
-    void anUpdateMaskDecidesTheThreeStatesOfTheUpdateDto() {
-        DynamicMessage changes = DynamicMessage.newBuilder(W).setField(f(W, "is_active"), false)
-                .setField(f(W, "name"), "Pump").setField(f(W, "start_date"), "2026-01-05").build();
-        FieldMask mask = FieldMask.newBuilder().addPaths("isActive").addPaths("sort_order").addPaths("name")
-                .addPaths("history").build();
-        WidgetUpdate masked = bridge.changes(changes, mask, WidgetUpdate.class);
-        assertThat(masked.getIsActive()).as("a masked flag (by its JSON name) is sent as its default").contains(false);
-        assertThat(masked.getSortOrder()).as("a masked number is sent as its default").contains(0);
-        assertThat(masked.getName()).as("masked and held: set").contains("Pump");
-        assertThat(masked.getHistory()).as("masked, not held, not required: cleared").isEmpty();
-        assertThat(masked.getStartDate()).as("held but unmasked: unchanged, never replaced").isNull();
+    void readsTheThreeStatesOfAnUpdateMessageField() throws ParseException {
+        NullableString cleared = NullableString.newBuilder().setNull(NullValue.NULL_VALUE).build();
+        NullableString set = NullableString.newBuilder().setValue("Pump").build();
+        assertThat(ProtoBridge.text(false, set)).as("unset: unchanged").isNull();
+        assertThat(ProtoBridge.text(true, cleared)).as("null: cleared").isEmpty();
+        assertThat(ProtoBridge.text(true, NullableString.getDefaultInstance())).as("an empty wrapper clears").isEmpty();
+        assertThat(ProtoBridge.text(true, set)).contains("Pump");
+        assertThat(ProtoBridge.text(true, "")).as("a plain optional sends its default").contains("");
+        assertThat(ProtoBridge.text(false, "x")).isNull();
 
-        WidgetUpdate unmasked = bridge.changes(changes, FieldMask.getDefaultInstance(), WidgetUpdate.class);
-        assertThat(unmasked.getIsActive()).as("without a mask a default is not sent").isNull();
-        assertThat(unmasked.getName()).contains("Pump");
-        assertThat(unmasked.getHistory()).isNull();
-        assertThat(unmasked.getStartDate()).contains("2026-01-05");
+        UUID id = UUID.randomUUID();
+        assertThat(bridge.uuid(true, NullableString.newBuilder().setValue(id.toString()).build(), "ownerId"))
+                .contains(id);
+        assertThat(bridge.uuid(true, cleared, "ownerId")).isEmpty();
+        assertThat(bridge.uuid(false, cleared, "ownerId")).isNull();
+        assertThat(bridge.uuid(true, id.toString(), "ownerId")).contains(id);
+        assertThat(bridge.uuid(false, "", "ownerId")).isNull();
+        assertThatThrownBy(() -> bridge.uuid(true, "nope", "ownerId")).isInstanceOf(InvalidArgumentException.class)
+                .hasMessage("Invalid value for ownerId.");
+
+        assertThat(bridge.date(true, NullableString.newBuilder().setValue("2026-01-05").build(), "startDate"))
+                .contains(LocalDate.of(2026, 1, 5));
+        assertThat(bridge.date(true, cleared, "startDate")).isEmpty();
+        assertThat(bridge.date(false, cleared, "startDate")).isNull();
+        assertThat(bridge.date(true, "2026-01-05", "startDate")).contains(LocalDate.of(2026, 1, 5));
+        assertThat(bridge.date(false, "", "startDate")).isNull();
+        assertThatThrownBy(() -> bridge.date(true, "05/01/2026", "startDate"))
+                .isInstanceOf(InvalidArgumentException.class).hasMessage("Invalid value for startDate.");
+
+        assertThat(ProtoBridge.flag(true, false)).as("an optional bool sends false").contains(false);
+        assertThat(ProtoBridge.flag(false, true)).isNull();
+        assertThat(ProtoBridge.flag(true, NullableBool.newBuilder().setValue(true).build())).contains(true);
+        assertThat(ProtoBridge.flag(true, NullableBool.newBuilder().setNull(NullValue.NULL_VALUE).build())).isEmpty();
+        assertThat(ProtoBridge.flag(false, NullableBool.getDefaultInstance())).isNull();
+
+        assertThat(ProtoBridge.number(true, 0)).contains(0);
+        assertThat(ProtoBridge.number(false, 3)).isNull();
+        assertThat(ProtoBridge.number(true, NullableInt32.newBuilder().setValue(7).build())).contains(7);
+        assertThat(ProtoBridge.number(true, NullableInt32.newBuilder().setNull(NullValue.NULL_VALUE).build()))
+                .isEmpty();
+        assertThat(ProtoBridge.number(false, NullableInt32.getDefaultInstance())).isNull();
+
+        assertThat(ProtoBridge.int64(true, 0L)).contains("0");
+        assertThat(ProtoBridge.int64(false, 3L)).isNull();
+        assertThat(ProtoBridge.int64(true, NullableInt64.newBuilder().setValue(5_000_000_000L).build()))
+                .contains("5000000000");
+        assertThat(ProtoBridge.int64(true, NullableInt64.newBuilder().setNull(NullValue.NULL_VALUE).build()))
+                .isEmpty();
+        assertThat(ProtoBridge.int64(false, NullableInt64.getDefaultInstance())).isNull();
+
+        OffsetDateTime at = OffsetDateTime.parse("2026-11-11T10:00:00.123456Z");
+        assertThat(ProtoBridge.time(true, Timestamps.parse("2026-11-11T10:00:00.123456Z"))).contains(at);
+        assertThat(ProtoBridge.time(false, Timestamps.parse("2026-11-11T10:00:00Z"))).isNull();
+        assertThat(ProtoBridge.time(true, NullableTimestamp.newBuilder()
+                .setValue(Timestamps.parse("2026-11-11T10:00:00.123456Z")).build())).contains(at);
+        assertThat(ProtoBridge.time(true, NullableTimestamp.newBuilder().setNull(NullValue.NULL_VALUE).build()))
+                .isEmpty();
+        assertThat(ProtoBridge.time(false, NullableTimestamp.getDefaultInstance())).isNull();
+
+        assertThat(ProtoBridge.duration(true, Durations.fromSeconds(5400))).contains("5400s");
+        assertThat(ProtoBridge.duration(false, Durations.fromSeconds(1))).isNull();
+        assertThat(ProtoBridge.duration(true, NullableDuration.newBuilder().setValue(Durations.fromMillis(1500)).build()))
+                .contains("1.500s");
+        assertThat(ProtoBridge.duration(true, NullableDuration.newBuilder().setNull(NullValue.NULL_VALUE).build()))
+                .isEmpty();
+        assertThat(ProtoBridge.duration(false, NullableDuration.getDefaultInstance())).isNull();
+
+        assertThat(ProtoBridge.texts(true, StringList.newBuilder().addValues("a").addValues("b").build()))
+                .contains(List.of("a", "b"));
+        assertThat(ProtoBridge.texts(true, StringList.getDefaultInstance())).as("set and empty: no entries")
+                .contains(List.of());
+        assertThat(ProtoBridge.texts(false, StringList.getDefaultInstance())).isNull();
     }
 
     @Test
-    void aMaskMayNotClearARequiredFieldNorNameAFieldTheUpdateLacks() {
-        DynamicMessage none = DynamicMessage.newBuilder(W).build();
-        assertThatThrownBy(() -> bridge.changes(none, FieldMask.newBuilder().addPaths("name").build(),
-                WidgetUpdate.class)).as("clearing a required field").isInstanceOf(ValidationFailedException.class);
-        assertThatThrownBy(() -> bridge.changes(none, FieldMask.newBuilder().addPaths("history").build(),
-                RequiredHistoryUpdate.class)).as("a required list masked but empty is refused, never made up")
+    void readsEnumsJsonAndMessagesOfAnUpdateMessage() {
+        assertThat(bridge.choice(true, Sort.Direction.DIRECTION_DESC, String::toUpperCase)).contains("DESC");
+        assertThat(bridge.choice(true, Sort.Direction.DIRECTION_UNSPECIFIED, String::toUpperCase))
+                .as("UNSPECIFIED is the enum's null").isEmpty();
+        assertThat(bridge.choice(false, Sort.Direction.DIRECTION_ASC, String::toUpperCase)).isNull();
+        assertThatThrownBy(() -> bridge.choice(true, Sort.Direction.UNRECOGNIZED, String::toUpperCase))
+                .isInstanceOf(InvalidArgumentException.class);
+
+        assertThat(bridge.choice(true, "DIRECTION_DESC", Sort.Direction::valueOf)).contains(Sort.Direction.DIRECTION_DESC);
+        assertThat(bridge.choice(false, "DIRECTION_DESC", Sort.Direction::valueOf)).isNull();
+        assertThatThrownBy(() -> bridge.choice(true, "sideways", Sort.Direction::valueOf))
+                .isInstanceOf(InvalidArgumentException.class);
+        assertThat(bridge.choice(true, NullableString.newBuilder().setValue("DIRECTION_ASC").build(),
+                Sort.Direction::valueOf)).contains(Sort.Direction.DIRECTION_ASC);
+        assertThat(bridge.choice(true, NullableString.newBuilder().setNull(NullValue.NULL_VALUE).build(),
+                Sort.Direction::valueOf)).isEmpty();
+        assertThat(bridge.choice(false, NullableString.getDefaultInstance(), Sort.Direction::valueOf)).isNull();
+
+        Value tokens = Value.newBuilder().setStructValue(Struct.newBuilder()
+                .putFields("primary", Value.newBuilder().setStringValue("#123456").build())).build();
+        assertThat(bridge.json(true, tokens)).contains(Map.of("primary", "#123456"));
+        assertThat(bridge.json(true, Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build())).isEmpty();
+        assertThat(bridge.json(true, Value.getDefaultInstance())).isEmpty();
+        assertThat(bridge.json(false, tokens)).isNull();
+
+        Sort criterion = Sort.newBuilder().setField("name").setDirection(Sort.Direction.DIRECTION_DESC).build();
+        assertThat(bridge.message(true, criterion, SortDto.class)).contains(new SortDto("name", "desc"));
+        assertThat(bridge.message(false, criterion, SortDto.class)).isNull();
+    }
+
+    /** The REST rendering of a nested message of a PATCH body. */
+    record SortDto(String field, String direction) {
+    }
+
+    @Test
+    void validatesTheChangesLikeRest() {
+        WidgetUpdate valid = new WidgetUpdate();
+        valid.setName(Optional.of("Pump"));
+        assertThat(bridge.patch(valid)).isSameAs(valid);
+        WidgetUpdate cleared = new WidgetUpdate();
+        cleared.setName(Optional.empty());
+        assertThatThrownBy(() -> bridge.patch(cleared)).as("a required field cleared")
                 .isInstanceOf(ValidationFailedException.class);
-        assertThatThrownBy(() -> bridge.changes(none, FieldMask.newBuilder().addPaths("etag").build(),
-                WidgetUpdate.class)).isInstanceOf(InvalidArgumentException.class).hasMessageContaining("etag");
-        assertThatThrownBy(() -> bridge.changes(none, FieldMask.newBuilder().addPaths("nope").build(),
-                WidgetUpdate.class)).isInstanceOf(InvalidArgumentException.class);
     }
 
     @Test

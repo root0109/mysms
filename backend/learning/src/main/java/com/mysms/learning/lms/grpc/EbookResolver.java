@@ -5,9 +5,7 @@ import com.mysms.learning.lms.business.EbookWorkflowService;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Ebook;
-import com.mysms.learning.lms.api.model.EbookUpdate;
 import com.mysms.learning.lms.api.model.RelatedMaterial;
-import com.mysms.learning.lms.api.model.RelatedMaterialUpdate;
 import com.mysms.learning.lms.business.EbookService;
 import com.mysms.lms.v1.ConvertEbookRequest;
 import com.mysms.lms.v1.ConvertEbookResponse;
@@ -20,6 +18,7 @@ import com.mysms.lms.v1.DeleteEbookResponse;
 import com.mysms.lms.v1.DeleteRelatedMaterialRequest;
 import com.mysms.lms.v1.DeleteRelatedMaterialResponse;
 import com.mysms.lms.v1.EbookServiceGrpc;
+import com.mysms.lms.v1.EbookUpdate;
 import com.mysms.lms.v1.GetEbookRequest;
 import com.mysms.lms.v1.GetEbookResponse;
 import com.mysms.lms.v1.GetMyRelatedMaterialsRequest;
@@ -38,9 +37,8 @@ import com.mysms.lms.v1.PublishEbookCurationRequest;
 import com.mysms.lms.v1.PublishEbookCurationResponse;
 import com.mysms.lms.v1.ReceiveEbookConversionRequest;
 import com.mysms.lms.v1.ReceiveEbookConversionResponse;
-import com.mysms.lms.v1.UpdateEbookRequest;
+import com.mysms.lms.v1.RelatedMaterialUpdate;
 import com.mysms.lms.v1.UpdateEbookResponse;
-import com.mysms.lms.v1.UpdateRelatedMaterialRequest;
 import com.mysms.lms.v1.UpdateRelatedMaterialResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -86,10 +84,10 @@ public class EbookResolver extends EbookServiceGrpc.EbookServiceImplBase {
     }
 
     @Override
-    public void updateEbook(UpdateEbookRequest request, StreamObserver<UpdateEbookResponse> out) {
-        Ebook updated = service.updateEbook(bridge.id(request.getEbook().getId(), "id"),
-                bridge.requiredIfMatch(request.getEbook().getEtag()),
-                bridge.changes(request.getEbook(), request.getUpdateMask(), EbookUpdate.class), request.getValidateOnly());
+    public void updateEbook(EbookUpdate request, StreamObserver<UpdateEbookResponse> out) {
+        Ebook updated = service.updateEbook(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                EbookProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateEbookResponse.newBuilder(), "ebook", updated).build());
     }
 
@@ -122,11 +120,11 @@ public class EbookResolver extends EbookServiceGrpc.EbookServiceImplBase {
     }
 
     @Override
-    public void updateRelatedMaterial(UpdateRelatedMaterialRequest request, StreamObserver<UpdateRelatedMaterialResponse> out) {
+    public void updateRelatedMaterial(RelatedMaterialUpdate request, StreamObserver<UpdateRelatedMaterialResponse> out) {
         RelatedMaterial updated = service.updateRelatedMaterial(bridge.id(request.getEbookId(), "ebookId"),
-                bridge.id(request.getRelatedMaterial().getId(), "id"),
-                bridge.requiredIfMatch(request.getRelatedMaterial().getEtag()),
-                bridge.changes(request.getRelatedMaterial(), request.getUpdateMask(), RelatedMaterialUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                RelatedMaterialProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateRelatedMaterialResponse.newBuilder(), "related_material", updated).build());
     }

@@ -3,9 +3,9 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.paging.Page;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.learning.lms.api.model.Category;
-import com.mysms.learning.lms.api.model.CategoryUpdate;
 import com.mysms.learning.lms.business.CategoryService;
 import com.mysms.lms.v1.CategoryServiceGrpc;
+import com.mysms.lms.v1.CategoryUpdate;
 import com.mysms.lms.v1.CreateCategoryRequest;
 import com.mysms.lms.v1.CreateCategoryResponse;
 import com.mysms.lms.v1.DeleteCategoryRequest;
@@ -14,7 +14,6 @@ import com.mysms.lms.v1.GetCategoryRequest;
 import com.mysms.lms.v1.GetCategoryResponse;
 import com.mysms.lms.v1.ListCategoriesRequest;
 import com.mysms.lms.v1.ListCategoriesResponse;
-import com.mysms.lms.v1.UpdateCategoryRequest;
 import com.mysms.lms.v1.UpdateCategoryResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -55,10 +54,10 @@ public class CategoryResolver extends CategoryServiceGrpc.CategoryServiceImplBas
     }
 
     @Override
-    public void updateCategory(UpdateCategoryRequest request, StreamObserver<UpdateCategoryResponse> out) {
-        Category updated = service.updateCategory(bridge.id(request.getCategory().getId(), "id"),
-                bridge.requiredIfMatch(request.getCategory().getEtag()),
-                bridge.changes(request.getCategory(), request.getUpdateMask(), CategoryUpdate.class), request.getValidateOnly());
+    public void updateCategory(CategoryUpdate request, StreamObserver<UpdateCategoryResponse> out) {
+        Category updated = service.updateCategory(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                CategoryProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateCategoryResponse.newBuilder(), "category", updated).build());
     }
 

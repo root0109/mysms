@@ -317,6 +317,9 @@ public class PersonService extends AppTransactionManager implements Initializing
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return dto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return dto(entity);
@@ -542,6 +545,9 @@ public class PersonService extends AppTransactionManager implements Initializing
             assertValidCertification(entity, false);
             scope.requireWritable(institutionOfCertification(entity));
             assertUniqueCertification(entity);
+            if (fields.isEmpty()) {
+                return certificationMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return certificationMapper.toDto(entity);
@@ -701,6 +707,9 @@ public class PersonService extends AppTransactionManager implements Initializing
             assertValidEducationHistory(entity, false);
             scope.requireWritable(institutionOfEducationHistory(entity));
             assertUniqueEducationHistory(entity);
+            if (fields.isEmpty()) {
+                return educationHistoryMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return educationHistoryMapper.toDto(entity);
@@ -867,6 +876,9 @@ public class PersonService extends AppTransactionManager implements Initializing
             assertValidEmergencyContact(entity, false);
             scope.requireWritable(institutionOfEmergencyContact(entity));
             assertUniqueEmergencyContact(entity);
+            if (fields.isEmpty()) {
+                return emergencyContactMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return emergencyContactMapper.toDto(entity);
@@ -1021,6 +1033,9 @@ public class PersonService extends AppTransactionManager implements Initializing
             assertValidPersonAddress(entity, false);
             scope.requireWritable(institutionOfPersonAddress(entity));
             assertUniquePersonAddress(entity);
+            if (fields.isEmpty()) {
+                return personAddressMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return personAddressMapper.toDto(entity);
@@ -1184,6 +1199,9 @@ public class PersonService extends AppTransactionManager implements Initializing
             assertValidPersonDocument(entity, false);
             scope.requireWritable(institutionOfPersonDocument(entity));
             assertUniquePersonDocument(entity);
+            if (fields.isEmpty()) {
+                return personDocumentMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return personDocumentMapper.toDto(entity);
@@ -1348,6 +1366,9 @@ public class PersonService extends AppTransactionManager implements Initializing
             assertValidPersonSkill(entity, false);
             scope.requireWritable(institutionOfPersonSkill(entity));
             assertUniquePersonSkill(entity);
+            if (fields.isEmpty()) {
+                return personSkillMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return personSkillMapper.toDto(entity);
@@ -1498,6 +1519,9 @@ public class PersonService extends AppTransactionManager implements Initializing
             assertValidPersonSocialLink(entity, false);
             scope.requireWritable(institutionOfPersonSocialLink(entity));
             assertUniquePersonSocialLink(entity);
+            if (fields.isEmpty()) {
+                return personSocialLinkMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return personSocialLinkMapper.toDto(entity);
@@ -1655,6 +1679,9 @@ public class PersonService extends AppTransactionManager implements Initializing
             assertValidPublicProfile(entity, false);
             scope.requireWritable(institutionOfPublicProfile(entity));
             assertUniquePublicProfile(entity);
+            if (fields.isEmpty()) {
+                return publicProfileMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return publicProfileMapper.toDto(entity);
@@ -1816,6 +1843,9 @@ public class PersonService extends AppTransactionManager implements Initializing
             assertValidWorkExperience(entity, false);
             scope.requireWritable(institutionOfWorkExperience(entity));
             assertUniqueWorkExperience(entity);
+            if (fields.isEmpty()) {
+                return workExperienceMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return workExperienceMapper.toDto(entity);

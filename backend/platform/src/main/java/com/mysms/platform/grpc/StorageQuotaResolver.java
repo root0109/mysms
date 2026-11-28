@@ -3,7 +3,6 @@ package com.mysms.platform.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.api.model.StorageQuota;
-import com.mysms.platform.api.model.StorageQuotaUpdate;
 import com.mysms.platform.business.StorageQuotaService;
 import com.mysms.platform.v1.CreateStorageQuotaRequest;
 import com.mysms.platform.v1.CreateStorageQuotaResponse;
@@ -16,7 +15,7 @@ import com.mysms.platform.v1.GetStorageQuotaResponse;
 import com.mysms.platform.v1.ListStorageQuotasRequest;
 import com.mysms.platform.v1.ListStorageQuotasResponse;
 import com.mysms.platform.v1.StorageQuotaServiceGrpc;
-import com.mysms.platform.v1.UpdateStorageQuotaRequest;
+import com.mysms.platform.v1.StorageQuotaUpdate;
 import com.mysms.platform.v1.UpdateStorageQuotaResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -58,11 +57,11 @@ public class StorageQuotaResolver extends StorageQuotaServiceGrpc.StorageQuotaSe
     }
 
     @Override
-    public void updateStorageQuota(UpdateStorageQuotaRequest request, StreamObserver<UpdateStorageQuotaResponse> out) {
+    public void updateStorageQuota(StorageQuotaUpdate request, StreamObserver<UpdateStorageQuotaResponse> out) {
         StorageQuota updated = service.updateStorageQuota(
-                bridge.id(request.getStorageQuota().getId(), "id"),
-                bridge.requiredIfMatch(request.getStorageQuota().getEtag()),
-                bridge.changes(request.getStorageQuota(), request.getUpdateMask(), StorageQuotaUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StorageQuotaProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStorageQuotaResponse.newBuilder(), "storage_quota", updated).build());
     }

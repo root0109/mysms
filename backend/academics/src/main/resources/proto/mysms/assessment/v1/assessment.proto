@@ -3,10 +3,10 @@ syntax = "proto3";
 
 package mysms.assessment.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "AssessmentProto";
@@ -21,7 +21,7 @@ service HomeworkService {
   // Create Homework.
   rpc CreateHomework(CreateHomeworkRequest) returns (CreateHomeworkResponse);
   // Update Homework.
-  rpc UpdateHomework(UpdateHomeworkRequest) returns (UpdateHomeworkResponse);
+  rpc UpdateHomework(HomeworkUpdate) returns (UpdateHomeworkResponse);
   // Soft-delete Homework.
   rpc DeleteHomework(DeleteHomeworkRequest) returns (DeleteHomeworkResponse);
   // List HomeworkApprovals.
@@ -45,7 +45,7 @@ service HomeworkSubmissionService {
   // Create HomeworkSubmission.
   rpc CreateHomeworkSubmission(CreateHomeworkSubmissionRequest) returns (CreateHomeworkSubmissionResponse);
   // Update HomeworkSubmission.
-  rpc UpdateHomeworkSubmission(UpdateHomeworkSubmissionRequest) returns (UpdateHomeworkSubmissionResponse);
+  rpc UpdateHomeworkSubmission(HomeworkSubmissionUpdate) returns (UpdateHomeworkSubmissionResponse);
   // Soft-delete HomeworkSubmission.
   rpc DeleteHomeworkSubmission(DeleteHomeworkSubmissionRequest) returns (DeleteHomeworkSubmissionResponse);
   // Teacher marks the submission checked.
@@ -63,7 +63,7 @@ service AssignmentTypeService {
   // Create AssignmentType.
   rpc CreateAssignmentType(CreateAssignmentTypeRequest) returns (CreateAssignmentTypeResponse);
   // Update AssignmentType.
-  rpc UpdateAssignmentType(UpdateAssignmentTypeRequest) returns (UpdateAssignmentTypeResponse);
+  rpc UpdateAssignmentType(AssignmentTypeUpdate) returns (UpdateAssignmentTypeResponse);
   // Soft-delete AssignmentType.
   rpc DeleteAssignmentType(DeleteAssignmentTypeRequest) returns (DeleteAssignmentTypeResponse);
 }
@@ -77,7 +77,7 @@ service AssignmentService {
   // Create Assignment.
   rpc CreateAssignment(CreateAssignmentRequest) returns (CreateAssignmentResponse);
   // Update Assignment.
-  rpc UpdateAssignment(UpdateAssignmentRequest) returns (UpdateAssignmentResponse);
+  rpc UpdateAssignment(AssignmentUpdate) returns (UpdateAssignmentResponse);
   // Soft-delete Assignment.
   rpc DeleteAssignment(DeleteAssignmentRequest) returns (DeleteAssignmentResponse);
   // List AssignmentSubjects.
@@ -87,7 +87,7 @@ service AssignmentService {
   // Create AssignmentSubject.
   rpc CreateAssignmentSubject(CreateAssignmentSubjectRequest) returns (CreateAssignmentSubjectResponse);
   // Update AssignmentSubject.
-  rpc UpdateAssignmentSubject(UpdateAssignmentSubjectRequest) returns (UpdateAssignmentSubjectResponse);
+  rpc UpdateAssignmentSubject(AssignmentSubjectUpdate) returns (UpdateAssignmentSubjectResponse);
   // Soft-delete AssignmentSubject.
   rpc DeleteAssignmentSubject(DeleteAssignmentSubjectRequest) returns (DeleteAssignmentSubjectResponse);
   // List AssignmentAllocations.
@@ -97,25 +97,21 @@ service AssignmentService {
   // Create AssignmentAllocation.
   rpc CreateAssignmentAllocation(CreateAssignmentAllocationRequest) returns (CreateAssignmentAllocationResponse);
   // Update AssignmentAllocation.
-  rpc UpdateAssignmentAllocation(UpdateAssignmentAllocationRequest) returns (UpdateAssignmentAllocationResponse);
+  rpc UpdateAssignmentAllocation(AssignmentAllocationUpdate) returns (UpdateAssignmentAllocationResponse);
   // Soft-delete AssignmentAllocation.
   rpc DeleteAssignmentAllocation(DeleteAssignmentAllocationRequest) returns (DeleteAssignmentAllocationResponse);
   // List AssignmentApprovals.
   rpc ListAssignmentApprovals(ListAssignmentApprovalsRequest) returns (ListAssignmentApprovalsResponse);
   // Get AssignmentApproval.
   rpc GetAssignmentApproval(GetAssignmentApprovalRequest) returns (GetAssignmentApprovalResponse);
-  // Create AssignmentApproval.
-  rpc CreateAssignmentApproval(CreateAssignmentApprovalRequest) returns (CreateAssignmentApprovalResponse);
-  // Update AssignmentApproval.
-  rpc UpdateAssignmentApproval(UpdateAssignmentApprovalRequest) returns (UpdateAssignmentApprovalResponse);
-  // Soft-delete AssignmentApproval.
-  rpc DeleteAssignmentApproval(DeleteAssignmentApprovalRequest) returns (DeleteAssignmentApprovalResponse);
   // Publish (status published; becomes ongoing automatically at issued_on).
   rpc PublishAssignment(PublishAssignmentRequest) returns (PublishAssignmentResponse);
   // Approve.
   rpc ApproveAssignment(ApproveAssignmentRequest) returns (ApproveAssignmentResponse);
   // Reject.
   rpc RejectAssignment(RejectAssignmentRequest) returns (RejectAssignmentResponse);
+  // Send a draft for review: a pending approval in the caller's name.
+  rpc RequestAssignmentApproval(RequestAssignmentApprovalRequest) returns (RequestAssignmentApprovalResponse);
   // Close for submissions.
   rpc FinishAssignment(FinishAssignmentRequest) returns (FinishAssignmentResponse);
   // Cancel.
@@ -133,7 +129,7 @@ service AssignmentSubmissionService {
   // Create AssignmentSubmission.
   rpc CreateAssignmentSubmission(CreateAssignmentSubmissionRequest) returns (CreateAssignmentSubmissionResponse);
   // Update AssignmentSubmission.
-  rpc UpdateAssignmentSubmission(UpdateAssignmentSubmissionRequest) returns (UpdateAssignmentSubmissionResponse);
+  rpc UpdateAssignmentSubmission(AssignmentSubmissionUpdate) returns (UpdateAssignmentSubmissionResponse);
   // Soft-delete AssignmentSubmission.
   rpc DeleteAssignmentSubmission(DeleteAssignmentSubmissionRequest) returns (DeleteAssignmentSubmissionResponse);
   // Student submits.
@@ -159,7 +155,7 @@ service GradingSchemeService {
   // Create GradingScheme.
   rpc CreateGradingScheme(CreateGradingSchemeRequest) returns (CreateGradingSchemeResponse);
   // Update GradingScheme.
-  rpc UpdateGradingScheme(UpdateGradingSchemeRequest) returns (UpdateGradingSchemeResponse);
+  rpc UpdateGradingScheme(GradingSchemeUpdate) returns (UpdateGradingSchemeResponse);
   // Soft-delete GradingScheme.
   rpc DeleteGradingScheme(DeleteGradingSchemeRequest) returns (DeleteGradingSchemeResponse);
 }
@@ -173,7 +169,7 @@ service GradingBandService {
   // Create GradingBand.
   rpc CreateGradingBand(CreateGradingBandRequest) returns (CreateGradingBandResponse);
   // Update GradingBand.
-  rpc UpdateGradingBand(UpdateGradingBandRequest) returns (UpdateGradingBandResponse);
+  rpc UpdateGradingBand(GradingBandUpdate) returns (UpdateGradingBandResponse);
   // Soft-delete GradingBand.
   rpc DeleteGradingBand(DeleteGradingBandRequest) returns (DeleteGradingBandResponse);
 }
@@ -187,7 +183,7 @@ service ExamTypeService {
   // Create ExamType.
   rpc CreateExamType(CreateExamTypeRequest) returns (CreateExamTypeResponse);
   // Update ExamType.
-  rpc UpdateExamType(UpdateExamTypeRequest) returns (UpdateExamTypeResponse);
+  rpc UpdateExamType(ExamTypeUpdate) returns (UpdateExamTypeResponse);
   // Soft-delete ExamType.
   rpc DeleteExamType(DeleteExamTypeRequest) returns (DeleteExamTypeResponse);
 }
@@ -201,7 +197,7 @@ service ExamSessionService {
   // Create ExamSession.
   rpc CreateExamSession(CreateExamSessionRequest) returns (CreateExamSessionResponse);
   // Update ExamSession.
-  rpc UpdateExamSession(UpdateExamSessionRequest) returns (UpdateExamSessionResponse);
+  rpc UpdateExamSession(ExamSessionUpdate) returns (UpdateExamSessionResponse);
   // Soft-delete ExamSession.
   rpc DeleteExamSession(DeleteExamSessionRequest) returns (DeleteExamSessionResponse);
   // Schedule.
@@ -225,7 +221,7 @@ service ExamService {
   // Create Exam.
   rpc CreateExam(CreateExamRequest) returns (CreateExamResponse);
   // Update Exam.
-  rpc UpdateExam(UpdateExamRequest) returns (UpdateExamResponse);
+  rpc UpdateExam(ExamUpdate) returns (UpdateExamResponse);
   // Soft-delete Exam.
   rpc DeleteExam(DeleteExamRequest) returns (DeleteExamResponse);
   // List ExamInvigilators.
@@ -235,7 +231,7 @@ service ExamService {
   // Create ExamInvigilator.
   rpc CreateExamInvigilator(CreateExamInvigilatorRequest) returns (CreateExamInvigilatorResponse);
   // Update ExamInvigilator.
-  rpc UpdateExamInvigilator(UpdateExamInvigilatorRequest) returns (UpdateExamInvigilatorResponse);
+  rpc UpdateExamInvigilator(ExamInvigilatorUpdate) returns (UpdateExamInvigilatorResponse);
   // Soft-delete ExamInvigilator.
   rpc DeleteExamInvigilator(DeleteExamInvigilatorRequest) returns (DeleteExamInvigilatorResponse);
   // Schedule.
@@ -265,7 +261,7 @@ service ExamResultService {
   // Get ExamResult.
   rpc GetExamResult(GetExamResultRequest) returns (GetExamResultResponse);
   // Update ExamResult.
-  rpc UpdateExamResult(UpdateExamResultRequest) returns (UpdateExamResultResponse);
+  rpc UpdateExamResult(ExamResultUpdate) returns (UpdateExamResultResponse);
 }
 
 // ResultTemplateService: operations on the ResultTemplate aggregate.
@@ -277,7 +273,7 @@ service ResultTemplateService {
   // Create ResultTemplate.
   rpc CreateResultTemplate(CreateResultTemplateRequest) returns (CreateResultTemplateResponse);
   // Update ResultTemplate.
-  rpc UpdateResultTemplate(UpdateResultTemplateRequest) returns (UpdateResultTemplateResponse);
+  rpc UpdateResultTemplate(ResultTemplateUpdate) returns (UpdateResultTemplateResponse);
   // Soft-delete ResultTemplate.
   rpc DeleteResultTemplate(DeleteResultTemplateRequest) returns (DeleteResultTemplateResponse);
   // List ResultTemplateBands.
@@ -287,7 +283,7 @@ service ResultTemplateService {
   // Create ResultTemplateBand.
   rpc CreateResultTemplateBand(CreateResultTemplateBandRequest) returns (CreateResultTemplateBandResponse);
   // Update ResultTemplateBand.
-  rpc UpdateResultTemplateBand(UpdateResultTemplateBandRequest) returns (UpdateResultTemplateBandResponse);
+  rpc UpdateResultTemplateBand(ResultTemplateBandUpdate) returns (UpdateResultTemplateBandResponse);
   // Soft-delete ResultTemplateBand.
   rpc DeleteResultTemplateBand(DeleteResultTemplateBandRequest) returns (DeleteResultTemplateBandResponse);
   // Compute result lines and the marksheet for the exam series.
@@ -305,7 +301,7 @@ service MarksheetService {
   // Create Marksheet.
   rpc CreateMarksheet(CreateMarksheetRequest) returns (CreateMarksheetResponse);
   // Update Marksheet.
-  rpc UpdateMarksheet(UpdateMarksheetRequest) returns (UpdateMarksheetResponse);
+  rpc UpdateMarksheet(MarksheetUpdate) returns (UpdateMarksheetResponse);
   // Soft-delete Marksheet.
   rpc DeleteMarksheet(DeleteMarksheetRequest) returns (DeleteMarksheetResponse);
   // Validate; results become visible.
@@ -375,13 +371,33 @@ message CreateHomeworkResponse {
   Homework homework = 1;
 }
 
-message UpdateHomeworkRequest {
-  // Resource with id and etag set.
-  Homework homework = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateHomework (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message HomeworkUpdate {
+  // Homework id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  optional string academic_year_id = 5;
+  // Class section. [UUID]
+  optional string class_section_id = 6;
+  // Subject. [UUID]
+  mysms.common.v1.NullableString subject_id = 7;
+  // Teacher. [UUID]
+  mysms.common.v1.NullableString assigned_by_staff_id = 8;
+  // Instructions.
+  mysms.common.v1.NullableString description = 9;
+  // Attachment. [UUID]
+  mysms.common.v1.NullableString attachment_file_id = 10;
+  // Assigned on.
+  mysms.common.v1.NullableTimestamp assigned_on = 11;
+  // Submission deadline.
+  mysms.common.v1.NullableTimestamp due_at = 12;
 }
 message UpdateHomeworkResponse {
   Homework homework = 1;
@@ -467,13 +483,19 @@ message CreateHomeworkSubmissionResponse {
   HomeworkSubmission homework_submission = 1;
 }
 
-message UpdateHomeworkSubmissionRequest {
-  // Resource with id and etag set.
-  HomeworkSubmission homework_submission = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateHomeworkSubmission (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message HomeworkSubmissionUpdate {
+  // HomeworkSubmission id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Homework. [UUID]
+  optional string homework_id = 4;
+  // Submission date. [ISO-8601 date (YYYY-MM-DD)]
+  mysms.common.v1.NullableString submitted_on = 5;
 }
 message UpdateHomeworkSubmissionResponse {
   HomeworkSubmission homework_submission = 1;
@@ -527,13 +549,25 @@ message CreateAssignmentTypeResponse {
   AssignmentType assignment_type = 1;
 }
 
-message UpdateAssignmentTypeRequest {
-  // Resource with id and etag set.
-  AssignmentType assignment_type = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateAssignmentType (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AssignmentTypeUpdate {
+  // AssignmentType id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Display order.
+  optional int32 sort_order = 4;
+  // Whether offered for new picks.
+  optional bool is_active = 5;
+  // Type code.
+  optional string code = 6;
+  // Type name.
+  optional string name = 7;
+  // How it is graded.
+  optional AssignmentType.GradingBasis grading_basis = 8;
 }
 message UpdateAssignmentTypeResponse {
   AssignmentType assignment_type = 1;
@@ -587,13 +621,43 @@ message CreateAssignmentResponse {
   Assignment assignment = 1;
 }
 
-message UpdateAssignmentRequest {
-  // Resource with id and etag set.
-  Assignment assignment = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateAssignment (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AssignmentUpdate {
+  // Assignment id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Title.
+  optional string title = 6;
+  // Instructions.
+  mysms.common.v1.NullableString description = 7;
+  // Type. [UUID]
+  mysms.common.v1.NullableString assignment_type_id = 8;
+  // Class section (K-12). [UUID]
+  mysms.common.v1.NullableString class_section_id = 9;
+  // Course (higher education). [UUID]
+  mysms.common.v1.NullableString course_id = 10;
+  // Batch (higher education). [UUID]
+  mysms.common.v1.NullableString batch_id = 11;
+  // Teacher who set it. [UUID]
+  mysms.common.v1.NullableString assigned_by_staff_id = 12;
+  // Teacher who grades it. [UUID]
+  mysms.common.v1.NullableString reviewer_staff_id = 13;
+  // Maximum marks. [Decimal string]
+  mysms.common.v1.NullableString max_marks = 14;
+  // Issue date.
+  mysms.common.v1.NullableTimestamp issued_on = 15;
+  // Submission deadline.
+  mysms.common.v1.NullableTimestamp due_at = 16;
+  // Attachment. [UUID]
+  mysms.common.v1.NullableString attachment_file_id = 17;
 }
 message UpdateAssignmentResponse {
   Assignment assignment = 1;
@@ -653,15 +717,19 @@ message CreateAssignmentSubjectResponse {
   AssignmentSubject assignment_subject = 1;
 }
 
-message UpdateAssignmentSubjectRequest {
+// The changes of UpdateAssignmentSubject (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AssignmentSubjectUpdate {
   // Assignment id (UUID).
   string assignment_id = 1;
-  // Resource with id and etag set.
-  AssignmentSubject assignment_subject = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // AssignmentSubject id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Subject. [UUID]
+  optional string subject_id = 5;
 }
 message UpdateAssignmentSubjectResponse {
   AssignmentSubject assignment_subject = 1;
@@ -723,15 +791,19 @@ message CreateAssignmentAllocationResponse {
   AssignmentAllocation assignment_allocation = 1;
 }
 
-message UpdateAssignmentAllocationRequest {
+// The changes of UpdateAssignmentAllocation (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AssignmentAllocationUpdate {
   // Assignment id (UUID).
   string assignment_id = 1;
-  // Resource with id and etag set.
-  AssignmentAllocation assignment_allocation = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // AssignmentAllocation id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Student. [UUID]
+  optional string student_id = 5;
 }
 message UpdateAssignmentAllocationResponse {
   AssignmentAllocation assignment_allocation = 1;
@@ -780,44 +852,6 @@ message GetAssignmentApprovalResponse {
   AssignmentApproval assignment_approval = 1;
 }
 
-message CreateAssignmentApprovalRequest {
-  // Assignment id (UUID).
-  string assignment_id = 1;
-  AssignmentApproval assignment_approval = 2;
-  // Idempotency key (UUID); retries with the same key return the original result.
-  string request_id = 3;
-  // Validate without persisting.
-  bool validate_only = 4;
-}
-message CreateAssignmentApprovalResponse {
-  AssignmentApproval assignment_approval = 1;
-}
-
-message UpdateAssignmentApprovalRequest {
-  // Assignment id (UUID).
-  string assignment_id = 1;
-  // Resource with id and etag set.
-  AssignmentApproval assignment_approval = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
-  // Validate without persisting.
-  bool validate_only = 4;
-}
-message UpdateAssignmentApprovalResponse {
-  AssignmentApproval assignment_approval = 1;
-}
-
-message DeleteAssignmentApprovalRequest {
-  // Assignment id (UUID).
-  string assignment_id = 1;
-  // AssignmentApproval id (UUID).
-  string id = 2;
-  // ETag from the last read.
-  string etag = 3;
-}
-message DeleteAssignmentApprovalResponse {
-}
-
 message ListAssignmentSubmissionsRequest {
   // Filter expression (AIP-160 subset).
   string filter = 3;
@@ -857,13 +891,19 @@ message CreateAssignmentSubmissionResponse {
   AssignmentSubmission assignment_submission = 1;
 }
 
-message UpdateAssignmentSubmissionRequest {
-  // Resource with id and etag set.
-  AssignmentSubmission assignment_submission = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateAssignmentSubmission (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message AssignmentSubmissionUpdate {
+  // AssignmentSubmission id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Assignment. [UUID]
+  optional string assignment_id = 4;
+  // Submission text.
+  mysms.common.v1.NullableString content = 5;
 }
 message UpdateAssignmentSubmissionResponse {
   AssignmentSubmission assignment_submission = 1;
@@ -917,13 +957,31 @@ message CreateGradingSchemeResponse {
   GradingScheme grading_scheme = 1;
 }
 
-message UpdateGradingSchemeRequest {
-  // Resource with id and etag set.
-  GradingScheme grading_scheme = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateGradingScheme (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message GradingSchemeUpdate {
+  // GradingScheme id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Year the scheme applies to (NULL = all years). [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Scheme name.
+  optional string name = 6;
+  // Scholastic or co-scholastic.
+  optional GradingScheme.SchemeType scheme_type = 7;
+  // Method.
+  optional GradingScheme.GradingMethod grading_method = 8;
+  // Co-scholastic indicators / areas assessed.
+  google.protobuf.Value criteria = 9;
+  // Whether usable.
+  optional bool is_active = 10;
+  // Reusable template copied into courses and cohorts.
+  optional bool is_template = 11;
 }
 message UpdateGradingSchemeResponse {
   GradingScheme grading_scheme = 1;
@@ -977,13 +1035,29 @@ message CreateGradingBandResponse {
   GradingBand grading_band = 1;
 }
 
-message UpdateGradingBandRequest {
-  // Resource with id and etag set.
-  GradingBand grading_band = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateGradingBand (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message GradingBandUpdate {
+  // GradingBand id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Scheme the band belongs to (NULL = standalone band selected per result template). [UUID]
+  optional string grading_scheme_id = 4;
+  // Lower bound (inclusive). [Decimal string]
+  optional string min_percent = 5;
+  // Upper bound (inclusive). [Decimal string]
+  optional string max_percent = 6;
+  // Grade / result label.
+  optional string grade_label = 7;
+  // Grade point. [Decimal string]
+  mysms.common.v1.NullableString grade_point = 8;
+  // Whether the band is a pass.
+  optional bool is_pass = 9;
+  // Descriptor.
+  mysms.common.v1.NullableString description = 10;
 }
 message UpdateGradingBandResponse {
   GradingBand grading_band = 1;
@@ -1037,13 +1111,23 @@ message CreateExamTypeResponse {
   ExamType exam_type = 1;
 }
 
-message UpdateExamTypeRequest {
-  // Resource with id and etag set.
-  ExamType exam_type = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateExamType (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ExamTypeUpdate {
+  // ExamType id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Display order.
+  optional int32 sort_order = 4;
+  // Whether offered for new picks.
+  optional bool is_active = 5;
+  // Code.
+  optional string code = 6;
+  // Name.
+  optional string name = 7;
 }
 message UpdateExamTypeResponse {
   ExamType exam_type = 1;
@@ -1097,13 +1181,41 @@ message CreateExamSessionResponse {
   ExamSession exam_session = 1;
 }
 
-message UpdateExamSessionRequest {
-  // Resource with id and etag set.
-  ExamSession exam_session = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateExamSession (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ExamSessionUpdate {
+  // ExamSession id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Term. [UUID]
+  mysms.common.v1.NullableString academic_term_id = 6;
+  // Exam type. [UUID]
+  optional string exam_type_id = 7;
+  // Series code.
+  optional string code = 8;
+  // Series name.
+  optional string name = 9;
+  // Grade (K-12). [UUID]
+  mysms.common.v1.NullableString grade_level_id = 10;
+  // Course (higher education). [UUID]
+  mysms.common.v1.NullableString course_id = 11;
+  // Batch (higher education). [UUID]
+  mysms.common.v1.NullableString batch_id = 12;
+  // Marks or grade evaluation.
+  optional ExamSession.EvaluationType evaluation_type = 13;
+  // First exam date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string start_date = 14;
+  // Last exam date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string end_date = 15;
+  // Venue (when external).
+  mysms.common.v1.NullableString venue = 16;
 }
 message UpdateExamSessionResponse {
   ExamSession exam_session = 1;
@@ -1157,13 +1269,38 @@ message CreateExamResponse {
   Exam exam = 1;
 }
 
-message UpdateExamRequest {
-  // Resource with id and etag set.
-  Exam exam = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateExam (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ExamUpdate {
+  // Exam id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Exam series. [UUID]
+  optional string exam_session_id = 4;
+  // Subject. [UUID]
+  optional string subject_id = 5;
+  // Class section sitting the paper (K-12). [UUID]
+  mysms.common.v1.NullableString class_section_id = 6;
+  // Paper code.
+  optional string code = 7;
+  // Paper name.
+  optional string name = 8;
+  // Start.
+  google.protobuf.Timestamp start_at = 9;
+  // End.
+  google.protobuf.Timestamp end_at = 10;
+  // Maximum marks. [Decimal string]
+  optional string total_marks = 11;
+  // Minimum marks to pass. [Decimal string]
+  optional string pass_marks = 12;
+  // Notes.
+  mysms.common.v1.NullableString notes = 14;
+  // Whether all marks are entered is set by the exam's results steps, never by an update.
+  reserved 13;
+  reserved "results_entered";
 }
 message UpdateExamResponse {
   Exam exam = 1;
@@ -1223,15 +1360,19 @@ message CreateExamInvigilatorResponse {
   ExamInvigilator exam_invigilator = 1;
 }
 
-message UpdateExamInvigilatorRequest {
+// The changes of UpdateExamInvigilator (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ExamInvigilatorUpdate {
   // Exam id (UUID).
   string exam_id = 1;
-  // Resource with id and etag set.
-  ExamInvigilator exam_invigilator = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ExamInvigilator id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Invigilator / examiner. [UUID]
+  optional string staff_id = 5;
 }
 message UpdateExamInvigilatorResponse {
   ExamInvigilator exam_invigilator = 1;
@@ -1276,13 +1417,19 @@ message GetExamResultResponse {
   ExamResult exam_result = 1;
 }
 
-message UpdateExamResultRequest {
-  // Resource with id and etag set.
-  ExamResult exam_result = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateExamResult (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ExamResultUpdate {
+  // ExamResult id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Exam room. [UUID]
+  mysms.common.v1.NullableString room_id = 4;
+  // Note.
+  mysms.common.v1.NullableString note = 5;
 }
 message UpdateExamResultResponse {
   ExamResult exam_result = 1;
@@ -1327,13 +1474,26 @@ message CreateResultTemplateResponse {
   ResultTemplate result_template = 1;
 }
 
-message UpdateResultTemplateRequest {
-  // Resource with id and etag set.
-  ResultTemplate result_template = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateResultTemplate (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ResultTemplateUpdate {
+  // ResultTemplate id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Exam series. [UUID]
+  optional string exam_session_id = 4;
+  // Grading scheme applied (its bands are used unless specific bands are chosen in result_template_band). [UUID]
+  mysms.common.v1.NullableString grading_scheme_id = 5;
+  // Name.
+  optional string name = 6;
+  // Result date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string result_date = 7;
+  // The state is moved by generating results and by cancelling the marksheet, never by an update.
+  reserved 8;
+  reserved "status";
 }
 message UpdateResultTemplateResponse {
   ResultTemplate result_template = 1;
@@ -1393,15 +1553,19 @@ message CreateResultTemplateBandResponse {
   ResultTemplateBand result_template_band = 1;
 }
 
-message UpdateResultTemplateBandRequest {
+// The changes of UpdateResultTemplateBand (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message ResultTemplateBandUpdate {
   // ResultTemplate id (UUID).
   string result_template_id = 1;
-  // Resource with id and etag set.
-  ResultTemplateBand result_template_band = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // ResultTemplateBand id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Band. [UUID]
+  optional string grading_band_id = 5;
 }
 message UpdateResultTemplateBandResponse {
   ResultTemplateBand result_template_band = 1;
@@ -1457,13 +1621,28 @@ message CreateMarksheetResponse {
   Marksheet marksheet = 1;
 }
 
-message UpdateMarksheetRequest {
-  // Resource with id and etag set.
-  Marksheet marksheet = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateMarksheet (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message MarksheetUpdate {
+  // Marksheet id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Whether guardians can see it once published.
+  optional bool visible_to_guardians = 4;
+  // Exam series. [UUID]
+  optional string exam_session_id = 5;
+  // Template used. [UUID]
+  optional string result_template_id = 6;
+  // Name.
+  optional string name = 7;
+  // Generation date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string generated_on = 8;
+  // Who generated the marksheet and its pass/fail counts are set by results generation, never by an update.
+  reserved 9 to 11;
+  reserved "generated_by_user_id", "total_passed", "total_failed";
 }
 message UpdateMarksheetResponse {
   Marksheet marksheet = 1;
@@ -1611,6 +1790,18 @@ message RejectAssignmentRequest {
   optional string request_id = 4;
 }
 message RejectAssignmentResponse {
+  Assignment assignment = 1;
+}
+
+message RequestAssignmentApprovalRequest {
+  // Path parameter assignmentId.
+  string assignment_id = 1;
+  // Concurrency token from the last read (optional but recommended).
+  optional string etag = 2;
+  // Idempotency key (UUID); same as the Idempotency-Key header on REST. Retries with the same key return the original result.
+  optional string request_id = 3;
+}
+message RequestAssignmentApprovalResponse {
   Assignment assignment = 1;
 }
 
@@ -2526,7 +2717,7 @@ message Exam {
   string pass_marks = 10;
   // State. Changed only through the workflow operations. Output only.
   Status status = 11;
-  // All marks have been entered.
+  // All marks have been entered. Changed only through the exam's results steps. Output only.
   bool results_entered = 12;
   // Notes.
   optional string notes = 13;
@@ -2646,7 +2837,7 @@ message ResultTemplate {
   string name = 4;
   // Result date. [ISO-8601 date (YYYY-MM-DD)]
   string result_date = 5;
-  // State.
+  // State. Changed only by generating results and by cancelling the marksheet. Output only.
   Status status = 6;
   // Row creation time. Output only.
   google.protobuf.Timestamp create_time = 7;
@@ -2700,13 +2891,13 @@ message Marksheet {
   string name = 4;
   // Generation date. [ISO-8601 date (YYYY-MM-DD)]
   string generated_on = 5;
-  // Generated by. [UUID]
-  string generated_by_user_id = 6;
+  // Generated by: the caller who created or generated the marksheet. [UUID] Output only.
+  optional string generated_by_user_id = 6;
   // State. Changed only through the workflow operations. Output only.
   Status status = 7;
-  // Number passed.
+  // Number passed. Filled by results generation. Output only.
   optional int32 total_passed = 8;
-  // Number failed.
+  // Number failed. Filled by results generation. Output only.
   optional int32 total_failed = 9;
   // Row creation time. Output only.
   google.protobuf.Timestamp create_time = 10;

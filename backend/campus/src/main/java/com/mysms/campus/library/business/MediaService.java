@@ -226,6 +226,9 @@ public class MediaService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -415,6 +418,9 @@ public class MediaService extends AppTransactionManager {
             assertValidMediaAuthor(entity, false);
             scope.requireWritable(institutionOfMediaAuthor(entity));
             assertUniqueMediaAuthor(entity);
+            if (fields.isEmpty()) {
+                return mediaAuthorMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mediaAuthorMapper.toDto(entity);
@@ -570,6 +576,9 @@ public class MediaService extends AppTransactionManager {
             assertValidMediaCourse(entity, false);
             scope.requireWritable(institutionOfMediaCourse(entity));
             assertUniqueMediaCourse(entity);
+            if (fields.isEmpty()) {
+                return mediaCourseMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mediaCourseMapper.toDto(entity);
@@ -720,6 +729,9 @@ public class MediaService extends AppTransactionManager {
             assertValidMediaPublisher(entity, false);
             scope.requireWritable(institutionOfMediaPublisher(entity));
             assertUniqueMediaPublisher(entity);
+            if (fields.isEmpty()) {
+                return mediaPublisherMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mediaPublisherMapper.toDto(entity);
@@ -876,6 +888,9 @@ public class MediaService extends AppTransactionManager {
             assertValidMediaSubject(entity, false);
             scope.requireWritable(institutionOfMediaSubject(entity));
             assertUniqueMediaSubject(entity);
+            if (fields.isEmpty()) {
+                return mediaSubjectMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mediaSubjectMapper.toDto(entity);
@@ -1026,6 +1041,9 @@ public class MediaService extends AppTransactionManager {
             assertValidMediaUnit(entity, false);
             scope.requireWritable(institutionOfMediaUnit(entity));
             assertUniqueMediaUnit(entity);
+            if (fields.isEmpty()) {
+                return mediaUnitMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mediaUnitMapper.toDto(entity);

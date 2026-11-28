@@ -11,6 +11,8 @@ import com.mysms.core.testkit.TestDatabase;
 import com.mysms.core.testkit.TestTransactions;
 import com.mysms.messaging.events.EventEnvelope;
 import com.mysms.messaging.events.InboxProcessor;
+import com.mysms.platform.PlatformTenants;
+import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.org.config.OrgDatabaseConfig;
 import com.mysms.platform.org.events.OrgReferenceCleanup;
 import java.io.IOException;
@@ -49,6 +51,9 @@ class OrgReferenceCleanupComponentTest {
     @Autowired
     @Qualifier(OrgDatabaseConfig.DATABASE)
     private ModuleDatabase database;
+    @Autowired
+    @Qualifier(PlatformDatabaseConfig.DATABASE)
+    private ModuleDatabase platform;
 
     @Autowired
     private OrgReferenceCleanup cleanup;
@@ -124,6 +129,7 @@ class OrgReferenceCleanupComponentTest {
     }
 
     private void sql(UUID tenant, List<String> fixtures, String row) {
+        PlatformTenants.register(platform, tenant);
         CallContext context = CallContext.anonymous(TRACE).withIdentity(tenant, null);
         CallContextHolder.callAs(context, () -> TestTransactions.of(database).write(() -> {
             fixtures.forEach(statement -> database.jdbc().sql(statement).param("tenant", tenant).update());

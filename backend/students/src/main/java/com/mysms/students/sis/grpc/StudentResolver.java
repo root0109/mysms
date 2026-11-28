@@ -5,11 +5,8 @@ import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.Operation;
 import com.mysms.students.sis.api.model.Student;
 import com.mysms.students.sis.api.model.StudentGuardian;
-import com.mysms.students.sis.api.model.StudentGuardianUpdate;
 import com.mysms.students.sis.api.model.StudentSibling;
-import com.mysms.students.sis.api.model.StudentSiblingUpdate;
 import com.mysms.students.sis.api.model.StudentSummary;
-import com.mysms.students.sis.api.model.StudentUpdate;
 import com.mysms.students.sis.business.PortalAccountService;
 import com.mysms.students.sis.business.StudentService;
 import com.mysms.students.sis.business.StudentSummaryService;
@@ -46,12 +43,12 @@ import com.mysms.sis.v1.ListStudentSiblingsRequest;
 import com.mysms.sis.v1.ListStudentSiblingsResponse;
 import com.mysms.sis.v1.ListStudentsRequest;
 import com.mysms.sis.v1.ListStudentsResponse;
+import com.mysms.sis.v1.StudentGuardianUpdate;
 import com.mysms.sis.v1.StudentServiceGrpc;
-import com.mysms.sis.v1.UpdateStudentGuardianRequest;
+import com.mysms.sis.v1.StudentSiblingUpdate;
+import com.mysms.sis.v1.StudentUpdate;
 import com.mysms.sis.v1.UpdateStudentGuardianResponse;
-import com.mysms.sis.v1.UpdateStudentRequest;
 import com.mysms.sis.v1.UpdateStudentResponse;
-import com.mysms.sis.v1.UpdateStudentSiblingRequest;
 import com.mysms.sis.v1.UpdateStudentSiblingResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -101,10 +98,10 @@ public class StudentResolver extends StudentServiceGrpc.StudentServiceImplBase {
     }
 
     @Override
-    public void updateStudent(UpdateStudentRequest request, StreamObserver<UpdateStudentResponse> out) {
+    public void updateStudent(StudentUpdate request, StreamObserver<UpdateStudentResponse> out) {
         Student updated = studentService.updateStudent(
-                bridge.id(request.getStudent().getId(), "id"), bridge.requiredIfMatch(request.getStudent().getEtag()),
-                bridge.changes(request.getStudent(), request.getUpdateMask(), StudentUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                StudentProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStudentResponse.newBuilder(), "student", updated).build());
     }
 
@@ -139,11 +136,11 @@ public class StudentResolver extends StudentServiceGrpc.StudentServiceImplBase {
     }
 
     @Override
-    public void updateStudentGuardian(UpdateStudentGuardianRequest request, StreamObserver<UpdateStudentGuardianResponse> out) {
+    public void updateStudentGuardian(StudentGuardianUpdate request, StreamObserver<UpdateStudentGuardianResponse> out) {
         StudentGuardian updated = studentService.updateStudentGuardian(
-                bridge.id(request.getStudentId(), "studentId"), bridge.id(request.getStudentGuardian().getId(), "id"),
-                bridge.requiredIfMatch(request.getStudentGuardian().getEtag()),
-                bridge.changes(request.getStudentGuardian(), request.getUpdateMask(), StudentGuardianUpdate.class),
+                bridge.id(request.getStudentId(), "studentId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StudentGuardianProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStudentGuardianResponse.newBuilder(), "student_guardian", updated).build());
     }
@@ -181,11 +178,11 @@ public class StudentResolver extends StudentServiceGrpc.StudentServiceImplBase {
     }
 
     @Override
-    public void updateStudentSibling(UpdateStudentSiblingRequest request, StreamObserver<UpdateStudentSiblingResponse> out) {
+    public void updateStudentSibling(StudentSiblingUpdate request, StreamObserver<UpdateStudentSiblingResponse> out) {
         StudentSibling updated = studentService.updateStudentSibling(
-                bridge.id(request.getStudentId(), "studentId"), bridge.id(request.getStudentSibling().getId(), "id"),
-                bridge.requiredIfMatch(request.getStudentSibling().getEtag()),
-                bridge.changes(request.getStudentSibling(), request.getUpdateMask(), StudentSiblingUpdate.class),
+                bridge.id(request.getStudentId(), "studentId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StudentSiblingProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStudentSiblingResponse.newBuilder(), "student_sibling", updated).build());
     }

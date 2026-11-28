@@ -53,15 +53,6 @@
   "idempotency" : "optional",
   "audience" : "public"
 }, {
-  "operationId" : "attendance.CreateStaffAttendance",
-  "method" : "POST",
-  "path" : "/v1/attendance/staff-attendance-days",
-  "permission" : "attendance.staff_attendance.create",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "idempotency" : "optional",
-  "audience" : "public"
-}, {
   "operationId" : "attendance.DeleteAbsenceReason",
   "method" : "DELETE",
   "path" : "/v1/attendance/absence-reasons/{absenceReasonId}",
@@ -134,14 +125,6 @@
   "anonymous" : false,
   "audience" : "public"
 }, {
-  "operationId" : "attendance.GetStaffAttendance",
-  "method" : "GET",
-  "path" : "/v1/attendance/staff-attendance-days/{staffAttendanceId}",
-  "permission" : "attendance.staff_attendance.read",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "audience" : "public"
-}, {
   "operationId" : "attendance.ListAbsenceReasons",
   "method" : "GET",
   "path" : "/v1/attendance/absence-reasons",
@@ -178,14 +161,6 @@
   "method" : "GET",
   "path" : "/v1/attendance/attendance-types",
   "permission" : "attendance.attendance_type.read",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "audience" : "public"
-}, {
-  "operationId" : "attendance.ListStaffAttendances",
-  "method" : "GET",
-  "path" : "/v1/attendance/staff-attendance-days",
-  "permission" : "attendance.staff_attendance.read",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"
@@ -262,14 +237,6 @@
   "method" : "PATCH",
   "path" : "/v1/attendance/attendance-types/{attendanceTypeId}",
   "permission" : "attendance.attendance_type.update",
-  "schemes" : [ "bearerAuth" ],
-  "anonymous" : false,
-  "audience" : "public"
-}, {
-  "operationId" : "attendance.UpdateStaffAttendance",
-  "method" : "PATCH",
-  "path" : "/v1/attendance/staff-attendance-days/{staffAttendanceId}",
-  "permission" : "attendance.staff_attendance.update",
   "schemes" : [ "bearerAuth" ],
   "anonymous" : false,
   "audience" : "public"

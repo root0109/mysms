@@ -58,7 +58,7 @@ describe('assessment screens', () => {
         ...SELF_SERVICE,
         'assessment.assignment.read',
         'assessment.assignment_approval.read',
-        'assessment.assignment_approval.create',
+        'assessment.assignment.request_assignment_approval',
         'assessment.assignment.approve_assignment',
         'assessment.assignment.finish_assignment',
       ],
@@ -89,9 +89,9 @@ describe('assessment screens', () => {
           },
         ]),
       'GET /v1/assessment/assignments/{assignmentId}/approvals': (request) => onePage(request, approvals),
-      'POST /v1/assessment/assignments/{assignmentId}/approvals': async (request) => {
-        const body = (await request.json()) as { decision: string };
-        expect(body).toEqual({ decision: 'pending' });
+      ['POST /v1/assessment/assignments/' + assignmentId + ':requestApproval']: async (request) => {
+        const body = (await request.json()) as { etag?: string };
+        expect(body).toEqual({ etag: '"1"' });
         approvals = [
           {
             id: '01960000-0000-7000-8000-0000000000a4',
@@ -99,7 +99,7 @@ describe('assessment screens', () => {
             decision: 'pending',
           },
         ];
-        return json(approvals[0]);
+        return json({ id: assignmentId, status: 'draft', etag: '"1"' });
       },
       ['POST /v1/assessment/assignments/' + assignmentId + ':approve']: async (request) => {
         const body = (await request.json()) as { etag?: string };
@@ -117,7 +117,8 @@ describe('assessment screens', () => {
     expect(
       api.calls.some(
         (call) =>
-          call.path === `/v1/assessment/assignments/${assignmentId}/approvals` && call.method === 'POST',
+          call.path === `/v1/assessment/assignments/${assignmentId}:requestApproval` &&
+          call.method === 'POST',
       ),
     ).toBe(true);
     expect(api.calls.some((call) => call.path === `/v1/assessment/assignments/${assignmentId}:approve`)).toBe(

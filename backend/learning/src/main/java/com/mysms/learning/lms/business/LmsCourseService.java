@@ -485,6 +485,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -1897,6 +1900,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidCatalogBanner(entity, false);
             scope.requireWritable(institutionOfCatalogBanner(entity));
             assertUniqueCatalogBanner(entity);
+            if (fields.isEmpty()) {
+                return catalogBannerMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return catalogBannerMapper.toDto(entity);
@@ -2059,6 +2065,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidChapter(entity, false);
             scope.requireWritable(institutionOfChapter(entity));
             assertUniqueChapter(entity);
+            if (fields.isEmpty()) {
+                return chapterMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return chapterMapper.toDto(entity);
@@ -2273,6 +2282,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidCourseAuthorProfile(entity, false);
             scope.requireWritable(institutionOfCourseAuthorProfile(entity));
             assertUniqueCourseAuthorProfile(entity);
+            if (fields.isEmpty()) {
+                return courseAuthorProfileMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return courseAuthorProfileMapper.toDto(entity);
@@ -2437,6 +2449,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidCourseInterest(entity, false);
             scope.requireWritable(institutionOfCourseInterest(entity));
             assertUniqueCourseInterest(entity);
+            if (fields.isEmpty()) {
+                return courseInterestMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return courseInterestMapper.toDto(entity);
@@ -2592,6 +2607,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidCourseMentor(entity, false);
             scope.requireWritable(institutionOfCourseMentor(entity));
             assertUniqueCourseMentor(entity);
+            if (fields.isEmpty()) {
+                return courseMentorMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return courseMentorMapper.toDto(entity);
@@ -2727,6 +2745,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidCoursePreview(entity, false);
             scope.requireWritable(institutionOfCoursePreview(entity));
             assertUniqueCoursePreview(entity);
+            if (fields.isEmpty()) {
+                return coursePreviewMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return coursePreviewMapper.toDto(entity);
@@ -2873,6 +2894,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidCourseReview(entity, false);
             scope.requireWritable(institutionOfCourseReview(entity));
             assertUniqueCourseReview(entity);
+            if (fields.isEmpty()) {
+                return courseReviewMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return courseReviewMapper.toDto(entity);
@@ -3029,6 +3053,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidCourseTeacher(entity, false);
             scope.requireWritable(institutionOfCourseTeacher(entity));
             assertUniqueCourseTeacher(entity);
+            if (fields.isEmpty()) {
+                return courseTeacherMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return courseTeacherMapper.toDto(entity);
@@ -3169,6 +3196,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidCourseTestimonial(entity, false);
             scope.requireWritable(institutionOfCourseTestimonial(entity));
             assertUniqueCourseTestimonial(entity);
+            if (fields.isEmpty()) {
+                return courseTestimonialMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return courseTestimonialMapper.toDto(entity);
@@ -3326,6 +3356,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidEnrollmentRequest(entity, false);
             scope.requireWritable(institutionOfEnrollmentRequest(entity));
             assertUniqueEnrollmentRequest(entity);
+            if (fields.isEmpty()) {
+                return enrollmentRequestMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return enrollmentRequestMapper.toDto(entity);
@@ -3504,6 +3537,9 @@ public class LmsCourseService extends AppTransactionManager {
             assertValidRelatedCourse(entity, false);
             scope.requireWritable(institutionOfRelatedCourse(entity));
             assertUniqueRelatedCourse(entity);
+            if (fields.isEmpty()) {
+                return relatedCourseMapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return relatedCourseMapper.toDto(entity);

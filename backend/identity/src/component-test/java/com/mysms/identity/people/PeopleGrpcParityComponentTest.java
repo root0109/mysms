@@ -205,14 +205,14 @@ class PeopleGrpcParityComponentTest {
         GrpcParityContract.assertSameAnswer(rest("GET", "/v1/people/me", null, null), grpc("GetMyPerson", null, "{}"));
 
         String body = "{\"aboutMe\":\"Teaches physics\"}";
-        String update = "{\"person\":{\"aboutMe\":\"Teaches physics\"},\"updateMask\":\"aboutMe\",\"etag\":%s}";
+        String update = "{\"aboutMe\":{\"value\":\"Teaches physics\"},\"etag\":%s}";
         GrpcParityContract.assertSameAnswer(rest("PATCH", "/v1/people/me", me, body),
                 grpc("UpdateMyPerson", me, update.formatted("\"\"")));
         GrpcParityContract.assertSameAnswer(rest("PATCH", "/v1/people/me", me, body, "If-Match", "\"9\""),
                 grpc("UpdateMyPerson", me, update.formatted("\"9\"")));
         GrpcParityContract.assertSameAnswer(rest("PATCH", "/v1/people/me", NOBODY, body, "If-Match", "\"1\""),
                 grpc("UpdateMyPerson", NOBODY, update.formatted("\"1\"")));
-        Answer dryRun = grpc("UpdateMyPerson", me, "{\"person\":{\"aboutMe\":\"Dry run\"},\"validateOnly\":true,"
+        Answer dryRun = grpc("UpdateMyPerson", me, "{\"aboutMe\":{\"value\":\"Dry run\"},\"validateOnly\":true,"
                 + "\"etag\":\"1\"}");
         assertThat(dryRun.status()).as(dryRun.code()).isEqualTo(200);
         assertThat(rest("GET", "/v1/people/me", me, null).body().path("etag").asString())
@@ -222,6 +222,14 @@ class PeopleGrpcParityComponentTest {
         Answer reread = rest("GET", "/v1/people/me", me, null);
         assertThat(reread.body().path("aboutMe").asString()).isEqualTo("Teaches physics");
         GrpcParity.assertSameResource(reread.body(), updated.body().path("person"));
+        String current = quoted(reread.body().path("etag").asString());
+        Answer unchanged = grpc("UpdateMyPerson", me, "{\"etag\":" + current + "}");
+        assertThat(unchanged.status()).as(unchanged.code()).isEqualTo(200);
+        assertThat(unchanged.body().path("person").path("etag").asString()).as("an empty update changes nothing")
+                .isEqualTo(reread.body().path("etag").asString());
+        Answer cleared = grpc("UpdateMyPerson", me, "{\"aboutMe\":{\"null\":\"NULL_VALUE\"},\"etag\":" + current + "}");
+        assertThat(cleared.status()).as(cleared.code()).isEqualTo(200);
+        assertThat(rest("GET", "/v1/people/me", me, null).body().has("aboutMe")).as("cleared").isFalse();
     }
 
     @Test

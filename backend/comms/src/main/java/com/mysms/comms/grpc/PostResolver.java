@@ -2,12 +2,8 @@ package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.Post;
 import com.mysms.comms.api.model.PostAudienceClass;
-import com.mysms.comms.api.model.PostAudienceClassUpdate;
 import com.mysms.comms.api.model.PostComment;
-import com.mysms.comms.api.model.PostCommentUpdate;
 import com.mysms.comms.api.model.PostReaction;
-import com.mysms.comms.api.model.PostReactionUpdate;
-import com.mysms.comms.api.model.PostUpdate;
 import com.mysms.comms.business.PostService;
 import com.mysms.comms.business.ReactionService;
 import com.mysms.comms.v1.ApprovePostRequest;
@@ -48,16 +44,16 @@ import com.mysms.comms.v1.ListPostReactionsRequest;
 import com.mysms.comms.v1.ListPostReactionsResponse;
 import com.mysms.comms.v1.ListPostsRequest;
 import com.mysms.comms.v1.ListPostsResponse;
+import com.mysms.comms.v1.PostAudienceClassUpdate;
+import com.mysms.comms.v1.PostCommentUpdate;
+import com.mysms.comms.v1.PostReactionUpdate;
 import com.mysms.comms.v1.PostServiceGrpc;
+import com.mysms.comms.v1.PostUpdate;
 import com.mysms.comms.v1.SubmitPostRequest;
 import com.mysms.comms.v1.SubmitPostResponse;
-import com.mysms.comms.v1.UpdatePostAudienceClassRequest;
 import com.mysms.comms.v1.UpdatePostAudienceClassResponse;
-import com.mysms.comms.v1.UpdatePostCommentRequest;
 import com.mysms.comms.v1.UpdatePostCommentResponse;
-import com.mysms.comms.v1.UpdatePostReactionRequest;
 import com.mysms.comms.v1.UpdatePostReactionResponse;
-import com.mysms.comms.v1.UpdatePostRequest;
 import com.mysms.comms.v1.UpdatePostResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -102,10 +98,10 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
     }
 
     @Override
-    public void updatePost(UpdatePostRequest request, StreamObserver<UpdatePostResponse> out) {
+    public void updatePost(PostUpdate request, StreamObserver<UpdatePostResponse> out) {
         Post updated = service.updatePost(
-                bridge.id(request.getPost().getId(), "id"), bridge.requiredIfMatch(request.getPost().getEtag()),
-                bridge.changes(request.getPost(), request.getUpdateMask(), PostUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                PostProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePostResponse.newBuilder(), "post", updated).build());
     }
 
@@ -142,12 +138,12 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
     }
 
     @Override
-    public void updatePostAudienceClass(UpdatePostAudienceClassRequest request,
+    public void updatePostAudienceClass(PostAudienceClassUpdate request,
             StreamObserver<UpdatePostAudienceClassResponse> out) {
         PostAudienceClass updated = service.updatePostAudienceClass(
-                bridge.id(request.getPostId(), "postId"), bridge.id(request.getPostAudienceClass().getId(), "id"),
-                bridge.requiredIfMatch(request.getPostAudienceClass().getEtag()),
-                bridge.changes(request.getPostAudienceClass(), request.getUpdateMask(), PostAudienceClassUpdate.class),
+                bridge.id(request.getPostId(), "postId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PostAudienceClassProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePostAudienceClassResponse.newBuilder(), "post_audience_class", updated).build());
     }
@@ -185,11 +181,11 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
     }
 
     @Override
-    public void updatePostReaction(UpdatePostReactionRequest request, StreamObserver<UpdatePostReactionResponse> out) {
+    public void updatePostReaction(PostReactionUpdate request, StreamObserver<UpdatePostReactionResponse> out) {
         PostReaction updated = reactions.updatePostReaction(
-                bridge.id(request.getPostId(), "postId"), bridge.id(request.getPostReaction().getId(), "id"),
-                bridge.requiredIfMatch(request.getPostReaction().getEtag()),
-                bridge.changes(request.getPostReaction(), request.getUpdateMask(), PostReactionUpdate.class),
+                bridge.id(request.getPostId(), "postId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PostReactionProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePostReactionResponse.newBuilder(), "post_reaction", updated).build());
     }
@@ -225,11 +221,11 @@ public class PostResolver extends PostServiceGrpc.PostServiceImplBase {
     }
 
     @Override
-    public void updatePostComment(UpdatePostCommentRequest request, StreamObserver<UpdatePostCommentResponse> out) {
+    public void updatePostComment(PostCommentUpdate request, StreamObserver<UpdatePostCommentResponse> out) {
         PostComment updated = service.updatePostComment(
-                bridge.id(request.getPostId(), "postId"), bridge.id(request.getPostComment().getId(), "id"),
-                bridge.requiredIfMatch(request.getPostComment().getEtag()),
-                bridge.changes(request.getPostComment(), request.getUpdateMask(), PostCommentUpdate.class),
+                bridge.id(request.getPostId(), "postId"), bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PostCommentProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePostCommentResponse.newBuilder(), "post_comment", updated).build());
     }

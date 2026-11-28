@@ -40,7 +40,6 @@
     <module>comms</module>
     <module>privacy</module>
     <module>app</module>
-    <module>demo-seed</module>
     <module>conformance</module>
   </modules>
 
@@ -99,10 +98,10 @@
     <!--
       Test JVM: JaCoCo's prepare-agent appends its agent to argLine (empty when JaCoCo is skipped). The heap is capped so
       that two module test JVMs of the parallel build (-T 1C), the Maven JVM and the PostgreSQL containers fit in the
-      build machine's memory; C1-only JIT because short-lived test JVMs gain nothing from C2 and pay for it in CPU.
+      build machine's memory; C1-only JIT because short-lived test JVMs gain nothing from C2 and pay for it in CPU; the code cache is raised because a multi-area module loads several Spring contexts and C1 adapters overflowed the default 240 MB (academics, JDK 17).
     -->
     <argLine/>
-    <mysms.test.jvm>-Xmx1g -XX:TieredStopAtLevel=1</mysms.test.jvm>
+    <mysms.test.jvm>-Xmx1g -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=384m</mysms.test.jvm>
   </properties>
 
   <dependencyManagement>

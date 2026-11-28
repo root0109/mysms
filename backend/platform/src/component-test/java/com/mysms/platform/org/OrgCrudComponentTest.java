@@ -8,6 +8,8 @@ import com.mysms.core.context.CallContextHolder;
 import com.mysms.core.db.ModuleDatabase;
 import com.mysms.core.testkit.TestDatabase;
 import com.mysms.core.testkit.TestTransactions;
+import com.mysms.platform.PlatformTenants;
+import com.mysms.platform.config.PlatformDatabaseConfig;
 import com.mysms.platform.org.config.OrgDatabaseConfig;
 import java.util.List;
 import java.util.UUID;
@@ -37,6 +39,9 @@ class OrgCrudComponentTest {
     @Autowired
     @Qualifier(OrgDatabaseConfig.DATABASE)
     private ModuleDatabase database;
+    @Autowired
+    @Qualifier(PlatformDatabaseConfig.DATABASE)
+    private ModuleDatabase platform;
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
@@ -52,6 +57,7 @@ class OrgCrudComponentTest {
 
     /** Fixture rows, inserted as the application role inside a transaction bound to the tenant. */
     private void fixtures(UUID tenant, List<String> statements) {
+        PlatformTenants.register(platform, tenant);
         CallContext context = CallContext.anonymous(TRACE).withIdentity(tenant, null);
         CallContextHolder.callAs(context, () -> TestTransactions.of(database).write(() -> {
             statements.forEach(statement -> database.jdbc().sql(statement).param("tenant", tenant).update());

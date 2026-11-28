@@ -1,7 +1,8 @@
 # MySMS ER diagrams
 
-> **Stale.** Covers 466 tables of 21 schemas; the baselines now have 489 tables in 22 schemas (privacy and later
-> additions are missing). The generator is not in the repository; regenerate once a Java generator exists in the
+> **Stale.** Covers 466 tables of 22 schemas; the baselines now have 495 tables in 23 schemas (privacy and later
+> additions are missing; `time_attendance`, split out of `attendance` by reorganisation 2c, is sketched below and
+> on its own page without a PNG). The generator is not in the repository; regenerate once a Java generator exists in the
 > build (ROADMAP DOC-1). The baselines are the source of truth.
 
 Every diagram here is generated from the SQL migrations in `../migrations/` alone: the DDL is parsed with the PostgreSQL parser and turned into Mermaid `erDiagram` text, then rendered to PNG. Nothing is drawn by hand.
@@ -32,8 +33,9 @@ Totals: 460 tables drawn (the other one, `iam.member_record`, is a copy kept fro
 | [Student Information](#070_sis) | 22 | 19 | [`070_sis.mmd`](070_sis.mmd) · [`070_sis.png`](070_sis.png) |
 | [Workforce / HR](#080_hr) | 12 | 8 | [`080_hr.mmd`](080_hr.mmd) · [`080_hr.png`](080_hr.png) |
 | [Payroll](#090_payroll) | 17 | 12 | [`090_payroll.mmd`](090_payroll.mmd) · [`090_payroll.png`](090_payroll.png) |
+| [Time & Attendance](#095_time_attendance) | 5 | 1 | [`095_time_attendance.mmd`](095_time_attendance.mmd) (PNG pending, DOC-1) |
 | [Admissions](#100_admission) | 10 | 4 | [`100_admission.mmd`](100_admission.mmd) · [`100_admission.png`](100_admission.png) |
-| [Attendance](#110_attendance) | 10 | 5 | [`110_attendance.mmd`](110_attendance.mmd) · [`110_attendance.png`](110_attendance.png) |
+| [Attendance](#110_attendance) | 9 | 5 | [`110_attendance.mmd`](110_attendance.mmd) · [`110_attendance.png`](110_attendance.png) |
 | [Rooms & Facilities](#120_facility) | 9 | 4 | [`120_facility.mmd`](120_facility.mmd) · [`120_facility.png`](120_facility.png) |
 | [Timetable](#130_timetable) | 7 | 2 | [`130_timetable.mmd`](130_timetable.mmd) · [`130_timetable.png`](130_timetable.png) |
 | [Assessment & Results](#140_assessment) | 25 | 21 | [`140_assessment.mmd`](140_assessment.mmd) · [`140_assessment.png`](140_assessment.png) |
@@ -1960,6 +1962,76 @@ erDiagram
 
 </details>
 
+<a id="095_time_attendance"></a>
+### Time & Attendance
+
+Staff attendance, moved out of `attendance` into hrms as the `time_attendance` area (reorganisation 2c). PNG pending
+(the diagram generator is not in the repo, DOC-1).
+
+<details><summary>Mermaid source</summary>
+
+```mermaid
+erDiagram
+    time_attendance__staff_attendance["time_attendance.staff_attendance"] {
+        uuid id PK
+        uuid staff_id FK "NN · → hr.staff (logical)"
+        date attendance_date PK
+        varchar(20) status "NN"
+        timestamptz check_in_at
+        timestamptz check_out_at
+        varchar(20) source "NN"
+        uuid leave_application_id FK "→ hr.leave_application (in-module FK, hrms)"
+        uuid recorded_by_user_id FK "→ iam.user_account (logical)"
+        varchar(300) remark
+    }
+    time_attendance__outbox_event["time_attendance.outbox_event"] {
+        bigint id PK
+        varchar(120) event_type "NN"
+        varchar(80) aggregate_type "NN"
+        uuid aggregate_id "NN"
+        text payload "NN"
+        timestamptz occurred_at "NN"
+        timestamptz published_at
+        text publish_error
+    }
+    time_attendance__inbox_event["time_attendance.inbox_event"] {
+        uuid event_id PK "with tenant_id"
+        varchar(120) event_type "NN"
+        timestamptz received_at "NN"
+        timestamptz processed_at
+        text processing_error
+    }
+    time_attendance__idempotency_key["time_attendance.idempotency_key"] {
+        uuid id PK
+        uuid idempotency_key "NN"
+        uuid user_id
+        varchar(120) operation_name "NN"
+        varchar(64) request_hash
+        smallint response_status
+        text response_body
+        timestamptz locked_at
+        timestamptz completed_at
+        timestamptz expires_at "NN"
+    }
+    time_attendance__operation["time_attendance.operation"] {
+        uuid id PK
+        varchar(120) operation_name "NN"
+        varchar(80) resource_type
+        uuid resource_id
+        varchar(20) status "NN"
+        smallint progress_percent
+        varchar(60) error_code
+        varchar(500) error_message
+        varchar(80) result_entity_type
+        uuid result_entity_id
+        uuid started_by_user_id
+        timestamptz started_at "NN"
+        timestamptz finished_at
+    }
+```
+
+</details>
+
 <a id="100_admission"></a>
 ### Admissions
 
@@ -2209,18 +2281,6 @@ erDiagram
         uuid recorded_by_user_id FK "→ iam.user_account (logical)"
         date attendance_date PK
         uuid leave_request_id FK "→ sis.student_leave_request (logical)"
-    }
-    attendance__staff_attendance["attendance.staff_attendance"] {
-        uuid id PK
-        uuid staff_id FK "NN · → hr.staff (logical)"
-        date attendance_date PK
-        varchar(20) status "NN"
-        timestamptz check_in_at
-        timestamptz check_out_at
-        varchar(20) source "NN"
-        uuid leave_application_id FK "→ hr.leave_application (logical)"
-        uuid recorded_by_user_id FK "→ iam.user_account (logical)"
-        varchar(300) remark
     }
     attendance__outbox_event["attendance.outbox_event"] {
         bigint id PK

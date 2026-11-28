@@ -7,9 +7,11 @@ import com.mysms.hrms.payroll.business.PayslipCalculator.Line;
 import com.mysms.hrms.payroll.business.PayslipCalculator.Result;
 import com.mysms.hrms.payroll.business.PayslipCalculator.Salary;
 import com.mysms.hrms.payroll.business.PayslipCalculator.Segment;
+import com.mysms.hrms.payroll.repository.PayslipRunRepository.Absence;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -25,6 +27,11 @@ class PayslipCalculatorTest {
         return new Component(UUID.randomUUID(), salary, code, code + " name", type, new BigDecimal(amount));
     }
 
+    /** The payslip of salaries without unpaid leave. */
+    private static Result calculate(LocalDate periodStart, List<Segment> segments, List<Component> components) {
+        return PayslipCalculator.calculate(periodStart, segments, components, Map.of());
+    }
+
     private static List<String> amounts(Result result) {
         return result.lines().stream().map(line -> line.code() + " " + line.amount().toPlainString()).toList();
     }
@@ -35,7 +42,7 @@ class PayslipCalculatorTest {
                 List.of(new Salary(OLD, LocalDate.of(2025, 4, 1))));
         assertThat(segments).containsExactly(new Segment(OLD, JAN_1, JAN_31));
 
-        Result result = PayslipCalculator.calculate(JAN_1, segments, List.of(
+        Result result = calculate(JAN_1, segments, List.of(
                 component(OLD, "BASIC", "earning", "30000.00"),
                 component(OLD, "HRA", "earning", "12000.50"),
                 component(OLD, "PF", "deduction", "3600.00"),
@@ -66,7 +73,7 @@ class PayslipCalculatorTest {
                 .containsExactly(new Segment(OLD, JAN_1, LocalDate.of(2026, 1, 15)),
                         new Segment(NEW, LocalDate.of(2026, 1, 16), JAN_31));
 
-        Result result = PayslipCalculator.calculate(JAN_1, segments, List.of(
+        Result result = calculate(JAN_1, segments, List.of(
                 component(OLD, "BASIC", "earning", "30000.00"),
                 component(OLD, "HRA", "earning", "12000.50"),
                 component(OLD, "PF", "deduction", "3600.00"),
@@ -99,7 +106,7 @@ class PayslipCalculatorTest {
         List<Segment> segments = PayslipCalculator.segments(start, end,
                 List.of(new Salary(OLD, LocalDate.of(2026, 1, 1)), new Salary(NEW, LocalDate.of(2026, 4, 16))));
 
-        Result result = PayslipCalculator.calculate(start, segments, List.of(
+        Result result = calculate(start, segments, List.of(
                 component(OLD, "A", "earning", "100.01"),
                 component(OLD, "B", "earning", "0.01"),
                 component(OLD, "C", "deduction", "33.33"),
@@ -130,7 +137,7 @@ class PayslipCalculatorTest {
                 List.of(new Salary(NEW, LocalDate.of(2026, 3, 17))));
         assertThat(segments).containsExactly(new Segment(NEW, LocalDate.of(2026, 3, 17), end));
 
-        Result result = PayslipCalculator.calculate(start, segments, List.of(
+        Result result = calculate(start, segments, List.of(
                 component(NEW, "BASIC", "earning", "25000.00"),
                 component(NEW, "PF", "deduction", "2500.00")));
 
@@ -142,13 +149,13 @@ class PayslipCalculatorTest {
 
     @Test
     void deductionsLargerThanTheEarningsGiveANegativeNetAndNoSalaryGivesNothing() {
-        Result negative = PayslipCalculator.calculate(JAN_1, List.of(new Segment(OLD, JAN_1, JAN_31)),
+        Result negative = calculate(JAN_1, List.of(new Segment(OLD, JAN_1, JAN_31)),
                 List.of(component(OLD, "BASIC", "earning", "100.00"), component(OLD, "LOAN", "deduction", "250.50")));
         assertThat(negative.net()).isEqualByComparingTo("-150.50");
 
         assertThat(PayslipCalculator.segments(JAN_1, JAN_31, List.of(new Salary(NEW, LocalDate.of(2026, 2, 1)))))
                 .isEmpty();
-        Result nothing = PayslipCalculator.calculate(JAN_1, List.of(), List.of());
+        Result nothing = calculate(JAN_1, List.of(), List.of());
         assertThat(nothing.lines()).isEmpty();
         assertThat(nothing.net()).isEqualByComparingTo("0.00");
     }
@@ -163,13 +170,13 @@ class PayslipCalculatorTest {
                 component(OLD, "HRA", "earning", "100.01"),
                 component(OLD, "PF", "deduction", "0.03"));
 
-        Result first = PayslipCalculator.calculate(JAN_1,
+        Result first = calculate(JAN_1,
                 PayslipCalculator.segments(JAN_1, jan15, salary), components);
         assertThat(amounts(first)).containsExactly(
                 "BASIC 14516.13",   // 30000.00 x 15 / 31 = 14516.129...
                 "HRA 48.39",        // 100.01 x 15 / 31 = 48.391...
                 "PF 0.01");         // 0.03 x 15 / 31 = 0.0145...
-        Result second = PayslipCalculator.calculate(jan16,
+        Result second = calculate(jan16,
                 PayslipCalculator.segments(jan16, JAN_31, salary), components);
         assertThat(amounts(second)).containsExactly(
                 "BASIC 15483.87",   // 30000.00 x 16 / 31 = 15483.870...
@@ -187,9 +194,72 @@ class PayslipCalculatorTest {
     void oneDayPaysOneDayOfTheMonth() {
         // February 2026 has 28 days: 2800.00 x 1 / 28 = 100.00
         LocalDate feb10 = LocalDate.of(2026, 2, 10);
-        Result day = PayslipCalculator.calculate(feb10,
+        Result day = calculate(feb10,
                 PayslipCalculator.segments(feb10, feb10, List.of(new Salary(OLD, LocalDate.of(2025, 4, 1)))),
                 List.of(component(OLD, "BASIC", "earning", "2800.00")));
         assertThat(amounts(day)).containsExactly("BASIC 100.00");
+    }
+
+    @Test
+    void unpaidLeaveDeductsTheEarningsOfItsShareOfTheWorkingDaysAsALineOfItsOwn() {
+        // January 2026: 31 days, 9 of them Saturdays and Sundays, so 22 working days; 2.5 of them unpaid leave
+        Result result = PayslipCalculator.calculate(JAN_1, List.of(new Segment(OLD, JAN_1, JAN_31)), List.of(
+                        component(OLD, "BASIC", "earning", "30000.00"),
+                        component(OLD, "HRA", "earning", "12000.50"),
+                        component(OLD, "PF", "deduction", "3600.00")),
+                Map.of(OLD, new Absence(new BigDecimal("22"), new BigDecimal("2.5"))));
+        // 42000.50 x 2.5 / 22 = 105001.25 / 22 = 4772.784...
+        assertThat(amounts(result)).containsExactly("BASIC 30000.00", "HRA 12000.50", "PF 3600.00",
+                "UNPAID_LEAVE 4772.78");
+        Line leave = result.lines().get(3);
+        assertThat(leave.staffSalaryComponentId()).as("the line stands for no salary component").isNull();
+        assertThat(leave.type()).isEqualTo("deduction");
+        assertThat(result.gross()).isEqualByComparingTo("42000.50");
+        // 3600.00 + 4772.78
+        assertThat(result.deductions()).isEqualByComparingTo("8372.78");
+        // 42000.50 - 8372.78
+        assertThat(result.net()).isEqualByComparingTo("33627.72");
+        assertThat(result.unpaidDays()).isEqualByComparingTo("2.5");
+        assertThat(result.leaveDeduction()).isEqualByComparingTo("4772.78");
+
+        Result paid = PayslipCalculator.calculate(JAN_1, List.of(new Segment(OLD, JAN_1, JAN_31)),
+                List.of(component(OLD, "BASIC", "earning", "30000.00")),
+                Map.of(OLD, new Absence(new BigDecimal("22"), BigDecimal.ZERO)));
+        assertThat(amounts(paid)).as("no unpaid leave, no line").containsExactly("BASIC 30000.00");
+        assertThat(paid.leaveDeduction()).isEqualByComparingTo("0.00");
+    }
+
+    @Test
+    void eachSalaryDeductsItsOwnUnpaidLeaveAndAHalfCentIsRoundedUp() {
+        // old salary 1-15 January (15 days; working days 1, 2, 5-9, 12-15 = 11), new one 16-31 (16 days; working
+        // days 16, 19-23, 26-30 = 11)
+        LocalDate jan15 = LocalDate.of(2026, 1, 15);
+        LocalDate jan16 = LocalDate.of(2026, 1, 16);
+        Result result = PayslipCalculator.calculate(JAN_1,
+                List.of(new Segment(OLD, JAN_1, jan15), new Segment(NEW, jan16, JAN_31)),
+                List.of(component(OLD, "BASIC", "earning", "31000.00"), component(NEW, "BASIC", "earning", "62000.00")),
+                Map.of(OLD, new Absence(new BigDecimal("11"), new BigDecimal("1")),
+                        NEW, new Absence(new BigDecimal("11"), new BigDecimal("0.5"))));
+        // 31000.00 x 15 / 31 = 15000.00 and 62000.00 x 16 / 31 = 32000.00; leave 15000.00 x 1 / 11 = 1363.636...
+        // = 1363.64 and 32000.00 x 0.5 / 11 = 1454.545... = 1454.55, together 2818.19
+        assertThat(amounts(result)).containsExactly("BASIC 15000.00", "BASIC 32000.00", "UNPAID_LEAVE 2818.19");
+        assertThat(result.gross()).isEqualByComparingTo("47000.00");
+        assertThat(result.deductions()).isEqualByComparingTo("2818.19");
+        // 47000.00 - 2818.19
+        assertThat(result.net()).isEqualByComparingTo("44181.81");
+        assertThat(result.unpaidDays()).isEqualByComparingTo("1.5");
+
+        // 30.92 x 0.5 / 4 = 3.865: half-up gives 3.87 (half-even would give 3.86)
+        Result halfCent = PayslipCalculator.calculate(JAN_1, List.of(new Segment(OLD, JAN_1, JAN_31)),
+                List.of(component(OLD, "BASIC", "earning", "30.92")),
+                Map.of(OLD, new Absence(new BigDecimal("4"), new BigDecimal("0.5"))));
+        assertThat(halfCent.leaveDeduction()).isEqualByComparingTo("3.87");
+        // 30.92 - 3.87
+        assertThat(halfCent.net()).isEqualByComparingTo("27.05");
+
+        Result closed = PayslipCalculator.calculate(JAN_1, List.of(new Segment(OLD, JAN_1, JAN_31)),
+                List.of(component(OLD, "BASIC", "earning", "30.92")),
+                Map.of(OLD, new Absence(BigDecimal.ZERO, BigDecimal.ZERO)));
+        assertThat(closed.net()).as("a span without working days deducts nothing").isEqualByComparingTo("30.92");
     }
 }

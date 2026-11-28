@@ -4,7 +4,6 @@ import {
   useAssignmentApprovals,
   useAssignmentStep,
   useCan,
-  useCreateAssignmentApproval,
   useExamSessionStep,
   useExamStep,
   useHomeworkStep,
@@ -12,6 +11,7 @@ import {
   useInfiniteRecords,
   useMarksheetStep,
   useOperation,
+  useRequestAssignmentApproval,
   useResultTemplateGenerateResults,
   type Operation,
   usePopulateExamResults,
@@ -111,7 +111,7 @@ export function HomeworkApprovalTools({ row }: { row: RecordRow }) {
 export function AssignmentTools({ row }: { row: RecordRow }) {
   const { t } = useI18n();
   const action = useAssignmentStep();
-  const createApproval = useCreateAssignmentApproval();
+  const approvalRequest = useRequestAssignmentApproval();
   const may = {
     publish: useCan('assessment.assignment.publish_assignment'),
     approve: useCan('assessment.assignment.approve_assignment'),
@@ -121,7 +121,7 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
     reset: useCan('assessment.assignment.reset_assignment'),
   };
   const mayReadApprovals = useCan('assessment.assignment_approval.read');
-  const mayCreateApproval = useCan('assessment.assignment_approval.create');
+  const mayRequestApproval = useCan('assessment.assignment.request_assignment_approval');
   const approvals = useAssignmentApprovals(mayReadApprovals ? row.id : null);
   const [reason, setReason] = useState('');
   const [approvalError, setApprovalError] = useState<unknown>(null);
@@ -140,10 +140,11 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
     { step: 'reset', label: t('asm.native.reset'), states: ['cancelled'] },
   ];
   const requestApproval = async () => {
+    if (!etag) return;
     setApprovalError(null);
     setNotice(null);
     try {
-      await createApproval.mutateAsync(row.id);
+      await approvalRequest.mutateAsync({ assignmentId: row.id, etag });
       setNotice(t('asm.web.approvalRequestSaved'));
     } catch (error) {
       setApprovalError(error);
@@ -166,7 +167,7 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
     }
   };
   const canRequestApproval =
-    mayCreateApproval &&
+    mayRequestApproval &&
     status === 'draft' &&
     (!mayReadApprovals || (approvals.data !== undefined && !pendingApproval));
   const needsReason =
@@ -203,7 +204,12 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
         ) : null,
       )}
       {canRequestApproval ? (
-        <Button variant="secondary" loading={createApproval.isPending} onClick={() => void requestApproval()}>
+        <Button
+          variant="secondary"
+          loading={approvalRequest.isPending}
+          disabled={!etag}
+          onClick={() => void requestApproval()}
+        >
           {t('asm.web.requestApproval')}
         </Button>
       ) : null}
@@ -250,7 +256,7 @@ export function AssignmentTools({ row }: { row: RecordRow }) {
         </div>
       ) : null}
       {notice ? <p role="status">{notice}</p> : null}
-      <RowError error={approvalError ?? action.error ?? createApproval.error} />
+      <RowError error={approvalError ?? action.error ?? approvalRequest.error} />
     </>
   );
 }

@@ -3,9 +3,9 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.Bookmark;
-import com.mysms.learning.lms.api.model.BookmarkUpdate;
 import com.mysms.learning.lms.business.BookmarkService;
 import com.mysms.lms.v1.BookmarkServiceGrpc;
+import com.mysms.lms.v1.BookmarkUpdate;
 import com.mysms.lms.v1.CreateBookmarkRequest;
 import com.mysms.lms.v1.CreateBookmarkResponse;
 import com.mysms.lms.v1.DeleteBookmarkRequest;
@@ -14,7 +14,6 @@ import com.mysms.lms.v1.GetBookmarkRequest;
 import com.mysms.lms.v1.GetBookmarkResponse;
 import com.mysms.lms.v1.ListBookmarksRequest;
 import com.mysms.lms.v1.ListBookmarksResponse;
-import com.mysms.lms.v1.UpdateBookmarkRequest;
 import com.mysms.lms.v1.UpdateBookmarkResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,10 +55,10 @@ public class BookmarkResolver extends BookmarkServiceGrpc.BookmarkServiceImplBas
     }
 
     @Override
-    public void updateBookmark(UpdateBookmarkRequest request, StreamObserver<UpdateBookmarkResponse> out) {
+    public void updateBookmark(BookmarkUpdate request, StreamObserver<UpdateBookmarkResponse> out) {
         Bookmark updated = service.updateBookmark(
-                bridge.id(request.getBookmark().getId(), "id"), bridge.requiredIfMatch(request.getBookmark().getEtag()),
-                bridge.changes(request.getBookmark(), request.getUpdateMask(), BookmarkUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                BookmarkProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateBookmarkResponse.newBuilder(), "bookmark", updated).build());
     }
 

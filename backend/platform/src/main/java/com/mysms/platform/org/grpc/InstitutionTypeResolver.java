@@ -4,8 +4,6 @@ import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.platform.org.api.model.InstitutionType;
 import com.mysms.platform.org.api.model.InstitutionTypeAttribute;
-import com.mysms.platform.org.api.model.InstitutionTypeAttributeUpdate;
-import com.mysms.platform.org.api.model.InstitutionTypeUpdate;
 import com.mysms.platform.org.business.InstitutionTypeService;
 import com.mysms.org.v1.CreateInstitutionTypeAttributeRequest;
 import com.mysms.org.v1.CreateInstitutionTypeAttributeResponse;
@@ -19,14 +17,14 @@ import com.mysms.org.v1.GetInstitutionTypeAttributeRequest;
 import com.mysms.org.v1.GetInstitutionTypeAttributeResponse;
 import com.mysms.org.v1.GetInstitutionTypeRequest;
 import com.mysms.org.v1.GetInstitutionTypeResponse;
+import com.mysms.org.v1.InstitutionTypeAttributeUpdate;
 import com.mysms.org.v1.InstitutionTypeServiceGrpc;
+import com.mysms.org.v1.InstitutionTypeUpdate;
 import com.mysms.org.v1.ListInstitutionTypeAttributesRequest;
 import com.mysms.org.v1.ListInstitutionTypeAttributesResponse;
 import com.mysms.org.v1.ListInstitutionTypesRequest;
 import com.mysms.org.v1.ListInstitutionTypesResponse;
-import com.mysms.org.v1.UpdateInstitutionTypeAttributeRequest;
 import com.mysms.org.v1.UpdateInstitutionTypeAttributeResponse;
-import com.mysms.org.v1.UpdateInstitutionTypeRequest;
 import com.mysms.org.v1.UpdateInstitutionTypeResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -73,12 +71,12 @@ public class InstitutionTypeResolver extends InstitutionTypeServiceGrpc.Institut
     }
 
     @Override
-    public void updateInstitutionType(UpdateInstitutionTypeRequest request,
+    public void updateInstitutionType(InstitutionTypeUpdate request,
             StreamObserver<UpdateInstitutionTypeResponse> out) {
         InstitutionType updated = service.updateInstitutionType(
-                bridge.id(request.getInstitutionType().getId(), "id"),
-                bridge.requiredIfMatch(request.getInstitutionType().getEtag()),
-                bridge.changes(request.getInstitutionType(), request.getUpdateMask(), InstitutionTypeUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                InstitutionTypeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateInstitutionTypeResponse.newBuilder(), "institution_type",
                 updated).build());
@@ -124,14 +122,13 @@ public class InstitutionTypeResolver extends InstitutionTypeServiceGrpc.Institut
     }
 
     @Override
-    public void updateInstitutionTypeAttribute(UpdateInstitutionTypeAttributeRequest request,
+    public void updateInstitutionTypeAttribute(InstitutionTypeAttributeUpdate request,
             StreamObserver<UpdateInstitutionTypeAttributeResponse> out) {
         InstitutionTypeAttribute updated = service.updateInstitutionTypeAttribute(
                 bridge.id(request.getInstitutionTypeId(), "institutionTypeId"),
-                bridge.id(request.getInstitutionTypeAttribute().getId(), "id"),
-                bridge.requiredIfMatch(request.getInstitutionTypeAttribute().getEtag()),
-                bridge.changes(request.getInstitutionTypeAttribute(), request.getUpdateMask(),
-                        InstitutionTypeAttributeUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                InstitutionTypeAttributeProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateInstitutionTypeAttributeResponse.newBuilder(),
                 "institution_type_attribute", updated).build());
     }

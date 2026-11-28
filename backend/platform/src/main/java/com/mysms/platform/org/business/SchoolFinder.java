@@ -2,18 +2,18 @@ package com.mysms.platform.org.business;
 
 import com.mysms.core.db.AppTransactionManager;
 import com.mysms.core.db.ModuleDatabase;
+import com.mysms.core.error.ApiException;
 import com.mysms.core.error.FieldError;
 import com.mysms.core.error.UnavailableException;
 import com.mysms.core.error.ValidationFailedException;
-import com.mysms.core.grpc.IntegrationGrpcClientException;
 import com.mysms.core.paging.Page;
 import com.mysms.core.paging.PageRequest;
 import com.mysms.core.paging.SortSpec;
-import com.mysms.master.v1.GetCityRequest;
-import com.mysms.master.v1.ListCountriesRequest;
+import com.mysms.platform.master.api.model.Country;
+import com.mysms.platform.master.business.CityService;
+import com.mysms.platform.master.business.CountryService;
 import com.mysms.platform.org.api.model.InstitutionCard;
 import com.mysms.platform.org.config.OrgDatabaseConfig;
-import com.mysms.platform.org.integration.MasterGrpcClient;
 import com.mysms.platform.org.repository.DirectoryRepository;
 import com.mysms.platform.org.repository.DirectoryRepository.Listing;
 import java.time.Clock;
@@ -35,8 +35,8 @@ import org.springframework.transaction.PlatformTransactionManager;
  * tenant's schools, so it reads only org's global directories — a school's name, code, city and its tenant's sign-in
  * code — and finds only active schools of active tenants whose administrators opted in (the iam setting
  * {@code directory.listedInSchoolFinder}, off by default). Pages follow the name, then the id. The query is three
- * characters at least; a country narrows it (by ISO code, through master). City names come from master and are left
- * out when master cannot answer.
+ * characters at least; a country narrows it (by ISO code, through the sibling master area, read in process; its reads
+ * are public). City names come from master and are left out when master does not know the city.
  */
 @Service
 public class SchoolFinder extends AppTransactionManager {
@@ -46,15 +46,17 @@ public class SchoolFinder extends AppTransactionManager {
     private static final Logger LOG = LoggerFactory.getLogger(SchoolFinder.class);
 
     private final DirectoryRepository directory;
-    private final MasterGrpcClient master;
+    private final CountryService countries;
+    private final CityService cities;
     private final Clock clock;
 
-    public SchoolFinder(DirectoryRepository directory, MasterGrpcClient master,
+    public SchoolFinder(DirectoryRepository directory, CountryService countries, CityService cities,
             @Qualifier(OrgDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(OrgDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions, Clock clock) {
         super(database, transactions);
         this.directory = directory;
-        this.master = master;
+        this.countries = countries;
+        this.cities = cities;
         this.clock = clock;
     }
 
@@ -90,23 +92,25 @@ public class SchoolFinder extends AppTransactionManager {
         });
     }
 
-    /** The country of an ISO code; empty when master knows none. Without master the finder cannot narrow: 503. */
+    /**
+     * The country of an ISO code, from the sibling master area in process; empty when master knows none. A refusal
+     * from master is 503, as when the call went over gRPC.
+     */
     private Optional<UUID> countryOf(String iso2) {
         try {
-            return master.listCountries(ListCountriesRequest.newBuilder().setFilter("iso2 = \"" + iso2 + "\"")
-                    .build()).getItemsList().stream().findFirst().map(country -> UUID.fromString(country.getId()));
-        } catch (IntegrationGrpcClientException e) {
-            LOG.warn("the master service answered {} ({})", e.httpStatus(), e.statusCode());
+            return countries.listCountries(1, 1, null, "iso2 = \"" + iso2 + "\"", null).items().stream().findFirst()
+                    .map(Country::getId);
+        } catch (ApiException e) {
+            LOG.warn("the master service answered {} ({})", e.status().value(), e.code());
             throw new UnavailableException("The master service could not answer.");
         }
     }
 
-    /** A city's name, or nothing when master cannot say (a display nicety, never a guess). */
+    /** A city's name, or nothing when master cannot say, whatever the reason (a display nicety, never a guess). */
     private Optional<String> cityName(UUID cityId) {
         try {
-            return Optional.of(master.getCity(GetCityRequest.newBuilder().setId(cityId.toString()).build()).getCity()
-                    .getName()).filter(name -> !name.isEmpty());
-        } catch (IntegrationGrpcClientException e) {
+            return Optional.ofNullable(cities.getCity(cityId).getName()).filter(name -> !name.isEmpty());
+        } catch (RuntimeException e) {
             return Optional.empty();
         }
     }

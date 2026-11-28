@@ -241,6 +241,9 @@ public class InvoiceService extends AppTransactionManager {
             if (!Objects.equals(institutionBefore, entity.getInstitutionId()) && repository.lineCount(id) > 0) {
                 throw new InvalidStateException("The invoice bills dues of its institution; its institution stays.");
             }
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);

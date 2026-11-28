@@ -3,7 +3,6 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.ParticipationActivity;
-import com.mysms.learning.lms.api.model.ParticipationActivityUpdate;
 import com.mysms.learning.lms.business.ParticipationActivityService;
 import com.mysms.lms.v1.CreateParticipationActivityRequest;
 import com.mysms.lms.v1.CreateParticipationActivityResponse;
@@ -14,7 +13,7 @@ import com.mysms.lms.v1.GetParticipationActivityResponse;
 import com.mysms.lms.v1.ListParticipationActivitiesRequest;
 import com.mysms.lms.v1.ListParticipationActivitiesResponse;
 import com.mysms.lms.v1.ParticipationActivityServiceGrpc;
-import com.mysms.lms.v1.UpdateParticipationActivityRequest;
+import com.mysms.lms.v1.ParticipationActivityUpdate;
 import com.mysms.lms.v1.UpdateParticipationActivityResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -61,13 +60,12 @@ public class ParticipationActivityResolver extends ParticipationActivityServiceG
     }
 
     @Override
-    public void updateParticipationActivity(UpdateParticipationActivityRequest request,
+    public void updateParticipationActivity(ParticipationActivityUpdate request,
             StreamObserver<UpdateParticipationActivityResponse> out) {
         ParticipationActivity updated = service.updateParticipationActivity(
-                bridge.id(request.getParticipationActivity().getId(), "id"),
-                bridge.requiredIfMatch(request.getParticipationActivity().getEtag()),
-                bridge.changes(request.getParticipationActivity(), request.getUpdateMask(),
-                ParticipationActivityUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                ParticipationActivityProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateParticipationActivityResponse.newBuilder(), "participation_activity",
                 updated).build());
     }

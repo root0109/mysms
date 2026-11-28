@@ -71,15 +71,6 @@ public class AssignmentApprovalRepository {
             RETURNING id, tenant_id, assignment_id, decision, comments, decided_by_user_id, decided_at, created_at,
                       created_by, updated_at, updated_by, deleted_at, row_version
             """;
-    private static final String SOFT_DELETE = """
-            UPDATE assessment.assignment_approval
-               SET deleted_at = :deletedAt,
-                   updated_at = :updatedAt,
-                   updated_by = :updatedBy,
-                   row_version = row_version + 1
-             WHERE tenant_id = :tenantId
-               AND id = :id AND row_version = :expected AND deleted_at IS NULL
-            """;
     private static final String UPDATE = """
             UPDATE assessment.assignment_approval
                SET decision = :decision,
@@ -91,10 +82,6 @@ public class AssignmentApprovalRepository {
                    row_version = row_version + 1
              WHERE tenant_id = :tenantId
                AND id = :id AND row_version = :expected AND deleted_at IS NULL
-            """;
-    private static final String EXISTS_ASSIGNMENT_ID = """
-            SELECT EXISTS (SELECT 1 FROM assessment.assignment WHERE tenant_id = :tenantId
-                AND id = :id AND deleted_at IS NULL)
             """;
     private static final String INSTITUTION_OF = """
             SELECT p0.institution_id FROM assessment.assignment p0 WHERE p0.tenant_id = :tenantId AND p0.id = :ref
@@ -159,21 +146,6 @@ public class AssignmentApprovalRepository {
                 .param("updatedBy", e.getUpdatedBy())
                 .param("expected", expectedVersion)
                 .update();
-    }
-
-    public int softDelete(AssignmentApprovalEntity e, int expectedVersion) {
-        return jdbc.sql(SOFT_DELETE)
-                .param("id", e.getId())
-                .param("deletedAt", e.getDeletedAt())
-                .param("updatedAt", e.getUpdatedAt())
-                .param("updatedBy", e.getUpdatedBy())
-                .param("expected", expectedVersion)
-                .update();
-    }
-
-    /** Whether the referenced assessment.assignment row exists (live). */
-    public boolean existsAssignmentId(UUID id) {
-        return Boolean.TRUE.equals(jdbc.sql(EXISTS_ASSIGNMENT_ID).param("id", id).query(Boolean.class).single());
     }
 
     /** The institution owning the row reached through assignment_id (empty: a tenant-level row, or none). */

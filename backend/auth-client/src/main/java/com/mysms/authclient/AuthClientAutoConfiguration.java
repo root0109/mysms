@@ -57,6 +57,12 @@ public class AuthClientAutoConfiguration {
         return new IamAuthzGrpcClient(channels.createChannel(IAM_SERVICE));
     }
 
+    /** The edge's permission check for a sibling area's operation called in process. */
+    @Bean
+    public SiblingAccess siblingAccess(PermissionChecker permissions) {
+        return new SiblingAccess(permissions);
+    }
+
     /** The per-process role→permission cache of the permissions filter ({@code mysms.auth.role-cache-ttl}). */
     @Bean
     public RolePermissionResolver rolePermissionResolver(RolePermissionSource source,
@@ -109,7 +115,8 @@ public class AuthClientAutoConfiguration {
     @Bean
     public ServiceTokenProvider serviceTokenProvider(Environment environment, JsonMapper jsonMapper, Clock clock) {
         return new ServiceTokenProvider(environment.getProperty("mysms.auth.token-uri"),
-                module -> environment.getProperty("mysms." + module + ".service-client.secret"), jsonMapper, clock);
+                module -> environment.getProperty("mysms." + module.replace('_', '-') + ".service-client.secret"),
+                jsonMapper, clock);
     }
 
     /**

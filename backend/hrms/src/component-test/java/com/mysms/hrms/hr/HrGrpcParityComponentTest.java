@@ -84,7 +84,7 @@ class HrGrpcParityComponentTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        DATABASE.register(registry, "hr", "payroll");
+        DATABASE.register(registry, "hr", "payroll", "time_attendance");
         registry.add("mysms.auth.issuer", () -> TestTokens.ISSUER);
         registry.add("mysms.auth.public-key", TOKENS::publicKeyPem);
     }
@@ -198,6 +198,24 @@ class HrGrpcParityComponentTest {
 
     private DynamicMessage call(MethodDescriptor rpc, String idField, String id, JsonNode body) {
         return call(rpc, Map.of(idField, id), body);
+    }
+
+    /** An update: the {@code <Resource>Update} message of a REST PATCH body, with the row's id and etag. */
+    private DynamicMessage updating(MethodDescriptor update, String id, String etag, ObjectNode changes) {
+        DynamicMessage.Builder request = contract().changes(update, changes);
+        set(request, "id", id);
+        return set(request, "etag", etag).build();
+    }
+
+    /** A resource's crud-spec.json entry, for the kit's PATCH-state step on resources outside the standard flow. */
+    private static GrpcParityContract.Resource described(String spec, String name) throws Exception {
+        for (JsonNode resource : JSON.readTree(HrGrpcParityComponentTest.class.getClassLoader().getResourceAsStream(spec))
+                .path("resources")) {
+            if (name.equals(resource.path("name").asString())) {
+                return GrpcParityContract.Resource.of(resource);
+            }
+        }
+        throw new IllegalArgumentException("no resource " + name + " in " + spec);
     }
 
     /** The one resource a response carries. */
@@ -378,20 +396,19 @@ class HrGrpcParityComponentTest {
 
         MethodDescriptor update = rpc("UpdateLeaveBalance");
         ObjectNode changes = json("{\"entitledDays\":\"12\"}");
-        com.google.protobuf.FieldMask mask = com.google.protobuf.FieldMask.newBuilder().addPaths("entitled_days").build();
         String path = "/v1/hr/leave-balances/" + id;
         GrpcParityContract.assertSameAnswer(rest("PATCH", path, school.admin(), changes.toString(), "If-Match", "\"99\""),
-                grpc(update, set(call(update, Map.of(), json("{}").set("leaveBalance", changes.deepCopy().put("id", id)
-                        .put("etag", "\"99\""))).toBuilder(), "update_mask", mask).build(), school.admin()));
+                grpc(update, updating(update, id, "\"99\"", changes), school.admin()));
         GrpcParityContract.assertSameAnswer(rest("PATCH", path, school.admin(), changes.toString()),
-                grpc(update, set(call(update, Map.of(), json("{}").set("leaveBalance", changes.deepCopy().put("id", id)))
-                        .toBuilder(), "update_mask", mask).build(), school.admin()));
-        JsonNode updated = resource(grpc(update, set(call(update, Map.of(), json("{}").set("leaveBalance",
-                changes.deepCopy().put("id", id).put("etag", read.body().path("etag").asString()))).toBuilder(),
-                "update_mask", mask).build(), school.admin()));
+                grpc(update, updating(update, id, "", changes), school.admin()));
+        JsonNode updated = resource(grpc(update, updating(update, id, read.body().path("etag").asString(), changes),
+                school.admin()));
         assertThat(new java.math.BigDecimal(updated.path("entitledDays").asString())).isEqualByComparingTo("12");
         sameResource(rest("GET", path, school.admin(), null).body(),
                 resource(grpc(get, call(get, "id", id, null), school.admin())));
+        new GrpcParityContract(HrProto.getDescriptor(), this::rest, this::channel, bridge,
+                new GrpcParityContract.Callers(school.admin(), school.nobody(), STRANGER))
+                .patchStates(described("hr/crud-spec.json", "LeaveBalance"), id, updated.path("etag").asString());
     }
 
     @Test

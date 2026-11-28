@@ -5,6 +5,7 @@ import com.mysms.academics.config.AcademicsEventsConfig;
 import com.mysms.academics.domain.TeachingAssignmentEntity;
 import com.mysms.academics.events.AcademicsEvents;
 import com.mysms.academics.mapper.TeachingAssignmentMapper;
+import com.mysms.academics.repository.StaffRecordRepository;
 import com.mysms.academics.repository.TeachingAssignmentRepository;
 import com.mysms.authclient.DataScope;
 import com.mysms.academics.api.model.TeachingAssignment;
@@ -55,12 +56,14 @@ public class TeachingAssignmentService extends AppTransactionManager {
 
     private final TeachingAssignmentRepository repository;
     private final TeachingAssignmentMapper mapper;
+    private final StaffRecordRepository staffRecords;
     private final OutboxWriter outbox;
     private final AuditWriter audit;
     private final DtoValidator validator;
     private final Clock clock;
 
     public TeachingAssignmentService(TeachingAssignmentRepository repository, TeachingAssignmentMapper mapper,
+            StaffRecordRepository staffRecords,
             @Qualifier(AcademicsDatabaseConfig.DATABASE) ModuleDatabase database,
             @Qualifier(AcademicsDatabaseConfig.TRANSACTIONS) PlatformTransactionManager transactions,
             @Qualifier(AcademicsEventsConfig.OUTBOX) OutboxWriter outbox,
@@ -70,6 +73,7 @@ public class TeachingAssignmentService extends AppTransactionManager {
         super(database, transactions);
         this.repository = repository;
         this.mapper = mapper;
+        this.staffRecords = staffRecords;
         this.outbox = outbox;
         this.audit = audit;
         this.validator = validator;
@@ -138,6 +142,9 @@ public class TeachingAssignmentService extends AppTransactionManager {
             assertValid(entity, false);
             scope.requireWritable(institutionOf(entity));
             assertUnique(entity);
+            if (fields.isEmpty()) {
+                return mapper.toDto(entity);
+            }
             entity.onUpdatingData(Actor.current(), clock);
             if (validateOnly) {
                 return mapper.toDto(entity);
@@ -200,7 +207,6 @@ public class TeachingAssignmentService extends AppTransactionManager {
         patch.apply("classSubjectId", changes.getClassSubjectId(), entity::setClassSubjectId);
         patch.apply("staffId", changes.getStaffId(), entity::setStaffId);
         patch.apply("periodsPerWeek", changes.getPeriodsPerWeek(), entity::setPeriodsPerWeek);
-        patch.apply("periodsRemaining", changes.getPeriodsRemaining(), entity::setPeriodsRemaining);
         patch.apply("teacherRole", changes.getTeacherRole(), entity::setTeacherRole);
         patch.apply("isActive", changes.getIsActive(), entity::setIsActive);
         return patch.applied();
@@ -220,6 +226,9 @@ public class TeachingAssignmentService extends AppTransactionManager {
         }
         if (entity.getClassSubjectId() != null && !repository.existsClassSubjectId(entity.getClassSubjectId())) {
             errors.add(new FieldError("classSubjectId", "class subject does not exist", "NOT_FOUND"));
+        }
+        if (entity.getStaffId() != null && !staffRecords.live(entity.getStaffId())) {
+            errors.add(new FieldError("staffId", "staff does not exist", "NOT_FOUND"));
         }
         if (!errors.isEmpty()) {
             throw new ValidationFailedException(errors);

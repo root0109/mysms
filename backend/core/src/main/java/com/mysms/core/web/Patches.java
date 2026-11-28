@@ -33,7 +33,10 @@ public final class Patches {
         return field == null ? null : field.orElse(null);
     }
 
-    /** The names of the fields applied so far, in call order. */
+    /**
+     * The names of the fields applied so far, in call order. None: the PATCH changes nothing, and the service answers
+     * the row as it is — after its checks, without a write, a new version, an audit record or an event (§7.2).
+     */
     public List<String> applied() {
         return List.copyOf(applied);
     }

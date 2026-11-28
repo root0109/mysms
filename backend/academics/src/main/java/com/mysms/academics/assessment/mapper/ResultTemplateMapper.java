@@ -29,6 +29,6 @@ public interface ResultTemplateMapper {
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "rowVersion", ignore = true)
-    @Mapping(target = "status", expression = "java(dto.getStatus() == null ? null : dto.getStatus().getValue())")
+    @Mapping(target = "status", ignore = true)
     ResultTemplateEntity toEntity(ResultTemplate dto);
 }

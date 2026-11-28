@@ -3,9 +3,9 @@ package com.mysms.students.sis.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.students.sis.api.model.ActivityType;
-import com.mysms.students.sis.api.model.ActivityTypeUpdate;
 import com.mysms.students.sis.business.ActivityTypeService;
 import com.mysms.sis.v1.ActivityTypeServiceGrpc;
+import com.mysms.sis.v1.ActivityTypeUpdate;
 import com.mysms.sis.v1.CreateActivityTypeRequest;
 import com.mysms.sis.v1.CreateActivityTypeResponse;
 import com.mysms.sis.v1.DeleteActivityTypeRequest;
@@ -14,7 +14,6 @@ import com.mysms.sis.v1.GetActivityTypeRequest;
 import com.mysms.sis.v1.GetActivityTypeResponse;
 import com.mysms.sis.v1.ListActivityTypesRequest;
 import com.mysms.sis.v1.ListActivityTypesResponse;
-import com.mysms.sis.v1.UpdateActivityTypeRequest;
 import com.mysms.sis.v1.UpdateActivityTypeResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -56,10 +55,10 @@ public class ActivityTypeResolver extends ActivityTypeServiceGrpc.ActivityTypeSe
     }
 
     @Override
-    public void updateActivityType(UpdateActivityTypeRequest request, StreamObserver<UpdateActivityTypeResponse> out) {
+    public void updateActivityType(ActivityTypeUpdate request, StreamObserver<UpdateActivityTypeResponse> out) {
         ActivityType updated = service.updateActivityType(
-                bridge.id(request.getActivityType().getId(), "id"), bridge.requiredIfMatch(request.getActivityType().getEtag()),
-                bridge.changes(request.getActivityType(), request.getUpdateMask(), ActivityTypeUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                ActivityTypeProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateActivityTypeResponse.newBuilder(), "activity_type", updated).build());
     }

@@ -1,7 +1,6 @@
 package com.mysms.comms.grpc;
 
 import com.mysms.comms.api.model.PageCategory;
-import com.mysms.comms.api.model.PageCategoryUpdate;
 import com.mysms.comms.business.PageCategoryService;
 import com.mysms.comms.v1.CreatePageCategoryRequest;
 import com.mysms.comms.v1.CreatePageCategoryResponse;
@@ -12,7 +11,7 @@ import com.mysms.comms.v1.GetPageCategoryResponse;
 import com.mysms.comms.v1.ListPageCategoriesRequest;
 import com.mysms.comms.v1.ListPageCategoriesResponse;
 import com.mysms.comms.v1.PageCategoryServiceGrpc;
-import com.mysms.comms.v1.UpdatePageCategoryRequest;
+import com.mysms.comms.v1.PageCategoryUpdate;
 import com.mysms.comms.v1.UpdatePageCategoryResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -56,10 +55,10 @@ public class PageCategoryResolver extends PageCategoryServiceGrpc.PageCategorySe
     }
 
     @Override
-    public void updatePageCategory(UpdatePageCategoryRequest request, StreamObserver<UpdatePageCategoryResponse> out) {
+    public void updatePageCategory(PageCategoryUpdate request, StreamObserver<UpdatePageCategoryResponse> out) {
         PageCategory updated = service.updatePageCategory(
-                bridge.id(request.getPageCategory().getId(), "id"), bridge.requiredIfMatch(request.getPageCategory().getEtag()),
-                bridge.changes(request.getPageCategory(), request.getUpdateMask(), PageCategoryUpdate.class),
+                bridge.id(request.getId(), "id"), bridge.requiredIfMatch(request.getEtag()),
+                PageCategoryProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdatePageCategoryResponse.newBuilder(), "page_category", updated).build());
     }

@@ -3,7 +3,6 @@ package com.mysms.campus.transport.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.campus.transport.api.model.StudentTransport;
-import com.mysms.campus.transport.api.model.StudentTransportUpdate;
 import com.mysms.campus.transport.business.StudentTransportService;
 import com.mysms.transport.v1.CreateStudentTransportRequest;
 import com.mysms.transport.v1.CreateStudentTransportResponse;
@@ -14,7 +13,7 @@ import com.mysms.transport.v1.GetStudentTransportResponse;
 import com.mysms.transport.v1.ListStudentTransportsRequest;
 import com.mysms.transport.v1.ListStudentTransportsResponse;
 import com.mysms.transport.v1.StudentTransportServiceGrpc;
-import com.mysms.transport.v1.UpdateStudentTransportRequest;
+import com.mysms.transport.v1.StudentTransportUpdate;
 import com.mysms.transport.v1.UpdateStudentTransportResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -57,11 +56,11 @@ public class StudentTransportResolver extends StudentTransportServiceGrpc.Studen
     }
 
     @Override
-    public void updateStudentTransport(UpdateStudentTransportRequest request,
+    public void updateStudentTransport(StudentTransportUpdate request,
             StreamObserver<UpdateStudentTransportResponse> out) {
-        StudentTransport updated = service.updateStudentTransport(bridge.id(request.getStudentTransport().getId(), "id"),
-                bridge.requiredIfMatch(request.getStudentTransport().getEtag()),
-                bridge.changes(request.getStudentTransport(), request.getUpdateMask(), StudentTransportUpdate.class),
+        StudentTransport updated = service.updateStudentTransport(bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                StudentTransportProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateStudentTransportResponse.newBuilder(), "student_transport", updated).build());
     }

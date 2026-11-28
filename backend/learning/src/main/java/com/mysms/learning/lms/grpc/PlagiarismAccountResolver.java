@@ -3,9 +3,7 @@ package com.mysms.learning.lms.grpc;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
 import com.mysms.learning.lms.api.model.PlagiarismAccount;
-import com.mysms.learning.lms.api.model.PlagiarismAccountUpdate;
 import com.mysms.learning.lms.api.model.PlagiarismUserLink;
-import com.mysms.learning.lms.api.model.PlagiarismUserLinkUpdate;
 import com.mysms.learning.lms.business.PlagiarismAccountService;
 import com.mysms.lms.v1.CreatePlagiarismAccountRequest;
 import com.mysms.lms.v1.CreatePlagiarismAccountResponse;
@@ -24,9 +22,9 @@ import com.mysms.lms.v1.ListPlagiarismAccountsResponse;
 import com.mysms.lms.v1.ListPlagiarismUserLinksRequest;
 import com.mysms.lms.v1.ListPlagiarismUserLinksResponse;
 import com.mysms.lms.v1.PlagiarismAccountServiceGrpc;
-import com.mysms.lms.v1.UpdatePlagiarismAccountRequest;
+import com.mysms.lms.v1.PlagiarismAccountUpdate;
+import com.mysms.lms.v1.PlagiarismUserLinkUpdate;
 import com.mysms.lms.v1.UpdatePlagiarismAccountResponse;
-import com.mysms.lms.v1.UpdatePlagiarismUserLinkRequest;
 import com.mysms.lms.v1.UpdatePlagiarismUserLinkResponse;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -73,12 +71,12 @@ public class PlagiarismAccountResolver extends PlagiarismAccountServiceGrpc.Plag
     }
 
     @Override
-    public void updatePlagiarismAccount(UpdatePlagiarismAccountRequest request,
+    public void updatePlagiarismAccount(PlagiarismAccountUpdate request,
             StreamObserver<UpdatePlagiarismAccountResponse> out) {
         PlagiarismAccount updated = service.updatePlagiarismAccount(
-                bridge.id(request.getPlagiarismAccount().getId(), "id"),
-                bridge.requiredIfMatch(request.getPlagiarismAccount().getEtag()),
-                bridge.changes(request.getPlagiarismAccount(), request.getUpdateMask(), PlagiarismAccountUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PlagiarismAccountProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdatePlagiarismAccountResponse.newBuilder(), "plagiarism_account", updated).build());
@@ -121,14 +119,13 @@ public class PlagiarismAccountResolver extends PlagiarismAccountServiceGrpc.Plag
     }
 
     @Override
-    public void updatePlagiarismUserLink(UpdatePlagiarismUserLinkRequest request,
+    public void updatePlagiarismUserLink(PlagiarismUserLinkUpdate request,
             StreamObserver<UpdatePlagiarismUserLinkResponse> out) {
         PlagiarismUserLink updated = service.updatePlagiarismUserLink(
                 bridge.id(request.getPlagiarismAccountId(), "plagiarismAccountId"),
-                bridge.id(request.getPlagiarismUserLink().getId(), "id"),
-                bridge.requiredIfMatch(request.getPlagiarismUserLink().getEtag()),
-                bridge.changes(request.getPlagiarismUserLink(), request.getUpdateMask(),
-                        PlagiarismUserLinkUpdate.class), request.getValidateOnly());
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                PlagiarismUserLinkProtoBridge.changes(bridge, request), request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(
                 UpdatePlagiarismUserLinkResponse.newBuilder(), "plagiarism_user_link", updated).build());
     }

@@ -20,6 +20,8 @@ import {
 import { useCreateRecord, useDeleteRecord, useInfiniteRecords, useRecord, useUpdateRecord } from './hooks';
 import type { ActionDef, ResourceDef } from './types';
 
+/** An area's URL prefix: an underscore in the area name is a hyphen in the URL (`time_attendance` → `/v1/time-attendance/`). */
+const urlPrefix = (area: string) => `/v1/${area.replaceAll('_', '-')}/`;
 const tokens = { accessToken: 'a1', refreshToken: 'r1', expiresInSeconds: 900, tokenType: 'Bearer' };
 const PARENT = '01960000-0000-7000-8000-0000000000aa';
 
@@ -88,7 +90,7 @@ describe('generic record operations', () => {
     expect(RESOURCES.length).toBeGreaterThan(200);
     for (const r of RESOURCES) {
       expect(r.key).toBe(`${r.module}.${r.key.split('.')[1]}`);
-      for (const op of Object.values(r.ops)) expect(op?.path.startsWith(`/v1/${r.module}/`)).toBe(true);
+      for (const op of Object.values(r.ops)) expect(op?.path.startsWith(urlPrefix(r.module))).toBe(true);
       if (r.parent) expect(r.ops.List?.path ?? r.ops.Create?.path).toContain(`{${r.parent}}`);
     }
     const categories = RESOURCES.find((r) => r.key === 'sis.StudentCategory');
@@ -125,7 +127,7 @@ describe('generic record operations', () => {
       reason: false,
     });
     for (const r of RESOURCES)
-      for (const a of r.actions ?? []) expect(a.path.startsWith(`/v1/${r.module}/`)).toBe(true);
+      for (const a of r.actions ?? []) expect(a.path.startsWith(urlPrefix(r.module))).toBe(true);
   });
 
   it('runs a state transition with the etag, a trimmed reason and typed fields', async () => {

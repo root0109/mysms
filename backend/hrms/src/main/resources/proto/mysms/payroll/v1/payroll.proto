@@ -3,9 +3,9 @@ syntax = "proto3";
 
 package mysms.payroll.v1;
 
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "PayrollProto";
@@ -20,7 +20,7 @@ service PayComponentService {
   // Create PayComponent.
   rpc CreatePayComponent(CreatePayComponentRequest) returns (CreatePayComponentResponse);
   // Update PayComponent.
-  rpc UpdatePayComponent(UpdatePayComponentRequest) returns (UpdatePayComponentResponse);
+  rpc UpdatePayComponent(PayComponentUpdate) returns (UpdatePayComponentResponse);
   // Soft-delete PayComponent.
   rpc DeletePayComponent(DeletePayComponentRequest) returns (DeletePayComponentResponse);
 }
@@ -34,7 +34,7 @@ service PayCategoryService {
   // Create PayCategory.
   rpc CreatePayCategory(CreatePayCategoryRequest) returns (CreatePayCategoryResponse);
   // Update PayCategory.
-  rpc UpdatePayCategory(UpdatePayCategoryRequest) returns (UpdatePayCategoryResponse);
+  rpc UpdatePayCategory(PayCategoryUpdate) returns (UpdatePayCategoryResponse);
   // Soft-delete PayCategory.
   rpc DeletePayCategory(DeletePayCategoryRequest) returns (DeletePayCategoryResponse);
 }
@@ -48,7 +48,7 @@ service SalaryTemplateService {
   // Create SalaryTemplate.
   rpc CreateSalaryTemplate(CreateSalaryTemplateRequest) returns (CreateSalaryTemplateResponse);
   // Update SalaryTemplate.
-  rpc UpdateSalaryTemplate(UpdateSalaryTemplateRequest) returns (UpdateSalaryTemplateResponse);
+  rpc UpdateSalaryTemplate(SalaryTemplateUpdate) returns (UpdateSalaryTemplateResponse);
   // Soft-delete SalaryTemplate.
   rpc DeleteSalaryTemplate(DeleteSalaryTemplateRequest) returns (DeleteSalaryTemplateResponse);
   // List SalaryTemplateComponents.
@@ -58,7 +58,7 @@ service SalaryTemplateService {
   // Create SalaryTemplateComponent.
   rpc CreateSalaryTemplateComponent(CreateSalaryTemplateComponentRequest) returns (CreateSalaryTemplateComponentResponse);
   // Update SalaryTemplateComponent.
-  rpc UpdateSalaryTemplateComponent(UpdateSalaryTemplateComponentRequest) returns (UpdateSalaryTemplateComponentResponse);
+  rpc UpdateSalaryTemplateComponent(SalaryTemplateComponentUpdate) returns (UpdateSalaryTemplateComponentResponse);
   // Soft-delete SalaryTemplateComponent.
   rpc DeleteSalaryTemplateComponent(DeleteSalaryTemplateComponentRequest) returns (DeleteSalaryTemplateComponentResponse);
 }
@@ -72,7 +72,7 @@ service StaffSalaryService {
   // Create StaffSalary.
   rpc CreateStaffSalary(CreateStaffSalaryRequest) returns (CreateStaffSalaryResponse);
   // Update StaffSalary.
-  rpc UpdateStaffSalary(UpdateStaffSalaryRequest) returns (UpdateStaffSalaryResponse);
+  rpc UpdateStaffSalary(StaffSalaryUpdate) returns (UpdateStaffSalaryResponse);
   // Soft-delete StaffSalary.
   rpc DeleteStaffSalary(DeleteStaffSalaryRequest) returns (DeleteStaffSalaryResponse);
   // List StaffSalaryComponents.
@@ -82,7 +82,7 @@ service StaffSalaryService {
   // Create StaffSalaryComponent.
   rpc CreateStaffSalaryComponent(CreateStaffSalaryComponentRequest) returns (CreateStaffSalaryComponentResponse);
   // Update StaffSalaryComponent.
-  rpc UpdateStaffSalaryComponent(UpdateStaffSalaryComponentRequest) returns (UpdateStaffSalaryComponentResponse);
+  rpc UpdateStaffSalaryComponent(StaffSalaryComponentUpdate) returns (UpdateStaffSalaryComponentResponse);
   // Soft-delete StaffSalaryComponent.
   rpc DeleteStaffSalaryComponent(DeleteStaffSalaryComponentRequest) returns (DeleteStaffSalaryComponentResponse);
 }
@@ -114,7 +114,7 @@ service PaymentTypeService {
   // Create PaymentType.
   rpc CreatePaymentType(CreatePaymentTypeRequest) returns (CreatePaymentTypeResponse);
   // Update PaymentType.
-  rpc UpdatePaymentType(UpdatePaymentTypeRequest) returns (UpdatePaymentTypeResponse);
+  rpc UpdatePaymentType(PaymentTypeUpdate) returns (UpdatePaymentTypeResponse);
   // Soft-delete PaymentType.
   rpc DeletePaymentType(DeletePaymentTypeRequest) returns (DeletePaymentTypeResponse);
 }
@@ -128,7 +128,7 @@ service DisbursementAccountService {
   // Create DisbursementAccount.
   rpc CreateDisbursementAccount(CreateDisbursementAccountRequest) returns (CreateDisbursementAccountResponse);
   // Update DisbursementAccount.
-  rpc UpdateDisbursementAccount(UpdateDisbursementAccountRequest) returns (UpdateDisbursementAccountResponse);
+  rpc UpdateDisbursementAccount(DisbursementAccountUpdate) returns (UpdateDisbursementAccountResponse);
   // Soft-delete DisbursementAccount.
   rpc DeleteDisbursementAccount(DeleteDisbursementAccountRequest) returns (DeleteDisbursementAccountResponse);
 }
@@ -182,13 +182,21 @@ message CreatePayComponentResponse {
   PayComponent pay_component = 1;
 }
 
-message UpdatePayComponentRequest {
-  // Resource with id and etag set.
-  PayComponent pay_component = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePayComponent (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PayComponentUpdate {
+  // PayComponent id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Component key used in formulas.
+  optional string code = 4;
+  // Component name.
+  optional string name = 5;
+  // Earning, deduction or employer-defined.
+  optional PayComponent.ComponentType component_type = 6;
 }
 message UpdatePayComponentResponse {
   PayComponent pay_component = 1;
@@ -242,13 +250,23 @@ message CreatePayCategoryResponse {
   PayCategory pay_category = 1;
 }
 
-message UpdatePayCategoryRequest {
-  // Resource with id and etag set.
-  PayCategory pay_category = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePayCategory (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PayCategoryUpdate {
+  // PayCategory id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Category name.
+  optional string name = 7;
 }
 message UpdatePayCategoryResponse {
   PayCategory pay_category = 1;
@@ -302,13 +320,21 @@ message CreateSalaryTemplateResponse {
   SalaryTemplate salary_template = 1;
 }
 
-message UpdateSalaryTemplateRequest {
-  // Resource with id and etag set.
-  SalaryTemplate salary_template = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateSalaryTemplate (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SalaryTemplateUpdate {
+  // SalaryTemplate id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Template name.
+  optional string name = 5;
+  // Whether usable.
+  optional bool is_active = 6;
 }
 message UpdateSalaryTemplateResponse {
   SalaryTemplate salary_template = 1;
@@ -368,15 +394,23 @@ message CreateSalaryTemplateComponentResponse {
   SalaryTemplateComponent salary_template_component = 1;
 }
 
-message UpdateSalaryTemplateComponentRequest {
+// The changes of UpdateSalaryTemplateComponent (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message SalaryTemplateComponentUpdate {
   // SalaryTemplate id (UUID).
   string salary_template_id = 1;
-  // Resource with id and etag set.
-  SalaryTemplateComponent salary_template_component = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // SalaryTemplateComponent id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Component. [UUID]
+  optional string pay_component_id = 5;
+  // Calculation basis. [UUID]
+  optional string pay_category_id = 6;
+  // Amount or rate for the calculation basis. [Decimal string]
+  mysms.common.v1.NullableString value = 7;
 }
 message UpdateSalaryTemplateComponentResponse {
   SalaryTemplateComponent salary_template_component = 1;
@@ -432,13 +466,25 @@ message CreateStaffSalaryResponse {
   StaffSalary staff_salary = 1;
 }
 
-message UpdateStaffSalaryRequest {
-  // Resource with id and etag set.
-  StaffSalary staff_salary = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStaffSalary (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StaffSalaryUpdate {
+  // StaffSalary id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Staff member. [UUID]
+  optional string staff_id = 4;
+  // Template used. [UUID]
+  optional string salary_template_id = 5;
+  // Gross monthly salary. [Decimal string]
+  optional string gross_salary = 6;
+  // Effective from. [ISO-8601 date (YYYY-MM-DD)]
+  optional string effective_date = 7;
+  // Comments.
+  mysms.common.v1.NullableString remarks = 8;
 }
 message UpdateStaffSalaryResponse {
   StaffSalary staff_salary = 1;
@@ -498,15 +544,21 @@ message CreateStaffSalaryComponentResponse {
   StaffSalaryComponent staff_salary_component = 1;
 }
 
-message UpdateStaffSalaryComponentRequest {
+// The changes of UpdateStaffSalaryComponent (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StaffSalaryComponentUpdate {
   // StaffSalary id (UUID).
   string staff_salary_id = 1;
-  // Resource with id and etag set.
-  StaffSalaryComponent staff_salary_component = 2;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 3;
+  // StaffSalaryComponent id (UUID).
+  string id = 2;
+  // ETag from the last read; required (If-Match).
+  string etag = 3;
   // Validate without persisting.
   bool validate_only = 4;
+  // Template component. [UUID]
+  optional string salary_template_component_id = 5;
+  // Amount. [Decimal string]
+  optional string amount = 6;
 }
 message UpdateStaffSalaryComponentResponse {
   StaffSalaryComponent staff_salary_component = 1;
@@ -622,13 +674,23 @@ message CreatePaymentTypeResponse {
   PaymentType payment_type = 1;
 }
 
-message UpdatePaymentTypeRequest {
-  // Resource with id and etag set.
-  PaymentType payment_type = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePaymentType (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PaymentTypeUpdate {
+  // PaymentType id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Stable key used by imports, integrations and seed scripts.
+  optional string code = 4;
+  // Display order.
+  optional int32 sort_order = 5;
+  // Whether offered for new picks.
+  optional bool is_active = 6;
+  // Type name.
+  optional string name = 7;
 }
 message UpdatePaymentTypeResponse {
   PaymentType payment_type = 1;
@@ -682,13 +744,31 @@ message CreateDisbursementAccountResponse {
   DisbursementAccount disbursement_account = 1;
 }
 
-message UpdateDisbursementAccountRequest {
-  // Resource with id and etag set.
-  DisbursementAccount disbursement_account = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateDisbursementAccount (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message DisbursementAccountUpdate {
+  // DisbursementAccount id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // User responsible for the account. [UUID]
+  optional string managed_by_user_id = 5;
+  // Account label.
+  optional string name = 6;
+  // Short key.
+  optional string account_key = 7;
+  // Plain value, input only: stored encrypted and never returned. Bank account number, encrypted.
+  optional string account_number = 8;
+  // Bank routing code (IFSC / ABA / sort code).
+  optional string bank_routing_code = 9;
+  // Branch.
+  mysms.common.v1.NullableString branch_name = 10;
+  // Additional bank parameter (e.g. SWIFT).
+  mysms.common.v1.NullableString extra_reference = 11;
 }
 message UpdateDisbursementAccountResponse {
   DisbursementAccount disbursement_account = 1;
@@ -1018,8 +1098,8 @@ message PayslipLine {
   string id = 1;
   // Payslip. [UUID] Set from the parent path on create.
   string payslip_id = 2;
-  // Component. [UUID]
-  string staff_salary_component_id = 3;
+  // Component; absent on the unpaid-leave line (component_code UNPAID_LEAVE). [UUID]
+  optional string staff_salary_component_id = 3;
   // Amount. [Decimal string]
   string amount = 4;
   // Row creation time. Output only.
@@ -1225,13 +1305,31 @@ message CreateStaffBankAccountResponse {
   StaffBankAccount staff_bank_account = 1;
 }
 
-message UpdateStaffBankAccountRequest {
-  // Resource with id and etag set.
-  StaffBankAccount staff_bank_account = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateStaffBankAccount (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message StaffBankAccountUpdate {
+  // StaffBankAccount id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Account number; stored encrypted, never returned. Input only.
+  optional string account_number = 4;
+  // Staff member. [UUID]
+  optional string staff_id = 5;
+  // Name on the account.
+  optional string account_holder_name = 6;
+  // Bank routing code.
+  mysms.common.v1.NullableString ifsc_code = 7;
+  // Bank.
+  mysms.common.v1.NullableString bank_name = 8;
+  // Branch.
+  mysms.common.v1.NullableString branch_name = 9;
+  // Account currently used for disbursement.
+  optional bool is_primary = 10;
+  // Whether usable.
+  optional bool is_active = 11;
 }
 message UpdateStaffBankAccountResponse {
   StaffBankAccount staff_bank_account = 1;
@@ -1255,7 +1353,7 @@ service StaffBankAccountService {
   // Create StaffBankAccount.
   rpc CreateStaffBankAccount(CreateStaffBankAccountRequest) returns (CreateStaffBankAccountResponse);
   // Update StaffBankAccount.
-  rpc UpdateStaffBankAccount(UpdateStaffBankAccountRequest) returns (UpdateStaffBankAccountResponse);
+  rpc UpdateStaffBankAccount(StaffBankAccountUpdate) returns (UpdateStaffBankAccountResponse);
   // Soft-delete StaffBankAccount.
   rpc DeleteStaffBankAccount(DeleteStaffBankAccountRequest) returns (DeleteStaffBankAccountResponse);
 }

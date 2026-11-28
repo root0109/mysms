@@ -1,18 +1,17 @@
 package com.mysms.students.careers.grpc;
 
 import com.mysms.students.careers.api.model.FunctionArea;
-import com.mysms.students.careers.api.model.FunctionAreaUpdate;
 import com.mysms.students.careers.business.FunctionAreaService;
 import com.mysms.careers.v1.CreateFunctionAreaRequest;
 import com.mysms.careers.v1.CreateFunctionAreaResponse;
 import com.mysms.careers.v1.DeleteFunctionAreaRequest;
 import com.mysms.careers.v1.DeleteFunctionAreaResponse;
 import com.mysms.careers.v1.FunctionAreaServiceGrpc;
+import com.mysms.careers.v1.FunctionAreaUpdate;
 import com.mysms.careers.v1.GetFunctionAreaRequest;
 import com.mysms.careers.v1.GetFunctionAreaResponse;
 import com.mysms.careers.v1.ListFunctionAreasRequest;
 import com.mysms.careers.v1.ListFunctionAreasResponse;
-import com.mysms.careers.v1.UpdateFunctionAreaRequest;
 import com.mysms.careers.v1.UpdateFunctionAreaResponse;
 import com.mysms.core.grpc.ProtoBridge;
 import com.mysms.core.paging.Page;
@@ -57,11 +56,11 @@ public class FunctionAreaResolver extends FunctionAreaServiceGrpc.FunctionAreaSe
     }
 
     @Override
-    public void updateFunctionArea(UpdateFunctionAreaRequest request, StreamObserver<UpdateFunctionAreaResponse> out) {
+    public void updateFunctionArea(FunctionAreaUpdate request, StreamObserver<UpdateFunctionAreaResponse> out) {
         FunctionArea updated = service.updateFunctionArea(
-                bridge.id(request.getFunctionArea().getId(), "id"),
-                bridge.requiredIfMatch(request.getFunctionArea().getEtag()),
-                bridge.changes(request.getFunctionArea(), request.getUpdateMask(), FunctionAreaUpdate.class),
+                bridge.id(request.getId(), "id"),
+                bridge.requiredIfMatch(request.getEtag()),
+                FunctionAreaProtoBridge.changes(bridge, request),
                 request.getValidateOnly());
         ProtoBridge.send(out, bridge.reply(UpdateFunctionAreaResponse.newBuilder(), "function_area", updated).build());
     }

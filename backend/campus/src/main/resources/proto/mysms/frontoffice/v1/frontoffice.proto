@@ -4,9 +4,9 @@ syntax = "proto3";
 package mysms.frontoffice.v1;
 
 import "google/protobuf/duration.proto";
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "mysms/common/v1/common.proto";
+import "mysms/common/v1/patch.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "FrontofficeProto";
@@ -21,7 +21,7 @@ service VisitorLogService {
   // Create VisitorLog.
   rpc CreateVisitorLog(CreateVisitorLogRequest) returns (CreateVisitorLogResponse);
   // Update VisitorLog.
-  rpc UpdateVisitorLog(UpdateVisitorLogRequest) returns (UpdateVisitorLogResponse);
+  rpc UpdateVisitorLog(VisitorLogUpdate) returns (UpdateVisitorLogResponse);
   // Soft-delete VisitorLog.
   rpc DeleteVisitorLog(DeleteVisitorLogRequest) returns (DeleteVisitorLogResponse);
   // Record exit time.
@@ -37,7 +37,7 @@ service CallLogService {
   // Create CallLog.
   rpc CreateCallLog(CreateCallLogRequest) returns (CreateCallLogResponse);
   // Update CallLog.
-  rpc UpdateCallLog(UpdateCallLogRequest) returns (UpdateCallLogResponse);
+  rpc UpdateCallLog(CallLogUpdate) returns (UpdateCallLogResponse);
   // Soft-delete CallLog.
   rpc DeleteCallLog(DeleteCallLogRequest) returns (DeleteCallLogResponse);
 }
@@ -51,7 +51,7 @@ service PostalRecordService {
   // Create PostalRecord.
   rpc CreatePostalRecord(CreatePostalRecordRequest) returns (CreatePostalRecordResponse);
   // Update PostalRecord.
-  rpc UpdatePostalRecord(UpdatePostalRecordRequest) returns (UpdatePostalRecordResponse);
+  rpc UpdatePostalRecord(PostalRecordUpdate) returns (UpdatePostalRecordResponse);
   // Soft-delete PostalRecord.
   rpc DeletePostalRecord(DeletePostalRecordRequest) returns (DeletePostalRecordResponse);
 }
@@ -65,7 +65,7 @@ service DirectoryContactService {
   // Create DirectoryContact.
   rpc CreateDirectoryContact(CreateDirectoryContactRequest) returns (CreateDirectoryContactResponse);
   // Update DirectoryContact.
-  rpc UpdateDirectoryContact(UpdateDirectoryContactRequest) returns (UpdateDirectoryContactResponse);
+  rpc UpdateDirectoryContact(DirectoryContactUpdate) returns (UpdateDirectoryContactResponse);
   // Soft-delete DirectoryContact.
   rpc DeleteDirectoryContact(DeleteDirectoryContactRequest) returns (DeleteDirectoryContactResponse);
 }
@@ -109,13 +109,51 @@ message CreateVisitorLogResponse {
   VisitorLog visitor_log = 1;
 }
 
-message UpdateVisitorLogRequest {
-  // Resource with id and etag set.
-  VisitorLog visitor_log = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateVisitorLog (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message VisitorLogUpdate {
+  // VisitorLog id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Visitor.
+  optional string visitor_name = 6;
+  // Visitor's relation to the school (parent, vendor, official...).
+  optional string visitor_type = 7;
+  // E-mail.
+  mysms.common.v1.NullableString email = 8;
+  // Phone.
+  mysms.common.v1.NullableString phone = 9;
+  // Company.
+  mysms.common.v1.NullableString company_name = 10;
+  // Address.
+  mysms.common.v1.NullableString address = 11;
+  // Student visited. [UUID]
+  mysms.common.v1.NullableString student_id = 12;
+  // Relation to that student.
+  mysms.common.v1.NullableString relation_to_student = 13;
+  // Name of the related person.
+  mysms.common.v1.NullableString related_person_name = 14;
+  // Number of visitors.
+  optional int32 visitor_count = 15;
+  // Purpose.
+  optional string purpose = 16;
+  // Staff member met. [UUID]
+  mysms.common.v1.NullableString host_staff_id = 17;
+  // Date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string visit_date = 18;
+  // Entry time. [Time of day (HH:MM[:SS])]
+  mysms.common.v1.NullableString entry_time = 19;
+  // Exit time. [Time of day (HH:MM[:SS])]
+  mysms.common.v1.NullableString exit_time = 20;
+  // Remarks.
+  mysms.common.v1.NullableString remarks = 21;
 }
 message UpdateVisitorLogResponse {
   VisitorLog visitor_log = 1;
@@ -169,13 +207,41 @@ message CreateCallLogResponse {
   CallLog call_log = 1;
 }
 
-message UpdateCallLogRequest {
-  // Resource with id and etag set.
-  CallLog call_log = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateCallLog (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message CallLogUpdate {
+  // CallLog id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Direction.
+  optional CallLog.Direction direction = 6;
+  // Purpose.
+  mysms.common.v1.NullableString purpose = 7;
+  // Caller / callee name.
+  optional string caller_name = 8;
+  // Incoming number.
+  mysms.common.v1.NullableString incoming_number = 9;
+  // Outgoing number.
+  mysms.common.v1.NullableString outgoing_number = 10;
+  // Date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string call_date = 11;
+  // Start. [Time of day (HH:MM[:SS])]
+  mysms.common.v1.NullableString start_time = 12;
+  // End. [Time of day (HH:MM[:SS])]
+  mysms.common.v1.NullableString end_time = 13;
+  // Duration.
+  mysms.common.v1.NullableDuration duration_seconds = 14;
+  // Notes.
+  mysms.common.v1.NullableString description = 15;
+  // Staff who logged it. [UUID]
+  mysms.common.v1.NullableString logged_by_user_id = 16;
 }
 message UpdateCallLogResponse {
   CallLog call_log = 1;
@@ -229,13 +295,43 @@ message CreatePostalRecordResponse {
   PostalRecord postal_record = 1;
 }
 
-message UpdatePostalRecordRequest {
-  // Resource with id and etag set.
-  PostalRecord postal_record = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdatePostalRecord (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message PostalRecordUpdate {
+  // PostalRecord id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Academic year. [UUID]
+  mysms.common.v1.NullableString academic_year_id = 5;
+  // Dispatch or receipt.
+  optional PostalRecord.Direction direction = 6;
+  // Post type (courier, registered, speed post...).
+  optional string post_type = 7;
+  // Tracking / reference number.
+  mysms.common.v1.NullableString reference_number = 8;
+  // Confidential.
+  optional bool is_confidential = 9;
+  // Sender.
+  mysms.common.v1.NullableString sender_name = 10;
+  // Sender address.
+  mysms.common.v1.NullableString sender_address = 11;
+  // Receiver.
+  mysms.common.v1.NullableString receiver_name = 12;
+  // Receiver address.
+  mysms.common.v1.NullableString receiver_address = 13;
+  // Date. [ISO-8601 date (YYYY-MM-DD)]
+  optional string postal_date = 14;
+  // Contents / description.
+  optional string description = 15;
+  // Scan. [UUID]
+  mysms.common.v1.NullableString attachment_file_id = 16;
+  // Staff who logged it. [UUID]
+  mysms.common.v1.NullableString logged_by_user_id = 17;
 }
 message UpdatePostalRecordResponse {
   PostalRecord postal_record = 1;
@@ -289,13 +385,23 @@ message CreateDirectoryContactResponse {
   DirectoryContact directory_contact = 1;
 }
 
-message UpdateDirectoryContactRequest {
-  // Resource with id and etag set.
-  DirectoryContact directory_contact = 1;
-  // Fields to update; empty = all fields present.
-  google.protobuf.FieldMask update_mask = 2;
+// The changes of UpdateDirectoryContact (PATCH, JAVA-CODING-RULES §7.2): a field left unset keeps its value, a
+// Nullable* wrapper holding null clears it (an enum: its _UNSPECIFIED value), a value sets it.
+message DirectoryContactUpdate {
+  // DirectoryContact id (UUID).
+  string id = 1;
+  // ETag from the last read; required (If-Match).
+  string etag = 2;
   // Validate without persisting.
   bool validate_only = 3;
+  // Institution. [UUID]
+  optional string institution_id = 4;
+  // Name.
+  optional string name = 5;
+  // Designation.
+  optional string designation = 6;
+  // Phone.
+  optional string phone = 7;
 }
 message UpdateDirectoryContactResponse {
   DirectoryContact directory_contact = 1;
